@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Expense Input</title>
+    <link
+      href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;600&display=swap"
+      rel="stylesheet"
+    />
+    <link
+      href="https://fonts.googleapis.com/icon?family=Material+Icons"
+      rel="stylesheet"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/css/materialize.min.css"
+    />
+    <link rel="stylesheet" href="style.css" />
+    <style>
+      .new-category {
+        display: none;
+      }
+      .action-buttons {
+        text-align: center;
+        margin-top: 20px;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="header-placeholder"></div>
+    <!-- Placeholder for the header -->
+    <div class="container">
+      <h4>Enter Expense</h4>
+      <form id="input-form">
+        <div class="input-field">
+          <label for="category">Category</label>
+          <select id="category" class="browser-default" required>
+            <!-- Categories will be populated dynamically -->
+            <option value="" disabled selected>Choose a category</option>
+            <option value="not-listed">Not listed</option>
+          </select>
+        </div>
+        <div class="input-field new-category">
+          <input id="new-category" type="text" />
+          <label for="new-category">New Category</label>
+        </div>
+        <div class="input-field">
+          <label for="item">Item</label>
+          <input id="item" type="text" required />
+        </div>
+        <div class="input-field">
+          <label for="amount">Amount</label>
+          <input id="amount" type="number" required />
+        </div>
+        <div class="input-field">
+          <label for="year">Year</label>
+          <select id="year" class="browser-default" required>
+            <!-- Year options will be populated dynamically -->
+          </select>
+        </div>
+        <div class="input-field">
+          <label for="payment-day">Payment Day</label>
+          <input type="date" id="payment-day" required />
+        </div>
+        <div class="action-buttons">
+          <button type="submit" class="btn waves-effect waves-light">
+            Submit
+          </button>
+          <button type="button" class="btn" id="clear-form">Clear</button>
+          <button
+            type="button"
+            class="btn"
+            id="add-new-expense"
+            style="display: none"
+          >
+            Add New Expense
+          </button>
+        </div>
+      </form>
+    </div>
+    <div id="footer-placeholder"></div>
+    <!-- Placeholder for the footer -->
+    <script src="https://apis.google.com/js/api.js"></script>
+    <script src="main.js"></script>
+  </body>
+</html>

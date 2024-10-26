@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Revenue Report</title>
+  <link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;600&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/css/materialize.min.css">
+  <link rel="stylesheet" href="style.css">
+  <style>
+    .share-menu {
+      position: relative;
+      display: inline-block;
+    }
+    .share-menu-content {
+      display: none;
+      position: absolute;
+      background-color: #fff;
+      min-width: 160px;
+      box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
+      z-index: 1;
+      border-radius: 8px;
+    }
+    .share-menu-content a {
+      color: black;
+      padding: 12px 16px;
+      text-decoration: none;
+      display: block;
+    }
+    .share-menu-content a:hover {
+      background-color: #ddd;
+    }
+    .share-menu:hover .share-menu-content {
+      display: block;
+    }
+    .filter-container {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+    }
+    .filter-container label {
+      margin-bottom: 5px;
+    }
+    .filter-container select {
+      margin-bottom: 20px;
+    }
+    .action-buttons {
+      text-align: center;
+      margin-top: 20px;
+    }
+  </style>
+</head>
+<body>
+    <div id="header-placeholder"></div> <!-- Placeholder for the header -->
+  <div class="container">
+    <h4><a href="revenue-report.html" style="text-decoration:none; color:inherit;">Revenue Report (as of <span id="currentyear"></span>)</a></h4>
+    <div class="filter-container">
+      <label for="filter-option">Filter By:</label>
+      <select id="filter-option" class="browser-default">
+        <option value="" disabled selected>Choose a filter</option>
+        <option value="year">Year</option>
+        <option value="month">Month</option>
+        <option value="unit">Unit Number</option>
+        <option value="floor">Floor</option>
+      </select>
+      <div id="year-select-container" style="display: none;">
+        <label for="year-select">Select Year:</label>
+        <select id="year-select" class="browser-default"></select>
+      </div>
+      <div id="month-select-container" style="display: none;">
+        <label for="month-select">Select Month:</label>
+        <select id="month-select" class="browser-default"></select>
+      </div>
+      <div id="unit-select-container" style="display: none;">
+        <label for="unit-select">Select Unit Number:</label>
+        <select id="unit-select" class="browser-default"></select>
+      </div>
+      <div id="floor-select-container" style="display: none;">
+        <label for="floor-select">Select Floor:</label>
+        <select id="floor-select" class="browser-default"></select>
+      </div>
+      <button class="btn waves-effect waves-light" id="run-report-btn">Run Report</button>
+    </div>
+    <table class="highlight responsive-table">
+      <thead>
+        <tr>
+          <th>Unit Number</th>
+          <th>Floor</th>
+          <th>Owner Name</th>
+          <th>Tenant Name</th>
+          <th>Year</th>
+          <th>Month</th>
+          <th>Amount</th>
+        </tr>
+      </thead>
+      <tbody id="report-table-body">
+        <!-- Revenue data will be populated here -->
+      </tbody>
+    </table>
+    <div class="action-buttons">
+      <a class="btn waves-effect waves-light" href="expense-report.html">View Expense Reports</a>
+      <a class="btn waves-effect waves-light" href="budget-details.html">View Budget Details</a>
+      <a class="btn waves-effect waves-light" href="budget-summary.html">View Budget Summary</a>
+    </div>
+    <br>
+    <center>
+      <div class="share-menu">
+        <button class="btn waves-effect waves-light" id="share-btn"><i class="material-icons">share</i> Share</button>
+        <div class="share-menu-content">
+          <a id="share-whatsapp"><i class="material-icons">message</i> WhatsApp</a>
+          <a id="share-messenger"><i class="material-icons">messenger</i> Messenger</a>
+          <a id="copy-link"><i class="material-icons">link</i> Copy Link</a>
+          <a id="share-twitter"><i class="material-icons">twitter</i> Twitter</a>
+          <a id="share-facebook"><i class="material-icons">facebook</i> Facebook</a>
+        </div>
+      </div>
+      <button class="btn waves-effect waves-light" id="print-btn"><i class="material-icons">print</i> Print</button>
+    </center>
+  </div>
+    <div id="footer-placeholder"></div> <!-- Placeholder for the footer -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/js/materialize.min.js"></script>
+  <script src="https://apis.google.com/js/api.js"></script>
+  <script src="main.js"></script>
+</body>
+</html>

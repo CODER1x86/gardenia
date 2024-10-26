@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Budget Summary</title>
+  <link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;600&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/css/materialize.min.css">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div id="header-placeholder"></div> <!-- Placeholder for the header -->
+  <div class="container">
+    <h4>Budget Summary (as of <span id="currentyear"></span>)</h4>
+    <p>Available Balance: $<span id="available-balance"></span></p>
+    <p>Total Revenue: $<span id="total-revenue"></span></p>
+    <p>Total Expenses: $<span id="total-expenses"></span></p>
+    <div class="action-buttons">
+      <a class="btn waves-effect waves-light" href="revenue-report.html">View Revenue Reports</a>
+      <a class="btn waves-effect waves-light" href="expense-report.html">View Expense Reports</a>
+      <a class="btn waves-effect waves-light" href="budget-details.html">View Budget Details</a>
+    </div>
+  </div>
+  <div id="footer-placeholder"></div> <!-- Placeholder for the footer -->
+  <script src="https://apis.google.com/js/api.js"></script>
+  <script src="main.js"></script>
+</body>
+</html>
