@@ -1,17 +1,17 @@
 const fs = require("fs");
-const dbFile = "./.data/gardenia.db"; // Use your specific database file name
+const dbFile = "./data/database.db"; // Specify your database file name
 const exists = fs.existsSync(dbFile);
 const sqlite3 = require("sqlite3").verbose();
 const dbWrapper = require("sqlite");
 
 let db;
 
-//SQLite wrapper for async / await connections
+// SQLite wrapper for async/await connections
 dbWrapper.open({ filename: dbFile, driver: sqlite3.Database }).then(async dBase => {
   db = dBase;
   try {
     if (!exists) {
-      // Create your tables
+      // Create tables
       await db.run(`
         CREATE TABLE IF NOT EXISTS floors (
           id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -32,7 +32,49 @@ dbWrapper.open({ filename: dbFile, driver: sqlite3.Database }).then(async dBase 
         );
       `);
 
-      // Add more tables as needed
+      await db.run(`
+        CREATE TABLE IF NOT EXISTS owners (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          name TEXT,
+          phone TEXT
+        );
+      `);
+
+      await db.run(`
+        CREATE TABLE IF NOT EXISTS tenants (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          name TEXT,
+          phone TEXT
+        );
+      `);
+
+      await db.run(`
+        CREATE TABLE IF NOT EXISTS revenue (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          unit_id INTEGER,
+          year INTEGER,
+          month TEXT,
+          amount REAL,
+          date TEXT,
+          method TEXT,
+          FOREIGN KEY(unit_id) REFERENCES units(id)
+        );
+      `);
+
+      await db.run(`
+        CREATE TABLE IF NOT EXISTS expenses (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          category TEXT,
+          item TEXT,
+          price REAL,
+          expense_date TEXT,
+          last_updated TEXT
+        );
+      `);
+
+      // Initial opening balance for 2024
+      const openingBalance = 12362;
+      await db.run(`INSERT INTO revenue (unit_id, year, month, amount) VALUES (?, ?, ?, ?)`, [null, 2024, "Opening Balance", openingBalance]);
     }
     console.log("Database initialized successfully");
   } catch (dbError) {
@@ -41,5 +83,27 @@ dbWrapper.open({ filename: dbFile, driver: sqlite3.Database }).then(async dBase 
 });
 
 module.exports = {
-  // Add your methods for interacting with the database here
+  getExpenses: async () => {
+    try {
+      return await db.all("SELECT * FROM expenses");
+    } catch (dbError) {
+      console.error(dbError);
+    }
+  },
+  addExpense: async expense => {
+    let success = false;
+    try {
+      success = await db.run("INSERT INTO expenses (category, item, price, expense_date, last_updated) VALUES (?, ?, ?, ?, ?)", [
+        expense.category,
+        expense.item,
+        expense.price,
+        expense.expense_date,
+        expense.last_updated
+      ]);
+    } catch (dbError) {
+      console.error(dbError);
+    }
+    return success.changes > 0 ? true : false;
+  },
+  // Add more methods for other operations as needed
 };
