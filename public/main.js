@@ -6,16 +6,16 @@ document.addEventListener("DOMContentLoaded", function () {
 });
 
 function fetchData() {
-  fetch("/sheets/data")
+  fetch("/api/data") // Updated to use your new API endpoint
     .then((response) => response.json())
     .then((data) => {
       // Process and display the data on the page
       console.log(data);
       // Example: Populate budget summary
       if (document.getElementById("available-balance")) {
-        document.getElementById("available-balance").textContent = data[0][1];
-        document.getElementById("total-revenue").textContent = data[1][1];
-        document.getElementById("total-expenses").textContent = data[2][1];
+        document.getElementById("available-balance").textContent = data.availableBalance;
+        document.getElementById("total-revenue").textContent = data.totalRevenue;
+        document.getElementById("total-expenses").textContent = data.totalExpenses;
       }
     })
     .catch((error) => {
@@ -53,9 +53,7 @@ function loadContent() {
       break;
     case "/expense-input.html":
     case "/revenue-input.html":
-      document
-        .getElementById("input-form")
-        .addEventListener("submit", handleFormSubmit);
+      document.getElementById("input-form").addEventListener("submit", handleFormSubmit);
       loadUnitData(); // Load unit data
       break;
   }
@@ -71,27 +69,21 @@ function handleFormSubmit(event) {
 }
 
 function loadBudgetSummary() {
-  fetch("/sheets/data")
+  fetch("/api/data") // Updated to use your new API endpoint
     .then((response) => response.json())
     .then((data) => {
       // Opening balance of 2024
       let totalRevenue = 12362;
       let totalExpenses = 0;
-
       data.values.forEach((row) => {
         const totalPaid = parseFloat(row[row.length - 3]); // Assuming 'Total Paid' is the third last column
         if (!isNaN(totalPaid)) totalRevenue += totalPaid;
       });
-
       const availableBalance = totalRevenue - totalExpenses;
-
       // Display the calculated totals
-      document.getElementById("available-balance").textContent =
-        availableBalance.toFixed(2);
-      document.getElementById("total-revenue").textContent =
-        totalRevenue.toFixed(2);
-      document.getElementById("total-expenses").textContent =
-        totalExpenses.toFixed(2);
+      document.getElementById("available-balance").textContent = availableBalance.toFixed(2);
+      document.getElementById("total-revenue").textContent = totalRevenue.toFixed(2);
+      document.getElementById("total-expenses").textContent = totalExpenses.toFixed(2);
     })
     .catch((error) => {
       console.error("Error loading budget summary:", error);
@@ -99,12 +91,11 @@ function loadBudgetSummary() {
 }
 
 function loadExpenseReport() {
-  fetch("/sheets/expense-data")
+  fetch("/api/expenses") // Updated to use your new API endpoint
     .then((response) => response.json())
     .then((data) => {
       // Calculate total expenses
       let totalExpenses = 0;
-
       const tableBody = document.getElementById("expense-table-body");
       data.values.forEach((row) => {
         const rowElement = document.createElement("tr");
@@ -112,7 +103,6 @@ function loadExpenseReport() {
           const cellElement = document.createElement("td");
           cellElement.textContent = cell;
           rowElement.appendChild(cellElement);
-
           if (index === 2) {
             // Assuming 'Price' is the third column (index 2)
             const price = parseFloat(cell);
@@ -121,23 +111,21 @@ function loadExpenseReport() {
         });
         tableBody.appendChild(rowElement);
       });
-
       // Display the total expenses
-      document.getElementById("total-expenses").textContent =
-        totalExpenses.toFixed(2);
+      document.getElementById("total-expenses").textContent = totalExpenses.toFixed(2);
     })
     .catch((error) => {
       console.error("Error loading expense report:", error);
     });
 }
 function loadRevenueReport() {
-  fetch("/sheets/revenue-data")
+  fetch("/api/revenue") // Updated to use your new API endpoint
     .then((response) => response.json())
     .then((data) => {
       const tableBody = document.getElementById("report-table-body");
-      data.values.forEach((row) => {
+      data.forEach((row) => { // Adjusted to match expected data structure
         const rowElement = document.createElement("tr");
-        row.forEach((cell) => {
+        Object.values(row).forEach((cell) => { // Ensure correct iteration over row values
           const cellElement = document.createElement("td");
           cellElement.textContent = cell;
           rowElement.appendChild(cellElement);
@@ -156,37 +144,21 @@ function loadUnitData() {
   const ownerNameField = document.getElementById("owner-name");
   const tenantNameField = document.getElementById("tenant-name");
 
-  fetch("/sheets/unit-data")
+  fetch("/api/units") // Updated to use your new API endpoint
     .then((response) => response.json())
     .then((data) => {
-      const unitData = data.reduce(
-        (
-          acc,
-          [
-            unit,
-            floor,
-            owner,
-            ownerPhone,
-            tenant,
-            tenantPhone,
-            lastPaymentMonth,
-            lastPaymentDate,
-            ...rest
-          ]
-        ) => {
-          acc[unit] = {
-            floor,
-            owner,
-            ownerPhone,
-            tenant,
-            tenantPhone,
-            lastPaymentMonth,
-            lastPaymentDate,
-          };
-          return acc;
-        },
-        {}
-      );
+      const unitData = data.reduce((acc, unit) => {
+        acc[unit.unit_number] = {
+          floor: unit.floor,
+          owner: unit.owner,
+          ownerPhone: unit.ownerPhone,
+          tenant: unit.tenant,
+          tenantPhone: unit.tenantPhone,
+          lastPaymentMonth: unit.lastPaymentMonth,
+          lastPaymentDate: unit.lastPaymentDate
+        };
+        return acc;
+      }, {});
 
       unitNumberSelect.addEventListener("change", function () {
         const selectedUnit = this.value;
@@ -194,14 +166,10 @@ function loadUnitData() {
           floorField.textContent = unitData[selectedUnit].floor;
           ownerNameField.textContent = unitData[selectedUnit].owner;
           tenantNameField.textContent = unitData[selectedUnit].tenant || "";
-          document.getElementById("owner-phone").textContent =
-            unitData[selectedUnit].ownerPhone;
-          document.getElementById("tenant-phone").textContent =
-            unitData[selectedUnit].tenantPhone || "";
-          document.getElementById("last-payment-month").textContent =
-            unitData[selectedUnit].lastPaymentMonth;
-          document.getElementById("last-payment-date").textContent =
-            unitData[selectedUnit].lastPaymentDate;
+          document.getElementById("owner-phone").textContent = unitData[selectedUnit].ownerPhone;
+          document.getElementById("tenant-phone").textContent = unitData[selectedUnit].tenantPhone || "";
+          document.getElementById("last-payment-month").textContent = unitData[selectedUnit].lastPaymentMonth;
+          document.getElementById("last-payment-date").textContent = unitData[selectedUnit].lastPaymentDate;
           document.getElementById("unit-details").style.display = "block";
         } else {
           document.getElementById("unit-details").style.display = "none";
@@ -213,7 +181,7 @@ function loadUnitData() {
     });
 }
 function loadCategories() {
-  fetch("/sheets/categories")
+  fetch("/api/categories") // Updated to use your new API endpoint
     .then((response) => response.json())
     .then((data) => {
       const categorySelect = document.getElementById("category");
@@ -231,18 +199,19 @@ function loadCategories() {
 
 function saveData(data) {
   const pathname = window.location.pathname;
-  let range;
+  let apiUrl;
   if (pathname === "/expense-input.html") {
-    range = "Expenses!A:E";
+    apiUrl = "/api/expenses"; // Updated to use your new API endpoint
   } else if (pathname === "/revenue-input.html") {
-    range = "Revenue!A:AR";
+    apiUrl = "/api/revenue"; // Updated to use your new API endpoint
   }
-  fetch("/sheets/data", {
+
+  fetch(apiUrl, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
     },
-    body: JSON.stringify({ range, data }),
+    body: JSON.stringify(data),
   })
     .then((response) => {
       if (response.ok) {
@@ -260,26 +229,24 @@ function saveData(data) {
     });
 }
 
-document
-  .getElementById("add-new-revenue")
-  .addEventListener("click", function () {
-    document.getElementById("input-form").reset();
-    this.style.display = "none";
-  });
+document.getElementById("add-new-revenue").addEventListener("click", function () {
+  document.getElementById("input-form").reset();
+  this.style.display = "none";
+});
 
-document
-  .getElementById("add-new-expense")
-  .addEventListener("click", function () {
-    document.getElementById("input-form").reset();
-    this.style.display = "none";
-  });
+document.getElementById("add-new-expense").addEventListener("click", function () {
+  document.getElementById("input-form").reset();
+  this.style.display = "none";
+});
+
 function setupAuthListener() {
   // Logic for handling login state can be removed if not using Google Auth on the client side
 }
+
 function validateForm() {
   const inputFields = document.querySelectorAll('input[type="number"]');
   let isValid = true;
-  
+
   inputFields.forEach(input => {
     if (input.value === "" || isNaN(input.value)) {
       input.style.border = '2px solid red';
@@ -289,7 +256,7 @@ function validateForm() {
       input.style.border = 'none';
     }
   });
-  
+
   return isValid;
 }
 
@@ -299,4 +266,3 @@ document.querySelector('form').onsubmit = (e) => {
     e.preventDefault();
   }
 };
-

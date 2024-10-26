@@ -91,3 +91,20 @@ fastify.listen({port:process.env.PORT, host:'0.0.0.0'}, function(err, address) {
   }
   console.log(`Your app is listening on ${address}`);
 });
+const { sendWhatsAppMessage } = require("./twilioIntegration");
+
+// Use this function when needed, e.g., after an expense is added
+fastify.post("/api/expenses", async (request, reply) => {
+  let data = {};
+  const auth = authorized(request.headers.admin_key);
+  if (!auth || !request.body || !request.body.expense) {
+    data.success = false;
+  } else {
+    data.success = await db.addExpense(request.body.expense);
+    if (data.success) {
+      sendWhatsAppMessage(request.body.expense.phoneNumber, request.body.expense.unit);
+    }
+  }
+  const status = data.success ? 201 : auth ? 400 : 401;
+  reply.status(status).send(data);
+});

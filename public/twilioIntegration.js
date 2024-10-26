@@ -1,7 +1,6 @@
 const twilio = require('twilio');
-const accountSid = 'AC391fe03c4c8c25c748f453b803fcd3c2'; // Your Account SID from www.twilio.com/console
-const authToken = '1554d6516eb1b6b5a5db3c9c5506c63d';   // Your Auth Token from www.twilio.com/console
-
+const accountSid = process.env.TWILIO_ACCOUNT_SID;
+const authToken = process.env.TWILIO_AUTH_TOKEN;
 const client = new twilio(accountSid, authToken);
 
 function sendWhatsAppMessage(phoneNumber, unit) {
@@ -9,7 +8,7 @@ function sendWhatsAppMessage(phoneNumber, unit) {
   client.messages.create({
     body: message,
     from: 'whatsapp:+YOUR_TWILIO_SANDBOX_NUMBER',
-    to: `whatsapp:${phoneNum`ber}`
+    to: `whatsapp:${phoneNumber}`
   })
   .then(message => console.log('Message sent successfully:', message.sid))
   .catch(error => console.error('Error sending message:', error));
@@ -17,3 +16,5 @@ function sendWhatsAppMessage(phoneNumber, unit) {
 
 // Example usage
 sendWhatsAppMessage('+201234567890', '1');
+
+module.exports = { sendWhatsAppMessage };
