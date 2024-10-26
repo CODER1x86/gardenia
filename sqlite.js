@@ -3,7 +3,7 @@ const path = require("path");
 const sqlite3 = require("sqlite3").verbose();
 const dbWrapper = require("sqlite");
 
-const dbFile = path.join(__dirname, "./data/database.db");
+const dbFile = path.join(__dirname, "./.data/database.db");
 const exists = fs.existsSync(dbFile);
 let db;
 

@@ -15,6 +15,6 @@ function sendWhatsAppMessage(phoneNumber, unit) {
 }
 
 // Example usage
-sendWhatsAppMessage('+201000094586', '1');
+// sendWhatsAppMessage('+201000094586', '1');
 
 module.exports = { sendWhatsAppMessage };

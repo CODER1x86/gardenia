@@ -4,7 +4,7 @@ const sqlite3 = require('sqlite3').verbose();
 const dbWrapper = require('sqlite');
 const csvParser = require('csv-parser');
 
-const dbFile = "./data/database.db";
+const dbFile = "./.data/database.db";
 let db;
 
 dbWrapper.open({ filename: dbFile, driver: sqlite3.Database }).then(async dBase => {
