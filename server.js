@@ -43,6 +43,21 @@ fastify.get("/", (request, reply) => {
   });
 });
 
+// Serve other HTML pages explicitly
+const pages = ['budget-summary.html', 'budget-details.html', 'expense-report.html', 'revenue-report.html'];
+pages.forEach(page => {
+  fastify.get(`/${page}`, (request, reply) => {
+    const filePath = path.join(__dirname, 'public', page);
+    fs.readFile(filePath, (err, data) => {
+      if (err) {
+        reply.status(500).send('Internal Server Error');
+      } else {
+        reply.type('text/html').send(data);
+      }
+    });
+  });
+});
+
 // API route to get expenses
 fastify.get("/api/expenses", async (request, reply) => {
   let data = {};
