@@ -63,13 +63,12 @@ pages.forEach((page) => {
 });
 // Snippet 4: Database Initialization
 initializeDatabase().then(() => {
-  global.db = getDb; // Ensure db is globally accessible
+  global.db = getDb(); // Ensure db is globally accessible
   
   // Confirm db initialization
   console.log('DB Initialized:', global.db);
 
   // Place other route definitions here once db is initialized
-});
 // Snippet 5: Revenue Report Endpoint
 // This snippet adds the revenue report endpoint to filter and fetch data based on the selected filter options.
 app.get("/api/revenue-report", (req, res) => {
@@ -387,4 +386,5 @@ app.get("/api/check-auth", (req, res) => {
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
   console.log(`Your app is listening on port ${PORT}`);
+});
 });
