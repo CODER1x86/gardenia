@@ -3,7 +3,21 @@ document.addEventListener("DOMContentLoaded", function () {
   const currentYear = new Date().getFullYear();
   document.getElementById("currentyear").textContent = currentYear;
   fetchData(); // Fetch data from Node.js server
+  checkAuth(); // Check authentication status
+  setInitialLanguage(); // Set initial language based on user preference
 });
+
+// Language selection
+function setLanguage(language) {
+  localStorage.setItem("language", language);
+  document.documentElement.lang = language;
+  // Additional logic to load the corresponding language content
+}
+
+function setInitialLanguage() {
+  const language = localStorage.getItem("language") || "en";
+  setLanguage(language);
+}
 
 function fetchData() {
   fetch("/api/data") // Updated to use your new API endpoint
@@ -13,9 +27,12 @@ function fetchData() {
       console.log(data);
       // Example: Populate budget summary
       if (document.getElementById("available-balance")) {
-        document.getElementById("available-balance").textContent = data.availableBalance;
-        document.getElementById("total-revenue").textContent = data.totalRevenue;
-        document.getElementById("total-expenses").textContent = data.totalExpenses;
+        document.getElementById("available-balance").textContent =
+          data.availableBalance;
+        document.getElementById("total-revenue").textContent =
+          data.totalRevenue;
+        document.getElementById("total-expenses").textContent =
+          data.totalExpenses;
       }
     })
     .catch((error) => {
@@ -34,7 +51,7 @@ function loadHeaderFooter() {
     .then((html) => {
       document.getElementById("footer-placeholder").innerHTML = html;
     })
-  .catch((error) => {
+    .catch((error) => {
       console.error("Error loading footer:", error);
     });
 }
@@ -56,7 +73,9 @@ function loadContent() {
       break;
     case "/expense-input.html":
     case "/revenue-input.html":
-      document.getElementById("input-form").addEventListener("submit", handleFormSubmit);
+      document
+        .getElementById("input-form")
+        .addEventListener("submit", handleFormSubmit);
       loadUnitData(); // Load unit data
       break;
   }
@@ -84,9 +103,12 @@ function loadBudgetSummary() {
       });
       const availableBalance = totalRevenue - totalExpenses;
       // Display the calculated totals
-      document.getElementById("available-balance").textContent = availableBalance.toFixed(2);
-      document.getElementById("total-revenue").textContent = totalRevenue.toFixed(2);
-      document.getElementById("total-expenses").textContent = totalExpenses.toFixed(2);
+      document.getElementById("available-balance").textContent =
+        availableBalance.toFixed(2);
+      document.getElementById("total-revenue").textContent =
+        totalRevenue.toFixed(2);
+      document.getElementById("total-expenses").textContent =
+        totalExpenses.toFixed(2);
     })
     .catch((error) => {
       console.error("Error loading budget summary:", error);
@@ -115,7 +137,8 @@ function loadExpenseReport() {
         tableBody.appendChild(rowElement);
       });
       // Display the total expenses
-      document.getElementById("total-expenses").textContent = totalExpenses.toFixed(2);
+      document.getElementById("total-expenses").textContent =
+        totalExpenses.toFixed(2);
     })
     .catch((error) => {
       console.error("Error loading expense report:", error);
@@ -126,9 +149,11 @@ function loadRevenueReport() {
     .then((response) => response.json())
     .then((data) => {
       const tableBody = document.getElementById("report-table-body");
-      data.forEach((row) => { // Adjusted to match expected data structure
+      data.forEach((row) => {
+        // Adjusted to match expected data structure
         const rowElement = document.createElement("tr");
-        Object.values(row).forEach((cell) => { // Ensure correct iteration over row values
+        Object.values(row).forEach((cell) => {
+          // Ensure correct iteration over row values
           const cellElement = document.createElement("td");
           cellElement.textContent = cell;
           rowElement.appendChild(cellElement);
@@ -157,7 +182,7 @@ function loadUnitData() {
           tenant: unit.tenant,
           tenantPhone: unit.tenantPhone,
           lastPaymentMonth: unit.lastPaymentMonth,
-          lastPaymentDate: unit.lastPaymentDate
+          lastPaymentDate: unit.lastPaymentDate,
         };
         return acc;
       }, {});
@@ -167,10 +192,14 @@ function loadUnitData() {
           floorField.textContent = unitData[selectedUnit].floor;
           ownerNameField.textContent = unitData[selectedUnit].owner;
           tenantNameField.textContent = unitData[selectedUnit].tenant || "";
-          document.getElementById("owner-phone").textContent = unitData[selectedUnit].ownerPhone;
-          document.getElementById("tenant-phone").textContent = unitData[selectedUnit].tenantPhone || "";
-          document.getElementById("last-payment-month").textContent = unitData[selectedUnit].lastPaymentMonth;
-          document.getElementById("last-payment-date").textContent = unitData[selectedUnit].lastPaymentDate;
+          document.getElementById("owner-phone").textContent =
+            unitData[selectedUnit].ownerPhone;
+          document.getElementById("tenant-phone").textContent =
+            unitData[selectedUnit].tenantPhone || "";
+          document.getElementById("last-payment-month").textContent =
+            unitData[selectedUnit].lastPaymentMonth;
+          document.getElementById("last-payment-date").textContent =
+            unitData[selectedUnit].lastPaymentDate;
           document.getElementById("unit-details").style.display = "block";
         } else {
           document.getElementById("unit-details").style.display = "none";
@@ -229,15 +258,19 @@ function saveData(data) {
     });
 }
 
-document.getElementById("add-new-revenue").addEventListener("click", function () {
-  document.getElementById("input-form").reset();
-  this.style.display = "none";
-});
+document
+  .getElementById("add-new-revenue")
+  .addEventListener("click", function () {
+    document.getElementById("input-form").reset();
+    this.style.display = "none";
+  });
 
-document.getElementById("add-new-expense").addEventListener("click", function () {
-  document.getElementById("input-form").reset();
-  this.style.display = "none";
-});
+document
+  .getElementById("add-new-expense")
+  .addEventListener("click", function () {
+    document.getElementById("input-form").reset();
+    this.style.display = "none";
+  });
 
 function setupAuthListener() {
   // Logic for handling login state can be removed if not using Google Auth on the client side
@@ -246,28 +279,28 @@ function setupAuthListener() {
 function validateForm() {
   const inputFields = document.querySelectorAll('input[type="number"]');
   let isValid = true;
-  inputFields.forEach(input => {
+  inputFields.forEach((input) => {
     if (input.value === "" || isNaN(input.value)) {
-      input.style.border = '2px solid red';
+      input.style.border = "2px solid red";
       alert("Please enter valid numbers in all fields");
       isValid = false;
     } else {
-      input.style.border = 'none';
+      input.style.border = "none";
     }
   });
   return isValid;
 }
 
 // Example: Call this function before form submission
-document.querySelector('form').onsubmit = (e) => {
+document.querySelector("form").onsubmit = (e) => {
   if (!validateForm()) {
     e.preventDefault();
   }
 };
 function checkAuth() {
   fetch("/api/check-auth")
-    .then(response => response.json())
-    .then(data => {
+    .then((response) => response.json())
+    .then((data) => {
       if (data.authenticated) {
         document.getElementById("authenticated-links").style.display = "block";
         document.getElementById("login-link").style.display = "none";
@@ -278,7 +311,7 @@ function checkAuth() {
         document.getElementById("logout-link").style.display = "none";
       }
     })
-    .catch(error => console.error("Error checking auth status:", error));
+    .catch((error) => console.error("Error checking auth status:", error));
 }
 
 document.getElementById("login-button").addEventListener("click", () => {
@@ -287,29 +320,28 @@ document.getElementById("login-button").addEventListener("click", () => {
   fetch("/login", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ username, password })
+    body: JSON.stringify({ username, password }),
   })
-    .then(response => response.json())
-    .then(data => {
+    .then((response) => response.json())
+    .then((data) => {
       if (data.success) {
         checkAuth();
       } else {
         alert("Login failed!");
       }
     })
-    .catch(error => console.error("Error during login:", error));
+    .catch((error) => console.error("Error during login:", error));
 });
 
 document.getElementById("logout-button").addEventListener("click", () => {
   fetch("/logout", { method: "POST" })
-    .then(response => response.json())
-    .then(data => {
+    .then((response) => response.json())
+    .then((data) => {
       if (data.success) {
         checkAuth();
       }
     })
-    .catch(error => console.error("Error during logout:", error));
+    .catch((error) => console.error("Error during logout:", error));
 });
 
 checkAuth(); // Check auth status on page load
-

@@ -7,9 +7,24 @@
       <li><a href="budget-details.html">Budget Details</a></li>
       <li><a href="expense-report.html">Expense Report</a></li>
       <li><a href="revenue-report.html">Revenue Report</a></li>
-      <li><a href="expense-input.html" id="expense-input-link" style="display:none;">Expense Input</a></li>
-      <li><a href="revenue-input.html" id="revenue-input-link" style="display:none;">Revenue Input</a></li>
-      <li><a href="#" id="login-button"><i class="material-icons left">login</i>Login</a></li>
+      <!-- Facility Management -->
+      <li class="dropdown">
+        <a href="#" class="dropdown-toggle" data-toggle="dropdown">Facility Management <span class="caret"></span></a>
+        <ul class="dropdown-menu" id="authenticated-links" style="display:none;">
+          <li><a href="expense-input.html">Expense Input</a></li>
+          <li><a href="revenue-input.html">Revenue Input</a></li>
+          <li><a href="unit-management.html">Unit Management</a></li>
+          <li><a href="style-modifier.html">Modify Site Style</a></li>
+          <li><a href="footer-settings.html">Modify Footer</a></li>
+        </ul>
+      </li>
+      <!-- Language Selection -->
+      <li>
+        <a href="#" id="lang-en" onclick="setLanguage('en')"><img src="uk-flag.png" alt="English" /></a>
+        <a href="#" id="lang-ar" onclick="setLanguage('ar')"><img src="egypt-flag.png" alt="Arabic" /></a>
+      </li>
+      <li id="login-link"><a href="#" id="login-button"><i class="material-icons left">login</i>Login</a></li>
+      <li id="logout-link" style="display:none;"><a href="#" id="logout-button"><i class="material-icons left">logout</i>Logout</a></li>
     </ul>
   </div>
 </nav>
