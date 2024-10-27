@@ -3,7 +3,7 @@
 const express = require("express");
 const path = require("path");
 const fs = require("fs");
-const db = require("./sqlite.js");
+const { initializeDatabase, getRevenue, getExpensesSum, getBalance } = require("./sqlite.js");
 const { sendWhatsAppMessage } = require("./twilioIntegration");
 const session = require("express-session");
 const cookieParser = require("cookie-parser");
@@ -311,6 +311,7 @@ app.get("/api/check-auth", (req, res) => {
 });
 
 // Snippet 15: Fetch Initial Data Endpoint with Enhanced Logging
+initializeDatabase().then(() => {
 app.get("/api/data", async (req, res) => {
   try {
     console.log("Fetching revenue...");
