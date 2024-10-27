@@ -128,11 +128,18 @@ fastify.get("/api/expenses", async (request, reply) => {
 fastify.get("/api/data", async (request, reply) => {
   let data = {};
   try {
-    const revenueResult = await db.getRevenue();
-    const expensesResult = await db.getExpensesSum();
-    const balanceResult = await db.getBalance();
+    const currentYear = new Date().getFullYear();
+    let openingBalance = 0;
 
-    data.availableBalance = balanceResult.starting_balance + revenueResult.totalRevenue - expensesResult.totalExpenses;
+    if (currentYear === 2024) {
+      const balanceResult = await db.get("SELECT starting_balance FROM balance WHERE year_id = (SELECT year_id FROM years WHERE year = 2024)");
+      openingBalance = balanceResult ? balanceResult.starting_balance : 0;
+    }
+
+    const revenueResult = await db.get("SELECT SUM(amount) AS totalRevenue FROM payments WHERE year = ?", [currentYear]);
+    const expensesResult = await db.get("SELECT SUM(price) AS totalExpenses FROM expenses WHERE strftime('%Y', expense_date) = ?", [currentYear]);
+
+    data.availableBalance = openingBalance + revenueResult.totalRevenue - expensesResult.totalExpenses;
     data.totalRevenue = revenueResult.totalRevenue;
     data.totalExpenses = expensesResult.totalExpenses;
 

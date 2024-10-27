@@ -7,8 +7,83 @@ document.addEventListener("DOMContentLoaded", function () {
   fetchData(); // Fetch data from Node.js server
   checkAuth(); // Check authentication status
   setInitialLanguage(); // Set initial language based on user preference
+   setInitialYearOptions(); // Populate year options
+  document.getElementById("filter-option").addEventListener("change", handleFilterChange);
+  document.getElementById("run-report-btn").addEventListener("click", fetchReportData);
+
 });
 
+
+  function handleFilterChange() {
+    const filter = document.getElementById("filter-option").value;
+    document.getElementById("year-select-container").style.display = filter === "year" || filter === "month" || filter === "unit" ? "block" : "none";
+    document.getElementById("month-select-container").style.display = filter === "month" ? "block" : "none";
+    document.getElementById("unit-select-container").style.display = filter === "unit" ? "block" : "none";
+    document.getElementById("floor-select-container").style.display = filter === "floor" ? "block" : "none";
+
+    if (filter === "unit") {
+      populateUnitOptions();
+    } else if (filter === "floor") {
+      populateFloorOptions();
+    }
+  }
+
+  function setInitialYearOptions() {
+    const yearSelect = document.getElementById("year-select");
+    const currentYear = new Date().getFullYear();
+    for (let year = currentYear; year >= 2020; year--) {
+      const option = document.createElement("option");
+      option.value = year;
+      option.textContent = year;
+      yearSelect.appendChild(option);
+    }
+  }
+
+  function populateUnitOptions() {
+    // Fetch and populate unit options dynamically
+  }
+
+  function populateFloorOptions() {
+    // Fetch and populate floor options dynamically
+  }
+
+  function fetchReportData() {
+    const filter = document.getElementById("filter-option").value;
+    const year = document.getElementById("year-select").value;
+    const month = document.getElementById("month-select").value;
+    const unit = document.getElementById("unit-select").value;
+    const floor = document.getElementById("floor-select").value;
+
+    let query = `/api/revenue-report?filter=${filter}&year=${year}`;
+    if (filter === "month") query += `&month=${month}`;
+    if (filter === "unit") query += `&unit=${unit}`;
+    if (filter === "floor") query += `&floor=${floor}`;
+
+    fetch(query)
+      .then(response => response.json())
+      .then(data => {
+        // Populate the table with the fetched data
+        const tbody = document.getElementById("report-table-body");
+        tbody.innerHTML = "";
+        data.forEach(record => {
+          const row = document.createElement("tr");
+          row.innerHTML = `
+            <td>${record.unit_number}</td>
+            <td>${record.floor}</td>
+            <td>${record.owner_name}</td>
+            <td>${record.tenant_name}</td>
+            <td>${record.year}</td>
+            <td>${record.month}</td>
+            <td>${record.amount}</td>
+            <td>${record.payment_date}</td>
+            <td>${record.payment_method}</td>
+          `;
+          tbody.appendChild(row);
+        });
+      })
+      .catch(error => console.error("Error fetching report data:", error));
+  }
+});
 // Language selection
 function setLanguage(language) {
   localStorage.setItem("language", language);

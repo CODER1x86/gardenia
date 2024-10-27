@@ -7,52 +7,22 @@
   <link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;600&display=swap" rel="stylesheet">
   <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/css/materialize.min.css">
-  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="/public/style.css">
   <style>
-    .share-menu {
-      position: relative;
-      display: inline-block;
-    }
-    .share-menu-content {
-      display: none;
-      position: absolute;
-      background-color: #fff;
-      min-width: 160px;
-      box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
-      z-index: 1;
-      border-radius: 8px;
-    }
-    .share-menu-content a {
-      color: black;
-      padding: 12px 16px;
-      text-decoration: none;
-      display: block;
-    }
-    .share-menu-content a:hover {
-      background-color: #ddd;
-    }
-    .share-menu:hover .share-menu-content {
-      display: block;
-    }
-    .filter-container {
-      display: flex;
-      flex-direction: column;
-      align-items: flex-start;
-    }
-    .filter-container label {
-      margin-bottom: 5px;
-    }
-    .filter-container select {
-      margin-bottom: 20px;
-    }
-    .action-buttons {
-      text-align: center;
-      margin-top: 20px;
-    }
+    .share-menu { position: relative; display: inline-block; }
+    .share-menu-content { display: none; position: absolute; background-color: #fff; min-width: 160px; box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2); z-index: 1; border-radius: 8px; }
+    .share-menu-content a { color: black; padding: 12px 16px; text-decoration: none; display: block; }
+    .share-menu-content a:hover { background-color: #ddd; }
+    .share-menu:hover .share-menu-content { display: block; }
+    .filter-container { display: flex; flex-direction: column; align-items: flex-start; }
+    .filter-container label { margin-bottom: 5px; }
+    .filter-container select { margin-bottom: 20px; }
+    .action-buttons { text-align: center; margin-top: 20px; }
   </style>
 </head>
 <body>
-    <div id="header-placeholder"></div> <!-- Placeholder for the header -->
+  <div id="header-placeholder"></div> <!-- Placeholder for the header -->
+
   <div class="container">
     <h4><a href="revenue-report.html" style="text-decoration:none; color:inherit;">Revenue Report (as of <span id="currentyear"></span>)</a></h4>
     <div class="filter-container">
@@ -92,6 +62,8 @@
           <th>Year</th>
           <th>Month</th>
           <th>Amount</th>
+          <th>Payment Date</th>
+          <th>Payment Method</th>
         </tr>
       </thead>
       <tbody id="report-table-body">
@@ -118,8 +90,10 @@
       <button class="btn waves-effect waves-light" id="print-btn"><i class="material-icons">print</i> Print</button>
     </center>
   </div>
-    <div id="footer-placeholder"></div> <!-- Placeholder for the footer -->
+
+  <div id="footer-placeholder"></div> <!-- Placeholder for the footer -->
+
   <script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/js/materialize.min.js"></script>
-  <script src="main.js"></script>
+  <script src="/public/main.js"></script>
 </body>
 </html>
