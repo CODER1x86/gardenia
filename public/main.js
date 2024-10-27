@@ -1,3 +1,5 @@
+console.log("main.js is loaded");
+
 document.addEventListener("DOMContentLoaded", function () {
   loadHeaderFooter(); // Load common header and footer
   const currentYear = new Date().getFullYear();
@@ -315,23 +317,25 @@ function checkAuth() {
 }
 
 document.getElementById("login-button").addEventListener("click", () => {
+  console.log("Login button clicked");
   const username = prompt("Enter username:");
   const password = prompt("Enter password:");
   fetch("/login", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ username, password }),
+    body: JSON.stringify({ username, password })
   })
-    .then((response) => response.json())
-    .then((data) => {
+    .then(response => response.json())
+    .then(data => {
       if (data.success) {
         checkAuth();
       } else {
         alert("Login failed!");
       }
     })
-    .catch((error) => console.error("Error during login:", error));
+    .catch(error => console.error("Error during login:", error));
 });
+
 
 document.getElementById("logout-button").addEventListener("click", () => {
   fetch("/logout", { method: "POST" })
