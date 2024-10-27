@@ -34,6 +34,15 @@ const transporter = nodemailer.createTransport({
 
 const errorMessage = "Whoops! Error connecting to the database–please try again!";
 
+//SNIPPET: Database Initialization
+
+initializeDatabase().then((db) => {
+  global.db = db; // Ensure db is globally accessible
+  
+  // Confirm db initialization
+  console.log('DB Initialized:', global.db);
+  
+
 // Snippet 2: Root Route
 // This snippet defines the root route to serve the index.html file.
 app.get("/", (req, res) => {
@@ -64,11 +73,6 @@ pages.forEach((page) => {
 });
 // Snippet 4: Revenue Report Endpoint
 // This snippet adds the revenue report endpoint to filter and fetch data based on the selected filter options.
-initializeDatabase().then(() => {
-  global.db = db; // Ensure db is globally accessible
-  
-  // Confirm db initialization
-  console.log('DB Initialized:', global.db);
 
   app.get("/api/revenue-report", async (req, res) => {
     const { filter, year, month, unit } = req.query;
@@ -164,8 +168,8 @@ app.get("/api/months", async (req, res) => {
 // Snippet 8: Fetch Available Years Endpoint
 app.get("/api/years", async (req, res) => {
   try {
-    console.log("DB in /api/years:", global.db);
-    const result = await db.all("SELECT DISTINCT year FROM years");
+    console.log('DB in /api/years:', global.db);
+    const result = await global.db.all("SELECT DISTINCT year FROM years");
     res.json(result);
   } catch (error) {
     console.error("Error fetching years:", error);
@@ -180,9 +184,9 @@ app.post("/api/expense-input", async (req, res) => {
   const finalCategory = newCategory || category;
   try {
     if (newCategory) {
-      await db.run("INSERT INTO categories (name) VALUES (?)", [newCategory]);
+      await global.db.run("INSERT INTO categories (name) VALUES (?)", [newCategory]);
     }
-    await db.run(
+    await global.db.run(
       "INSERT INTO expenses (category, item, price, expense_date, last_updated) VALUES (?, ?, ?, ?, ?)",
       [finalCategory, item, amount, paymentDate, new Date().toISOString()]
     );
@@ -197,7 +201,7 @@ app.post("/api/expense-input", async (req, res) => {
 app.post("/api/revenue-input", async (req, res) => {
   const { unitNumber, amount, paymentDate, paymentMethod } = req.body;
   try {
-    await db.run(
+    await global.db.run(
       "INSERT INTO payments (unit_id, year, month, amount, payment_date, method_id) VALUES (?, strftime('%Y', ?), strftime('%m', ?), ?, ?, ?)",
       [unitNumber, paymentDate, paymentDate, amount, paymentDate, paymentMethod]
     );
@@ -211,7 +215,7 @@ app.post("/api/revenue-input", async (req, res) => {
 // This snippet adds endpoints to fetch categories and payment methods dynamically.
 app.get("/api/categories", async (req, res) => {
   try {
-    const result = await db.all("SELECT name FROM categories");
+    const result = await global.db.all("SELECT name FROM categories");
     res.json(result);
   } catch (error) {
     console.error("Error fetching categories:", error);
@@ -221,9 +225,7 @@ app.get("/api/categories", async (req, res) => {
 
 app.get("/api/payment-methods", async (req, res) => {
   try {
-    const result = await db.all(
-      "SELECT method_id, method_name FROM payment_methods"
-    );
+    const result = await global.db.all("SELECT method_id, method_name FROM payment_methods");
     res.json(result);
   } catch (error) {
     console.error("Error fetching payment methods:", error);
@@ -244,9 +246,7 @@ app.get("/forget-password", (req, res) => {
 app.post("/login", async (req, res) => {
   const { username, password } = req.body;
   try {
-    const user = await db.get("SELECT * FROM users WHERE username = ?", [
-      username,
-    ]);
+    const user = await global.db.get("SELECT * FROM users WHERE username = ?", [username]);
     if (user && bcrypt.compareSync(password, user.password)) {
       req.session.authenticated = true;
       res.json({ success: true });
@@ -263,10 +263,10 @@ app.post("/login", async (req, res) => {
 app.post("/request-password-reset", async (req, res) => {
   const { email } = req.body;
   try {
-    const user = await db.get("SELECT * FROM users WHERE email = ?", [email]);
+    const user = await global.db.get("SELECT * FROM users WHERE email = ?", [email]);
     if (user) {
       const resetToken = generateResetToken();
-      await db.run("UPDATE users SET reset_token = ? WHERE email = ?", [
+      await global.db.run("UPDATE users SET reset_token = ? WHERE email = ?", [
         resetToken,
         email,
       ]);
@@ -318,11 +318,12 @@ app.get("/api/check-auth", (req, res) => {
 
 // Snippet 17: Fetch Initial Data Endpoint with Enhanced Logging
 // Initialize database
-initializeDatabase().then(() => {
- // global.db = database;
-  console.log("DB Initialized:", global.db);
+initializeDatabase().then((database) => {
+  global.db = database;
+
   app.get("/api/data", async (req, res) => {
     try {
+      console.log('DB in /api/data:', global.db);
       console.log("Fetching revenue...");
       const revenueResult = await getRevenue();
       console.log("Revenue result:", revenueResult);
@@ -336,15 +337,10 @@ initializeDatabase().then(() => {
       console.log("Balance result:", balanceResult);
 
       if (!balanceResult || !revenueResult || !expensesResult) {
-        throw new Error(
-          "Failed to fetch one or more components of initial data."
-        );
+        throw new Error("Failed to fetch one or more components of initial data.");
       }
 
-      const availableBalance =
-        balanceResult.starting_balance +
-        revenueResult.totalRevenue -
-        expensesResult.totalExpenses;
+      const availableBalance = balanceResult.starting_balance + revenueResult.totalRevenue - expensesResult.totalExpenses;
 
       res.json({
         totalRevenue: revenueResult.totalRevenue,
@@ -356,6 +352,7 @@ initializeDatabase().then(() => {
       res.status(500).json({ error: error.message });
     }
   });
+
 });
 
 // Start the server
