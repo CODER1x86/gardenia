@@ -57,16 +57,19 @@ pages.forEach(page => {
     });
   });
 });
-
 // API route to get expenses
 fastify.get("/api/expenses", async (request, reply) => {
   let data = {};
-  data.expenses = await db.getExpenses();
-  if (!data.expenses) data.error = errorMessage;
+  try {
+    data.expenses = await db.getExpenses();
+    if (!data.expenses) data.error = errorMessage;
+  } catch (error) {
+    console.error(error);
+    data.error = errorMessage;
+  }
   const status = data.error ? 400 : 200;
   reply.status(status).send(data);
 });
-
 // API route to add a new expense
 fastify.post("/api/expenses", async (request, reply) => {
   let data = {};
@@ -74,20 +77,23 @@ fastify.post("/api/expenses", async (request, reply) => {
   if (!auth || !request.body || !request.body.expense) {
     data.success = false;
   } else {
-    data.success = await db.addExpense(request.body.expense);
-    if (data.success) {
-      sendWhatsAppMessage(request.body.expense.phoneNumber, request.body.expense.unit);
+    try {
+      data.success = await db.addExpense(request.body.expense);
+      if (data.success) {
+        sendWhatsAppMessage(request.body.expense.phoneNumber, request.body.expense.unit);
+      }
+    } catch (error) {
+      console.error(error);
+      data.success = false;
     }
   }
   const status = data.success ? 201 : auth ? 400 : 401;
   reply.status(status).send(data);
 });
-
 // Helper function to authenticate the user key
 const authorized = key => {
   return key && key === process.env.ADMIN_KEY;
 };
-
 // Start the server
 fastify.listen({ port: process.env.PORT || 3000, host: '0.0.0.0' }, function (err, address) {
   if (err) {
