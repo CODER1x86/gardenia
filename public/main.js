@@ -3,14 +3,26 @@
 console.log("main.js is loaded");
 document.addEventListener("DOMContentLoaded", function () {
   loadHeaderFooter(); // Load common header and footer
-  const currentYear = new Date().getFullYear();
-  document.getElementById("currentyear").textContent = currentYear;
+
+  const currentYearElement = document.getElementById("currentyear");
+  if (currentYearElement) {
+    currentYearElement.textContent = new Date().getFullYear();
+  }
+
   fetchData(); // Fetch data from Node.js server
   checkAuth(); // Check authentication status
   setInitialLanguage(); // Set initial language based on user preference
   setInitialYearOptions(); // Populate year options
-  document.getElementById("filter-option").addEventListener("change", handleFilterChange);
-  document.getElementById("run-report-btn").addEventListener("click", fetchReportData);
+
+  const filterOption = document.getElementById("filter-option");
+  if (filterOption) {
+    filterOption.addEventListener("change", handleFilterChange);
+  }
+
+  const runReportBtn = document.getElementById("run-report-btn");
+  if (runReportBtn) {
+    runReportBtn.addEventListener("click", fetchReportData);
+  }
 });
 // Snippet 2: Handle Filter Changes and Fetch Data
 // This snippet defines functions to handle filter changes and fetch data based on the selected filters (year, month, unit, floor).
@@ -30,12 +42,14 @@ function handleFilterChange() {
 
 function setInitialYearOptions() {
   const yearSelect = document.getElementById("year-select");
-  const currentYear = new Date().getFullYear();
-  for (let year = currentYear; year >= 2020; year--) {
-    const option = document.createElement("option");
-    option.value = year;
-    option.textContent = year;
-    yearSelect.appendChild(option);
+  if (yearSelect) {
+    const currentYear = new Date().getFullYear();
+    for (let year = currentYear; year >= 2020; year--) {
+      const option = document.createElement("option");
+      option.value = year;
+      option.textContent = year;
+      yearSelect.appendChild(option);
+    }
   }
 }
 
@@ -398,45 +412,56 @@ document.addEventListener("DOMContentLoaded", function () {
 });
 // Snippet 12: Handle Login Form Submission
 // This snippet ensures the login form submission triggers the backend login endpoint.
-document.getElementById("login-form").addEventListener("submit", function (event) {
-  event.preventDefault();
-  const username = document.getElementById("username").value;
-  const password = document.getElementById("password").value;
-  fetch("/login", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ username, password }),
-  })
-    .then((response) => response.json())
-    .then((data) => {
-      if (data.success) {
-        checkAuth();
-        window.location.href = "/budget-summary.html"; // Redirect after successful login
-      } else {
-        alert("Login failed!");
-      }
-    })
-    .catch((error) => console.error("Error during login:", error));
+document.addEventListener("DOMContentLoaded", function () {
+  const loginForm = document.getElementById("login-form");
+  if (loginForm) {
+    loginForm.addEventListener("submit", function (event) {
+      event.preventDefault();
+      const username = document.getElementById("username").value;
+      const password = document.getElementById("password").value;
+      fetch("/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ username, password }),
+      })
+        .then((response) => response.json())
+        .then((data) => {
+          if (data.success) {
+            checkAuth();
+            window.location.href = "/budget-summary.html"; // Redirect after successful login
+          } else {
+            alert("Login failed!");
+          }
+        })
+        .catch((error) => console.error("Error during login:", error));
+    });
+  }
 });
+
 // Snippet 13: Handle Forget Password Form Submission
 // This snippet ensures the forget password form submission triggers the backend password reset request endpoint.
-document.getElementById("forget-password-form").addEventListener("submit", function (event) {
-  event.preventDefault();
-  const email = document.getElementById("email").value;
-  fetch("/request-password-reset", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ email }),
-  })
-    .then((response) => response.json())
-    .then((data) => {
-      if (data.success) {
-        alert("Reset email sent!");
-      } else {
-        alert("Email not found!");
-      }
-    })
-    .catch((error) => console.error("Error requesting password reset:", error));
+document.addEventListener("DOMContentLoaded", function () {
+  const forgetPasswordForm = document.getElementById("forget-password-form");
+  if (forgetPasswordForm) {
+    forgetPasswordForm.addEventListener("submit", function (event) {
+      event.preventDefault();
+      const email = document.getElementById("email").value;
+      fetch("/request-password-reset", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email }),
+      })
+        .then((response) => response.json())
+        .then((data) => {
+          if (data.success) {
+            alert("Reset email sent!");
+          } else {
+            alert("Email not found!");
+          }
+        })
+        .catch((error) => console.error("Error requesting password reset:", error));
+    });
+  }
 });
 
 checkAuth(); // Check auth status on page load
