@@ -230,3 +230,30 @@ fastify.get("/api/payment-methods", async (request, reply) => {
     reply.status(500).send({ error: errorMessage });
   }
 });
+
+//Snippet 9: Configure Server to Handle Clean URLs
+
+// Serve login page without .html extension
+fastify.get("/login", (request, reply) => {
+  const filePath = path.join(__dirname, "public", "login.html");
+  fs.readFile(filePath, (err, data) => {
+    if (err) {
+      reply.status(500).send("Internal Server Error");
+    } else {
+      reply.type("text/html").send(data);
+    }
+  });
+});
+
+// Serve forget password page without .html extension
+fastify.get("/forget-password", (request, reply) => {
+  const filePath = path.join(__dirname, "public", "forget-password.html");
+  fs.readFile(filePath, (err, data) => {
+    if (err) {
+      reply.status(500).send("Internal Server Error");
+    } else {
+      reply.type("text/html").send(data);
+    }
+  });
+});
+
