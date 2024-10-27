@@ -13,12 +13,14 @@ const app = express();
 
 // Middleware setup
 app.use(cookieParser());
-app.use(session({
-  secret: "a super secret key that should be stored securely",
-  resave: false,
-  saveUninitialized: false,
-  cookie: { secure: false }
-}));
+app.use(
+  session({
+    secret: "a super secret key that should be stored securely",
+    resave: false,
+    saveUninitialized: false,
+    cookie: { secure: false },
+  })
+);
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json());
 app.use(express.static(path.join(__dirname, "public")));
@@ -32,7 +34,8 @@ const transporter = nodemailer.createTransport({
   },
 });
 
-const errorMessage = "Whoops! Error connecting to the database–please try again!";
+const errorMessage =
+  "Whoops! Error connecting to the database–please try again!";
 // Snippet 2: Root Route
 // This snippet defines the root route to serve the index.html file.
 app.get("/", (req, res) => {
@@ -65,7 +68,8 @@ pages.forEach((page) => {
 // This snippet adds the revenue report endpoint to filter and fetch data based on the selected filter options.
 app.get("/api/revenue-report", async (req, res) => {
   const { filter, year, month, unit } = req.query;
-  let query = "SELECT p.unit_id, p.amount, p.payment_date, pm.method_name, u.unit_number, u.floor, o.owner_name, t.tenant_name, p.year, p.month FROM payments p JOIN payment_methods pm ON p.method_id = pm.method_id JOIN units u ON p.unit_id = u.unit_id JOIN owners o ON u.owner_id = o.owner_id JOIN tenants t ON u.tenant_id = t.tenant_id WHERE p.year = ?";
+  let query =
+    "SELECT p.unit_id, p.amount, p.payment_date, pm.method_name, u.unit_number, u.floor, o.owner_name, t.tenant_name, p.year, p.month FROM payments p JOIN payment_methods pm ON p.method_id = pm.method_id JOIN units u ON p.unit_id = u.unit_id JOIN owners o ON u.owner_id = o.owner_id JOIN tenants t ON u.tenant_id = t.tenant_id WHERE p.year = ?";
   let queryParams = [year];
 
   if (filter === "month") {
@@ -88,7 +92,8 @@ app.get("/api/revenue-report", async (req, res) => {
 // This snippet adds the expense report endpoint to filter and fetch data based on the selected filter options.
 app.get("/api/expense-report", async (req, res) => {
   const { filter, year, month, category } = req.query;
-  let query = "SELECT category, item, price, expense_date, last_updated FROM expenses WHERE strftime('%Y', expense_date) = ?";
+  let query =
+    "SELECT category, item, price, expense_date, last_updated FROM expenses WHERE strftime('%Y', expense_date) = ?";
   let queryParams = [year];
 
   if (filter === "month") {
@@ -111,8 +116,10 @@ app.get("/api/expense-report", async (req, res) => {
 // This snippet adds the budget details endpoint to fetch data based on the selected year and month.
 app.get("/api/budget-details", async (req, res) => {
   const { filter, year, month } = req.query;
-  let revenueQuery = "SELECT SUM(amount) AS totalRevenue FROM payments WHERE year = ?";
-  let expensesQuery = "SELECT SUM(price) AS totalExpenses FROM expenses WHERE strftime('%Y', expense_date) = ?";
+  let revenueQuery =
+    "SELECT SUM(amount) AS totalRevenue FROM payments WHERE year = ?";
+  let expensesQuery =
+    "SELECT SUM(price) AS totalExpenses FROM expenses WHERE strftime('%Y', expense_date) = ?";
   let queryParams = [year];
 
   if (filter === "month") {
@@ -129,7 +136,10 @@ app.get("/api/budget-details", async (req, res) => {
       [year]
     );
 
-    const availableBalance = balanceResult.starting_balance + revenueResult.totalRevenue - expensesResult.totalExpenses;
+    const availableBalance =
+      balanceResult.starting_balance +
+      revenueResult.totalRevenue -
+      expensesResult.totalExpenses;
 
     res.json({
       totalRevenue: revenueResult.totalRevenue,
@@ -145,7 +155,11 @@ app.get("/api/budget-details", async (req, res) => {
 app.get("/api/months", async (req, res) => {
   try {
     const year = req.query.year;
-    const result = await db.all("SELECT DISTINCT strftime('%m', expense_date) AS month FROM expenses WHERE strftime('%Y', expense_date) = ?", [year]);
+    console.log("DB in /api/months:", db);
+    const result = await db.all(
+      "SELECT DISTINCT strftime('%m', expense_date) AS month FROM expenses WHERE strftime('%Y', expense_date) = ?",
+      [year]
+    );
     res.json(result);
   } catch (error) {
     console.error("Error fetching months:", error);
@@ -155,6 +169,7 @@ app.get("/api/months", async (req, res) => {
 // Snippet 8: Fetch Available Years Endpoint
 app.get("/api/years", async (req, res) => {
   try {
+    console.log("DB in /api/years:", db);
     const result = await db.all("SELECT DISTINCT year FROM years");
     res.json(result);
   } catch (error) {
@@ -162,6 +177,7 @@ app.get("/api/years", async (req, res) => {
     res.status(500).json({ error: error.message });
   }
 });
+
 // Snippet 9: Expense Input Endpoint
 // This snippet adds the expense input endpoint to allow dynamic data input for expenses.
 app.post("/api/expense-input", async (req, res) => {
@@ -210,7 +226,9 @@ app.get("/api/categories", async (req, res) => {
 
 app.get("/api/payment-methods", async (req, res) => {
   try {
-    const result = await db.all("SELECT method_id, method_name FROM payment_methods");
+    const result = await db.all(
+      "SELECT method_id, method_name FROM payment_methods"
+    );
     res.json(result);
   } catch (error) {
     console.error("Error fetching payment methods:", error);
@@ -231,7 +249,9 @@ app.get("/forget-password", (req, res) => {
 app.post("/login", async (req, res) => {
   const { username, password } = req.body;
   try {
-    const user = await db.get("SELECT * FROM users WHERE username = ?", [username]);
+    const user = await db.get("SELECT * FROM users WHERE username = ?", [
+      username,
+    ]);
     if (user && bcrypt.compareSync(password, user.password)) {
       req.session.authenticated = true;
       res.json({ success: true });
@@ -305,7 +325,7 @@ app.get("/api/check-auth", (req, res) => {
 // Initialize database
 initializeDatabase().then((database) => {
   global.db = database;
-  
+  console.log("DB Initialized:", db);
   app.get("/api/data", async (req, res) => {
     try {
       console.log("Fetching revenue...");
@@ -321,10 +341,15 @@ initializeDatabase().then((database) => {
       console.log("Balance result:", balanceResult);
 
       if (!balanceResult || !revenueResult || !expensesResult) {
-        throw new Error("Failed to fetch one or more components of initial data.");
+        throw new Error(
+          "Failed to fetch one or more components of initial data."
+        );
       }
 
-      const availableBalance = balanceResult.starting_balance + revenueResult.totalRevenue - expensesResult.totalExpenses;
+      const availableBalance =
+        balanceResult.starting_balance +
+        revenueResult.totalRevenue -
+        expensesResult.totalExpenses;
 
       res.json({
         totalRevenue: revenueResult.totalRevenue,
