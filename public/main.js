@@ -84,6 +84,7 @@ function populateFloorOptions() {
 }
 // Snippet 3: Fetch Report Data
 // This snippet defines the function to fetch and display report data based on selected filters.
+// Snippet 3: Fetch Report Data
 function fetchReportData() {
   const filter = document.getElementById("filter-option").value;
   const year = document.getElementById("year-select").value;
@@ -95,26 +96,32 @@ function fetchReportData() {
   if (filter === "unit") query += `&unit=${unit}`;
   if (filter === "floor") query += `&floor=${floor}`;
   fetch(query)
-    .then((response) => response.json())
+    .then((response) => {
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      return response.json();
+    })
     .then((data) => {
-      // Populate the table with the fetched data
       const tbody = document.getElementById("report-table-body");
-      tbody.innerHTML = "";
-      data.forEach((record) => {
-        const row = document.createElement("tr");
-        row.innerHTML = `
-          <td>${record.unit_number}</td>
-          <td>${record.floor}</td>
-          <td>${record.owner_name}</td>
-          <td>${record.tenant_name}</td>
-          <td>${record.year}</td>
-          <td>${record.month}</td>
-          <td>${record.amount}</td>
-          <td>${record.payment_date}</td>
-          <td>${record.payment_method}</td>
-        `;
-        tbody.appendChild(row);
-      });
+      if (tbody) {
+        tbody.innerHTML = "";
+        data.forEach((record) => {
+          const row = document.createElement("tr");
+          row.innerHTML = `
+            <td>${record.unit_number}</td>
+            <td>${record.floor}</td>
+            <td>${record.owner_name}</td>
+            <td>${record.tenant_name}</td>
+            <td>${record.year}</td>
+            <td>${record.month}</td>
+            <td>${record.amount}</td>
+            <td>${record.payment_date}</td>
+            <td>${record.payment_method}</td>
+          `;
+          tbody.appendChild(row);
+        });
+      }
     })
     .catch((error) => console.error("Error fetching report data:", error));
 }

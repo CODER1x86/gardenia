@@ -98,7 +98,7 @@ app.get("/api/revenue-report", async (req, res) => {
     res.json(result);
   } catch (error) {
     console.error("Error fetching revenue report:", error);
-    res.status(500).json({ error: errorMessage });
+    res.status(500).json({ error: error.message });
   }
 });
 // Snippet 5: Expense Report Endpoint
@@ -121,7 +121,7 @@ app.get("/api/expense-report", async (req, res) => {
     res.json(result);
   } catch (error) {
     console.error("Error fetching expense report:", error);
-    res.status(500).json({ error: errorMessage });
+    res.status(500).json({ error: error.message });
   }
 });
 // Snippet 6: Budget Details Endpoint
@@ -160,9 +160,10 @@ app.get("/api/budget-details", async (req, res) => {
     });
   } catch (error) {
     console.error("Error fetching budget details:", error);
-    res.status(500).json({ error: errorMessage });
+    res.status(500).json({ error: error.message });
   }
 });
+
 // Snippet 7: Expense Input Endpoint
 // This snippet adds the expense input endpoint to allow dynamic data input for expenses.
 app.post("/api/expense-input", async (req, res) => {
@@ -180,7 +181,7 @@ app.post("/api/expense-input", async (req, res) => {
     res.json({ success: true });
   } catch (error) {
     console.error("Error adding expense:", error);
-    res.status(500).json({ success: false, error: errorMessage });
+    res.status(500).json({ success: false, error: error.message });
   }
 });
 // Snippet 8: Revenue Input Endpoint
@@ -196,7 +197,7 @@ app.post("/api/revenue-input", async (req, res) => {
     res.json({ success: true });
   } catch (error) {
     console.error("Error adding revenue:", error);
-    res.status(500).json({ success: false, error: errorMessage });
+    res.status(500).json({ success: false, error: error.message });
   }
 });
 // Snippet 9: Fetch Categories and Payment Methods Endpoints
@@ -207,7 +208,7 @@ app.get("/api/categories", async (req, res) => {
     res.json(result);
   } catch (error) {
     console.error("Error fetching categories:", error);
-    res.status(500).json({ error: errorMessage });
+    res.status(500).json({ error: error.message });
   }
 });
 
@@ -219,7 +220,7 @@ app.get("/api/payment-methods", async (req, res) => {
     res.json(result);
   } catch (error) {
     console.error("Error fetching payment methods:", error);
-    res.status(500).json({ error: errorMessage });
+    res.status(500).json({ error: error.message });
   }
 });
 // Snippet 10: Configure Server to Handle Clean URLs
@@ -292,12 +293,14 @@ function sendResetEmail(email, token) {
     console.log("Reset email sent: " + info.response);
   });
 }
+
 // Snippet 13: Server Wakeup Probe and Start the Server
 // This snippet adds a wakeup probe endpoint and starts the server.
 app.get("/wakeup", (req, res) => {
   console.log("I'm awake");
   res.send("I'm awake");
 });
+
 // Snippet 14: Check Authentication Status Endpoint
 app.get("/api/check-auth", (req, res) => {
   if (req.session.authenticated) {
