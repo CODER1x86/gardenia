@@ -78,7 +78,7 @@ pages.forEach((page) => {
 
 // Snippet: Header and Footer Route
 
-fastify.get("/header.html", (request, reply) => {
+/*fastify.get("/header.html", (request, reply) => {
   const filePath = path.join(__dirname, "public", "header.html");
   fs.readFile(filePath, (err, data) => {
     if (err) {
@@ -98,7 +98,7 @@ fastify.get("/footer.html", (request, reply) => {
       reply.type("text/html").send(data);
     }
   });
-});
+});*/
 
 
 // Snippet 2: Ensure 'db' has the necessary methods to interact with the SQLite database

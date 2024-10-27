@@ -157,7 +157,7 @@ function fetchData() {
 //Snippet 6: Load Header and Footer
 
 function loadHeaderFooter() {
-  fetch("/header.html") // No need for /public
+  fetch("/header.html")
     .then((response) => response.text())
     .then((html) => {
       document.getElementById("header-placeholder").innerHTML = html;
@@ -165,7 +165,7 @@ function loadHeaderFooter() {
     })
     .catch((error) => console.error("Error loading header:", error));
 
-  fetch("/footer.html") // No need for /public
+  fetch("/footer.html")
     .then((response) => response.text())
     .then((html) => {
       document.getElementById("footer-placeholder").innerHTML = html;
@@ -174,15 +174,11 @@ function loadHeaderFooter() {
 }
 
 function initializeMenu() {
-  document.addEventListener("DOMContentLoaded", function () {
-    const dropdowns = document.querySelectorAll(".dropdown-trigger");
+  const dropdowns = document.querySelectorAll(".dropdown-trigger");
+  if (typeof M !== "undefined") {
     M.Dropdown.init(dropdowns);
-  });
+  }
 }
-
-document.addEventListener("DOMContentLoaded", function () {
-  loadHeaderFooter();
-});
 
 function loadContent() {
   const pathname = window.location.pathname;
