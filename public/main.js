@@ -146,7 +146,6 @@ function loadUnitData() {
   const floorField = document.getElementById("floor");
   const ownerNameField = document.getElementById("owner-name");
   const tenantNameField = document.getElementById("tenant-name");
-
   fetch("/api/units") // Updated to use your new API endpoint
     .then((response) => response.json())
     .then((data) => {
@@ -162,7 +161,6 @@ function loadUnitData() {
         };
         return acc;
       }, {});
-
       unitNumberSelect.addEventListener("change", function () {
         const selectedUnit = this.value;
         if (unitData[selectedUnit]) {
@@ -208,7 +206,6 @@ function saveData(data) {
   } else if (pathname === "/revenue-input.html") {
     apiUrl = "/api/revenue"; // Updated to use your new API endpoint
   }
-
   fetch(apiUrl, {
     method: "POST",
     headers: {
@@ -249,7 +246,6 @@ function setupAuthListener() {
 function validateForm() {
   const inputFields = document.querySelectorAll('input[type="number"]');
   let isValid = true;
-
   inputFields.forEach(input => {
     if (input.value === "" || isNaN(input.value)) {
       input.style.border = '2px solid red';
@@ -259,7 +255,6 @@ function validateForm() {
       input.style.border = 'none';
     }
   });
-
   return isValid;
 }
 
