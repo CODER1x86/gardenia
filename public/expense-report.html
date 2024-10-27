@@ -20,7 +20,8 @@
         <option value="" disabled selected>Choose a filter</option>
         <option value="year">Year</option>
         <option value="month">Month</option>
-        <option value="category">By Category</option>
+        <option value="category">Category</option>
+      </select>
       </select>
       <div id="year-select-container" style="display: none;">
         <label for="year-select">Select Year:</label>
@@ -41,9 +42,9 @@
         <tr>
           <th>Category</th>
           <th>Item</th>
-          <th>Year</th>
-          <th>Month</th>
           <th>Amount</th>
+          <th>Payment Date</th>
+          <th>Last Updated</th>
         </tr>
       </thead>
       <tbody id="expense-table-body">
@@ -73,6 +74,7 @@
 
   <div id="footer-placeholder"></div> <!-- Placeholder for the footer -->
 
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/js/materialize.min.js"></script>
   <script src="/public/main.js"></script>
 </body>
 </html>

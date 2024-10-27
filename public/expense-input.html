@@ -8,59 +8,46 @@
   <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/css/materialize.min.css">
   <link rel="stylesheet" href="/public/style.css">
-  <style>
-    .new-category { display: none; }
-    .action-buttons { text-align: center; margin-top: 20px; }
-  </style>
 </head>
 <body>
-  <div id="header-placeholder"></div>
-  <!-- Placeholder for the header -->
+  <div id="header-placeholder"></div> <!-- Placeholder for the header -->
 
   <div class="container">
     <h4>Enter Expense</h4>
-    <form id="input-form">
+    <form id="expense-input-form">
       <div class="input-field">
         <label for="category">Category</label>
         <select id="category" class="browser-default" required>
-          <!-- Categories will be populated dynamically -->
           <option value="" disabled selected>Choose a category</option>
-          <option value="not-listed">Not listed</option>
+          <!-- Categories will be populated dynamically -->
         </select>
       </div>
-      <div class="input-field new-category">
-        <input id="new-category" type="text">
-        <label for="new-category">New Category</label>
+      <div class="input-field">
+        <label for="new-category">Or define new category:</label>
+        <input type="text" id="new-category" placeholder="New Category" />
       </div>
       <div class="input-field">
         <label for="item">Item</label>
-        <input id="item" type="text" required>
+        <input type="text" id="item" required />
       </div>
       <div class="input-field">
         <label for="amount">Amount</label>
-        <input id="amount" type="number" required>
+        <input type="number" id="amount" required />
       </div>
       <div class="input-field">
-        <label for="year">Year</label>
-        <select id="year" class="browser-default" required>
-          <!-- Year options will be populated dynamically -->
-        </select>
-      </div>
-      <div class="input-field">
-        <label for="payment-day">Payment Day</label>
-        <input type="date" id="payment-day" required>
+        <label for="payment-date">Payment Date</label>
+        <input type="date" id="payment-date" required />
       </div>
       <div class="action-buttons">
         <button type="submit" class="btn waves-effect waves-light">Submit</button>
-        <button type="button" class="btn" id="clear-form">Clear</button>
-        <button type="button" class="btn" id="add-new-expense" style="display: none">Add New Expense</button>
+        <button type="reset" class="btn">Clear</button>
       </div>
     </form>
   </div>
 
-  <div id="footer-placeholder"></div>
-  <!-- Placeholder for the footer -->
+  <div id="footer-placeholder"></div> <!-- Placeholder for the footer -->
 
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/js/materialize.min.js"></script>
   <script src="/public/main.js"></script>
 </body>
 </html>

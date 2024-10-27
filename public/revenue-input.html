@@ -14,7 +14,7 @@
 
   <div class="container">
     <h4>Enter Revenue</h4>
-    <form id="input-form">
+    <form id="revenue-input-form">
       <div class="input-field">
         <label for="unit-number">Unit Number</label>
         <select id="unit-number" class="browser-default" required>
@@ -22,41 +22,31 @@
           <!-- Unit options will be populated dynamically -->
         </select>
       </div>
-      <div id="unit-details" style="display: none;">
-        <table>
-          <tr><td>Floor:</td><td id="floor"></td></tr>
-          <tr><td>Owner Name:</td><td id="owner-name"></td></tr>
-          <tr><td>Owner Phone:</td><td id="owner-phone"></td></tr>
-          <tr><td>Tenant Name:</td><td id="tenant-name"></td></tr>
-          <tr><td>Tenant Phone:</td><td id="tenant-phone"></td></tr>
-          <tr><td>Last Payment Month:</td><td id="last-payment-month"></td></tr>
-          <tr><td>Last Payment Date:</td><td id="last-payment-date"></td></tr>
-        </table>
-      </div>
-      <div class="input-field">
-        <label for="year">Year</label>
-        <select id="year" class="browser-default" required>
-          <!-- Year options will be populated dynamically -->
-        </select>
-      </div>
-      <div class="input-field">
-        <label for="payment-day">Payment Day</label>
-        <input type="date" id="payment-day" required>
-      </div>
       <div class="input-field">
         <label for="amount">Amount</label>
-        <input id="amount" type="number" required>
+        <input type="number" id="amount" required />
+      </div>
+      <div class="input-field">
+        <label for="payment-date">Payment Date</label>
+        <input type="date" id="payment-date" required />
+      </div>
+      <div class="input-field">
+        <label for="payment-method">Method of Payment</label>
+        <select id="payment-method" class="browser-default" required>
+          <option value="" disabled selected>Choose a payment method</option>
+          <!-- Payment methods will be populated dynamically -->
+        </select>
       </div>
       <div class="action-buttons">
         <button type="submit" class="btn waves-effect waves-light">Submit</button>
-        <button type="button" class="btn" id="clear-form">Clear</button>
-        <button type="button" class="btn" id="add-new-revenue" style="display:none;">Add New Revenue</button>
+        <button type="reset" class="btn">Clear</button>
       </div>
     </form>
   </div>
 
   <div id="footer-placeholder"></div> <!-- Placeholder for the footer -->
 
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/js/materialize.min.js"></script>
   <script src="/public/main.js"></script>
 </body>
 </html>

@@ -13,13 +13,14 @@
   <div id="header-placeholder"></div> <!-- Placeholder for the header -->
 
   <div class="container">
-    <h4>Budget Details (as of <span id="currentyear"></span>)</h4>
+    <h4><a href="budget-details.html" style="text-decoration:none; color:inherit;">Budget Details (as of <span id="currentyear"></span>)</a></h4>
     <div class="filter-container">
       <label for="filter-option">Filter By:</label>
       <select id="filter-option" class="browser-default">
         <option value="" disabled selected>Choose a filter</option>
         <option value="year">Year</option>
         <option value="month">Month</option>
+      </select>
       </select>
       <div id="year-select-container" style="display: none;">
         <label for="year-select">Select Year:</label>
@@ -34,19 +35,18 @@
     <table class="highlight responsive-table">
       <thead>
         <tr>
-          <th>Year</th>
-          <th>Month</th>
-          <th>Revenue</th>
-          <th>Expenses</th>
+          <th>Total Revenue</th>
+          <th>Total Expenses</th>
+          <th>Available Balance</th>
         </tr>
       </thead>
-      <tbody id="details-table-body">
+      <tbody id="budget-table-body">
         <!-- Budget details data will be populated here -->
       </tbody>
     </table>
     <div class="action-buttons">
-      <a class="btn waves-effect waves-light" href="revenue-report.html">View Revenue Reports</a>
       <a class="btn waves-effect waves-light" href="expense-report.html">View Expense Reports</a>
+      <a class="btn waves-effect waves-light" href="revenue-report.html">View Revenue Reports</a>
       <a class="btn waves-effect waves-light" href="budget-summary.html">View Budget Summary</a>
     </div>
     <br>
@@ -67,6 +67,7 @@
 
   <div id="footer-placeholder"></div> <!-- Placeholder for the footer -->
 
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/js/materialize.min.js"></script>
   <script src="/public/main.js"></script>
 </body>
 </html>
