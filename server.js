@@ -154,7 +154,7 @@ app.get("/api/budget-details", async (req, res) => {
   }
 });
 // Snippet 7: Fetch Available Months Endpoint
-app.get("/api/months", async (req, res) => {
+/*app.get("/api/months", async (req, res) => {
   try {
     const year = req.query.year;
     console.log('DB in /api/months:', global.db);
@@ -165,8 +165,23 @@ app.get("/api/months", async (req, res) => {
     res.status(500).json({ error: error.message });
   }
 });
+*/
+// Snippet: Fetch Available Months Endpoint (Callback)
+app.get("/api/months", (req, res) => {
+  const year = req.query.year;
+  console.log('DB in /api/months:', global.db);
+  global.db.all("SELECT DISTINCT strftime('%m', expense_date) AS month FROM expenses WHERE strftime('%Y', expense_date) = ?", [year], (err, rows) => {
+    if (err) {
+      console.error("Error fetching months:", err);
+      res.status(500).json({ error: err.message });
+    } else {
+      res.json(rows);
+    }
+  });
+});
+
 // Snippet 8: Fetch Available Years Endpoint
-app.get("/api/years", async (req, res) => {
+/*app.get("/api/years", async (req, res) => {
   try {
     console.log('DB in /api/years:', global.db);
     const result = await global.db.all("SELECT DISTINCT year FROM years");
@@ -175,7 +190,23 @@ app.get("/api/years", async (req, res) => {
     console.error("Error fetching years:", error);
     res.status(500).json({ error: error.message });
   }
+}); */
+// Snippet: Fetch Available Years Endpoint (.each)
+app.get("/api/years", (req, res) => {
+  console.log('DB in /api/years:', global.db);
+  const years = [];
+  global.db.each("SELECT DISTINCT year FROM years", (err, row) => {
+    if (err) {
+      console.error("Error fetching years:", err);
+      res.status(500).json({ error: err.message });
+    } else {
+      years.push(row);
+    }
+  }, () => {
+    res.json(years);
+  });
 });
+
 
 // Snippet 9: Expense Input Endpoint
 // This snippet adds the expense input endpoint to allow dynamic data input for expenses.
