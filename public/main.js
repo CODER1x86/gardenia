@@ -414,4 +414,54 @@ document.getElementById("logout-button").addEventListener("click", () => {
     .catch((error) => console.error("Error during logout:", error));
 });
 
+//Snippet 12: Handle Login Form Submission: Ensure the login form submission triggers the backend login endpoint.
+
+document
+  .getElementById("login-form")
+  .addEventListener("submit", function (event) {
+    event.preventDefault();
+    const username = document.getElementById("username").value;
+    const password = document.getElementById("password").value;
+    fetch("/login", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ username, password }),
+    })
+      .then((response) => response.json())
+      .then((data) => {
+        if (data.success) {
+          checkAuth();
+          window.location.href = "/budget-summary.html"; // Redirect after successful login
+        } else {
+          alert("Login failed!");
+        }
+      })
+      .catch((error) => console.error("Error during login:", error));
+  });
+
+//Snippet 13: Handle Forget Password Form Submission: Ensure the forget password form submission triggers the backend password reset request endpoint.
+
+document
+  .getElementById("forget-password-form")
+  .addEventListener("submit", function (event) {
+    event.preventDefault();
+    const email = document.getElementById("email").value;
+    fetch("/request-password-reset", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email }),
+    })
+      .then((response) => response.json())
+      .then((data) => {
+        if (data.success) {
+          alert("Reset email sent!");
+        } else {
+          alert("Email not found!");
+        }
+      })
+      .catch((error) =>
+        console.error("Error requesting password reset:", error)
+      );
+  });
+
 checkAuth(); // Check auth status on page load

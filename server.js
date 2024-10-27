@@ -9,6 +9,14 @@ const session = require("@fastify/session");
 const cookie = require("@fastify/cookie");
 const bcrypt = require("bcrypt");
 const nodemailer = require("nodemailer");
+// Setup email transport
+const transporter = nodemailer.createTransport({
+  service: "gmail", // Use your email service
+  auth: {
+    user: "your-email@gmail.com",
+    pass: "your-email-password",
+  },
+});
 const errorMessage =
   "Whoops! Error connecting to the database–please try again!";
 
@@ -257,3 +265,65 @@ fastify.get("/forget-password", (request, reply) => {
   });
 });
 
+//Snippet 10: Login Endpoint: Handle login requests by verifying user credentials.
+
+fastify.post("/login", async (request, reply) => {
+  const { username, password } = request.body;
+  try {
+    const user = await db.get("SELECT * FROM users WHERE username = ?", [
+      username,
+    ]);
+    if (user && bcrypt.compareSync(password, user.password)) {
+      request.session.authenticated = true;
+      reply.send({ success: true });
+    } else {
+      reply.send({ success: false });
+    }
+  } catch (error) {
+    console.error("Error logging in:", error);
+    reply.send({ success: false });
+  }
+});
+
+//Snippet 11: Password Reset Request Endpoint : Handle requests to send a password reset email.
+
+fastify.post("/request-password-reset", async (request, reply) => {
+  const { email } = request.body;
+  try {
+    const user = await db.get("SELECT * FROM users WHERE email = ?", [email]);
+    if (user) {
+      const resetToken = generateResetToken();
+      await db.run("UPDATE users SET reset_token = ? WHERE email = ?", [
+        resetToken,
+        email,
+      ]);
+      sendResetEmail(email, resetToken); // Implement sendResetEmail function
+      reply.send({ success: true, message: "Reset email sent" });
+    } else {
+      reply.send({ success: false, message: "Email not found" });
+    }
+  } catch (error) {
+    console.error("Error requesting password reset:", error);
+    reply.send({ success: false });
+  }
+});
+
+function generateResetToken() {
+  return Math.random().toString(36).substr(2);
+}
+
+function sendResetEmail(email, token) {
+  const mailOptions = {
+    from: "your-email@gmail.com",
+    to: email,
+    subject: "Password Reset",
+    text: `Please use the following token to reset your password: ${token}`,
+  };
+
+  transporter.sendMail(mailOptions, (error, info) => {
+    if (error) {
+      return console.error("Error sending reset email:", error);
+    }
+    console.log("Reset email sent: " + info.response);
+  });
+}
