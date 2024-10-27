@@ -42,7 +42,15 @@ fastify.get("/", (request, reply) => {
     }
   });
 });
-// Snippet 3: Serve Static Pages
+// Snippet 3: Serve Static and Dynamic Routes Pages
+
+// This snippet ensures that static files like CSS and JavaScript are served correctly.
+const fastifyStatic = require('@fastify/static');
+fastify.register(fastifyStatic, {
+  root: path.join(__dirname, 'public'),
+  prefix: '/public/', // optional: default '/'
+});
+
 // This snippet defines routes to serve static pages from the public folder.
 const pages = [
   "index.html",
