@@ -84,7 +84,6 @@ function populateFloorOptions() {
 }
 // Snippet 3: Fetch Report Data
 // This snippet defines the function to fetch and display report data based on selected filters.
-// Snippet 3: Fetch Report Data
 function fetchReportData() {
   const filter = document.getElementById("filter-option").value;
   const year = document.getElementById("year-select").value;
@@ -148,10 +147,18 @@ function fetchData() {
       return response.json();
     })
     .then(data => {
-      if (document.getElementById("available-balance")) {
-        document.getElementById("available-balance").textContent = data.availableBalance;
-        document.getElementById("total-revenue").textContent = data.totalRevenue;
-        document.getElementById("total-expenses").textContent = data.totalExpenses;
+      const availableBalance = document.getElementById("available-balance");
+      const totalRevenue = document.getElementById("total-revenue");
+      const totalExpenses = document.getElementById("total-expenses");
+
+      if (availableBalance) {
+        availableBalance.textContent = data.availableBalance;
+      }
+      if (totalRevenue) {
+        totalRevenue.textContent = data.totalRevenue;
+      }
+      if (totalExpenses) {
+        totalExpenses.textContent = data.totalExpenses;
       }
     })
     .catch(error => {
@@ -165,15 +172,21 @@ function loadHeaderFooter() {
   fetch("/header.html")
     .then(response => response.text())
     .then(html => {
-      document.getElementById("header-placeholder").innerHTML = html;
-      initializeMenu(); // Make sure to initialize menu after loading header
+      const headerPlaceholder = document.getElementById("header-placeholder");
+      if (headerPlaceholder) {
+        headerPlaceholder.innerHTML = html;
+        initializeMenu(); // Make sure to initialize menu after loading header
+      }
     })
     .catch(error => console.error("Error loading header:", error));
 
   fetch("/footer.html")
     .then(response => response.text())
     .then(html => {
-      document.getElementById("footer-placeholder").innerHTML = html;
+      const footerPlaceholder = document.getElementById("footer-placeholder");
+      if (footerPlaceholder) {
+        footerPlaceholder.innerHTML = html;
+      }
     })
     .catch(error => console.error("Error loading footer:", error));
 }
@@ -206,7 +219,10 @@ function loadContent() {
       break;
     case "/expense-input.html":
     case "/revenue-input.html":
-      document.getElementById("input-form").addEventListener("submit", handleFormSubmit);
+      const inputForm = document.getElementById("input-form");
+      if (inputForm) {
+        inputForm.addEventListener("submit", handleFormSubmit);
+      }
       loadUnitData(); // Load unit data
       break;
   }
@@ -225,7 +241,12 @@ function handleFormSubmit(event) {
 
 function loadBudgetSummary() {
   fetch("/api/data")
-    .then((response) => response.json())
+    .then((response) => {
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      return response.json();
+    })
     .then((data) => {
       let totalRevenue = 12362; // Opening balance of 2024
       let totalExpenses = 0;
@@ -234,9 +255,19 @@ function loadBudgetSummary() {
         if (!isNaN(totalPaid)) totalRevenue += totalPaid;
       });
       const availableBalance = totalRevenue - totalExpenses;
-      document.getElementById("available-balance").textContent = availableBalance.toFixed(2);
-      document.getElementById("total-revenue").textContent = totalRevenue.toFixed(2);
-      document.getElementById("total-expenses").textContent = totalExpenses.toFixed(2);
+      const availableBalanceElem = document.getElementById("available-balance");
+      const totalRevenueElem = document.getElementById("total-revenue");
+      const totalExpensesElem = document.getElementById("total-expenses");
+
+      if (availableBalanceElem) {
+        availableBalanceElem.textContent = availableBalance.toFixed(2);
+      }
+      if (totalRevenueElem) {
+        totalRevenueElem.textContent = totalRevenue.toFixed(2);
+      }
+      if (totalExpensesElem) {
+        totalExpensesElem.textContent = totalExpenses.toFixed(2);
+      }
     })
     .catch((error) => {
       console.error("Error loading budget summary:", error);
@@ -246,23 +277,33 @@ function loadBudgetSummary() {
 // This snippet defines functions to load and display expense and revenue reports.
 function loadExpenseReport() {
   fetch("/api/expense-report")
-    .then((response) => response.json())
+    .then((response) => {
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      return response.json();
+    })
     .then((data) => {
       let totalExpenses = 0;
       const tableBody = document.getElementById("expense-table-body");
-      data.forEach((row) => {
-        const rowElement = document.createElement("tr");
-        rowElement.innerHTML = `
-          <td>${row.category}</td>
-          <td>${row.item}</td>
-          <td>${row.price}</td>
-          <td>${row.expense_date}</td>
-          <td>${row.last_updated}</td>
-        `;
-        tableBody.appendChild(rowElement);
-        totalExpenses += parseFloat(row.price);
-      });
-      document.getElementById("total-expenses").textContent = totalExpenses.toFixed(2);
+      if (tableBody) {
+        data.forEach((row) => {
+          const rowElement = document.createElement("tr");
+          rowElement.innerHTML = `
+            <td>${row.category}</td>
+            <td>${row.item}</td>
+            <td>${row.price}</td>
+            <td>${row.expense_date}</td>
+            <td>${row.last_updated}</td>
+          `;
+          tableBody.appendChild(rowElement);
+          totalExpenses += parseFloat(row.price);
+        });
+      }
+      const totalExpensesElem = document.getElementById("total-expenses");
+      if (totalExpensesElem) {
+        totalExpensesElem.textContent = totalExpenses.toFixed(2);
+      }
     })
     .catch((error) => {
       console.error("Error loading expense report:", error);
@@ -271,24 +312,31 @@ function loadExpenseReport() {
 
 function loadRevenueReport() {
   fetch("/api/revenue-report")
-    .then((response) => response.json())
+    .then((response) => {
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      return response.json();
+    })
     .then((data) => {
       const tableBody = document.getElementById("report-table-body");
-      data.forEach((row) => {
-        const rowElement = document.createElement("tr");
-        rowElement.innerHTML = `
-          <td>${row.unit_number}</td>
-          <td>${row.floor}</td>
-          <td>${row.owner_name}</td>
-          <td>${row.tenant_name}</td>
-          <td>${row.year}</td>
-          <td>${row.month}</td>
-          <td>${row.amount}</td>
-          <td>${row.payment_date}</td>
-          <td>${row.payment_method}</td>
-        `;
-        tableBody.appendChild(rowElement);
-      });
+      if (tableBody) {
+        data.forEach((row) => {
+          const rowElement = document.createElement("tr");
+          rowElement.innerHTML = `
+            <td>${row.unit_number}</td>
+            <td>${row.floor}</td>
+            <td>${row.owner_name}</td>
+            <td>${row.tenant_name}</td>
+            <td>${row.year}</td>
+            <td>${row.month}</td>
+            <td>${row.amount}</td>
+            <td>${row.payment_date}</td>
+            <td>${row.payment_method}</td>
+          `;
+          tableBody.appendChild(rowElement);
+        });
+      }
     })
     .catch((error) => {
       console.error("Error loading revenue report:", error);
@@ -303,7 +351,12 @@ function loadUnitData() {
   const tenantNameField = document.getElementById("tenant-name");
 
   fetch("/api/units") // Updated to use your new API endpoint
-    .then((response) => response.json())
+    .then((response) => {
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      return response.json();
+    })
     .then((data) => {
       const unitData = data.reduce((acc, unit) => {
         acc[unit.unit_number] = {
@@ -318,21 +371,23 @@ function loadUnitData() {
         return acc;
       }, {});
 
-      unitNumberSelect.addEventListener("change", function () {
-        const selectedUnit = this.value;
-        if (unitData[selectedUnit]) {
-          floorField.textContent = unitData[selectedUnit].floor;
-          ownerNameField.textContent = unitData[selectedUnit].owner;
-          tenantNameField.textContent = unitData[selectedUnit].tenant || "";
-          document.getElementById("owner-phone").textContent = unitData[selectedUnit].ownerPhone;
-          document.getElementById("tenant-phone").textContent = unitData[selectedUnit].tenantPhone || "";
-          document.getElementById("last-payment-month").textContent = unitData[selectedUnit].lastPaymentMonth;
-          document.getElementById("last-payment-date").textContent = unitData[selectedUnit].lastPaymentDate;
-          document.getElementById("unit-details").style.display = "block";
-        } else {
-          document.getElementById("unit-details").style.display = "none";
-        }
-      });
+      if (unitNumberSelect) {
+        unitNumberSelect.addEventListener("change", function () {
+          const selectedUnit = this.value;
+          if (unitData[selectedUnit]) {
+            floorField.textContent = unitData[selectedUnit].floor;
+            ownerNameField.textContent = unitData[selectedUnit].owner;
+            tenantNameField.textContent = unitData[selectedUnit].tenant || "";
+            document.getElementById("owner-phone").textContent = unitData[selectedUnit].ownerPhone;
+            document.getElementById("tenant-phone").textContent = unitData[selectedUnit].tenantPhone || "";
+            document.getElementById("last-payment-month").textContent = unitData[selectedUnit].lastPaymentMonth;
+            document.getElementById("last-payment-date").textContent = unitData[selectedUnit].lastPaymentDate;
+            document.getElementById("unit-details").style.display = "block";
+          } else {
+            document.getElementById("unit-details").style.display = "none";
+          }
+        });
+      }
     })
     .catch((error) => {
       console.error("Error loading unit data:", error);
@@ -356,7 +411,10 @@ function saveData(data) {
     .then((response) => {
       if (response.ok) {
         alert("Data saved successfully!");
-        document.getElementById("input-form").reset();
+        const inputForm = document.getElementById("input-form");
+        if (inputForm) {
+          inputForm.reset();
+        }
       } else {
         alert("Failed to save data.");
       }
@@ -368,7 +426,6 @@ function saveData(data) {
 }
 // Snippet 11: Authentication and Authorization
 // This snippet defines functions to handle authentication, including checking auth status, logging in, and logging out.
-// Snippet 11: Authentication and Authorization
 function checkAuth() {
   fetch("/api/check-auth")
     .then(response => {
@@ -392,11 +449,8 @@ function checkAuth() {
         if (logoutLink) logoutLink.style.display = "none";
       }
     })
-    .catch(error => {
-      console.error("Error checking auth status:", error);
-    });
+    .catch(error => console.error("Error checking auth status:", error));
 }
-
 
 // Attach event listeners conditionally
 document.addEventListener("DOMContentLoaded", function () {
@@ -410,7 +464,12 @@ document.addEventListener("DOMContentLoaded", function () {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ username, password }),
       })
-        .then((response) => response.json())
+        .then((response) => {
+          if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+          }
+          return response.json();
+        })
         .then((data) => {
           if (data.success) {
             checkAuth();
@@ -426,7 +485,12 @@ document.addEventListener("DOMContentLoaded", function () {
   if (logoutButton) {
     logoutButton.addEventListener("click", () => {
       fetch("/logout", { method: "POST" })
-        .then((response) => response.json())
+        .then((response) => {
+          if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+          }
+          return response.json();
+        })
         .then((data) => {
           if (data.success) {
             checkAuth();
@@ -450,7 +514,12 @@ document.addEventListener("DOMContentLoaded", function () {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ username, password }),
       })
-        .then((response) => response.json())
+        .then((response) => {
+          if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+          }
+          return response.json();
+        })
         .then((data) => {
           if (data.success) {
             checkAuth();
@@ -466,6 +535,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
 // Snippet 13: Handle Forget Password Form Submission
 // This snippet ensures the forget password form submission triggers the backend password reset request endpoint.
+// Snippet 13: Handle Forget Password Form Submission
 document.addEventListener("DOMContentLoaded", function () {
   const forgetPasswordForm = document.getElementById("forget-password-form");
   if (forgetPasswordForm) {
@@ -477,7 +547,12 @@ document.addEventListener("DOMContentLoaded", function () {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email }),
       })
-        .then((response) => response.json())
+        .then((response) => {
+          if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+          }
+          return response.json();
+        })
         .then((data) => {
           if (data.success) {
             alert("Reset email sent!");
