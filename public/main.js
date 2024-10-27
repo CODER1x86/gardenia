@@ -179,6 +179,9 @@ function initializeMenu() {
     M.Dropdown.init(dropdowns);
   }
 }
+document.addEventListener("DOMContentLoaded", function () {
+  loadHeaderFooter();
+});
 
 function loadContent() {
   const pathname = window.location.pathname;
