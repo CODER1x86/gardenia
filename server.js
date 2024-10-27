@@ -123,15 +123,19 @@ fastify.get("/api/expenses", async (request, reply) => {
   const status = data.error ? 400 : 200;
   reply.status(status).send(data);
 });
-// API route to get budget summary data
+
+// Ensure this is the only definition of /api/data
 fastify.get("/api/data", async (request, reply) => {
   let data = {};
   try {
-    // Replace with your actual database query to fetch data
-    const result = await db.get("SELECT * FROM budget_summary_table");
-    data.availableBalance = result.availableBalance;
-    data.totalRevenue = result.totalRevenue;
-    data.totalExpenses = result.totalExpenses;
+    const revenueResult = await db.getRevenue();
+    const expensesResult = await db.getExpensesSum();
+    const balanceResult = await db.getBalance();
+
+    data.availableBalance = balanceResult.starting_balance + revenueResult.totalRevenue - expensesResult.totalExpenses;
+    data.totalRevenue = revenueResult.totalRevenue;
+    data.totalExpenses = expensesResult.totalExpenses;
+
     reply.send(data);
   } catch (error) {
     console.error("Error fetching data:", error);
