@@ -359,24 +359,28 @@ function checkAuth() {
   fetch("/api/check-auth")
     .then((response) => response.json())
     .then((data) => {
+      const authenticatedLinks = document.getElementById("authenticated-links");
+      const loginLink = document.getElementById("login-link");
+      const logoutLink = document.getElementById("logout-link");
+      
       if (data.authenticated) {
-        document.getElementById("authenticated-links").style.display = "block";
-        document.getElementById("login-link").style.display = "none";
-        document.getElementById("logout-link").style.display = "block";
+        if (authenticatedLinks) authenticatedLinks.style.display = "block";
+        if (loginLink) loginLink.style.display = "none";
+        if (logoutLink) logoutLink.style.display = "block";
       } else {
-        document.getElementById("authenticated-links").style.display = "none";
-        document.getElementById("login-link").style.display = "block";
-        document.getElementById("logout-link").style.display = "none";
+        if (authenticatedLinks) authenticatedLinks.style.display = "none";
+        if (loginLink) loginLink.style.display = "block";
+        if (logoutLink) logoutLink.style.display = "none";
       }
     })
     .catch((error) => console.error("Error checking auth status:", error));
 }
 
+// Attach event listeners conditionally
 document.addEventListener("DOMContentLoaded", function () {
   const loginButton = document.getElementById("login-button");
   if (loginButton) {
     loginButton.addEventListener("click", () => {
-      console.log("Login button clicked");
       const username = prompt("Enter username:");
       const password = prompt("Enter password:");
       fetch("/login", {

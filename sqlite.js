@@ -1,5 +1,4 @@
 // Snippet 1: Definitions and Database Initialization
-// This snippet includes necessary definitions, and initializes the SQLite database.
 const fs = require("fs");
 const path = require("path");
 const sqlite3 = require("sqlite3").verbose();
@@ -14,8 +13,8 @@ dbWrapper.open({ filename: dbFile, driver: sqlite3.Database }).then(dBase => {
 }).catch(dbError => {
   console.error("Error initializing database:", dbError);
 });
-// Snippet 2: Database Methods - Expenses
-// This snippet defines methods for interacting with the expenses data in the database.
+
+// Snippet 2: Database Methods - Expenses, Revenue, Summary, Balance
 module.exports = {
   getExpenses: async () => {
     try {
@@ -35,11 +34,7 @@ module.exports = {
       console.error("Error adding expense:", dbError);
     }
     return success.changes > 0 ? true : false;
-  }
-};
-// Snippet 3: Database Methods - Revenue, Expenses Summary, and Balance
-// This snippet defines methods for interacting with the revenue, expenses summary, and balance data in the database.
-module.exports = {
+  },
   getRevenue: async () => {
     try {
       return await db.get("SELECT SUM(total_paid) AS totalRevenue FROM revenue");

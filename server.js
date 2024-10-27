@@ -310,24 +310,15 @@ app.get("/api/check-auth", (req, res) => {
 // Snippet 15: Fetch Initial Data Endpoint
 app.get("/api/data", async (req, res) => {
   try {
-    const revenueResult = await db.get(
-      "SELECT SUM(amount) AS totalRevenue FROM payments"
-    );
-    const expensesResult = await db.get(
-      "SELECT SUM(price) AS totalExpenses FROM expenses"
-    );
-    const balanceResult = await db.get(
-      "SELECT starting_balance FROM balance WHERE year_id = (SELECT year_id FROM years WHERE year = strftime('%Y', 'now'))"
-    );
+    const revenueResult = await db.all("SELECT SUM(amount) AS totalRevenue FROM payments");
+    const expensesResult = await db.all("SELECT SUM(price) AS totalExpenses FROM expenses");
+    const balanceResult = await db.all("SELECT starting_balance FROM balance WHERE year_id = (SELECT year_id FROM years WHERE year = strftime('%Y', 'now'))");
 
-    const availableBalance =
-      balanceResult.starting_balance +
-      revenueResult.totalRevenue -
-      expensesResult.totalExpenses;
+    const availableBalance = balanceResult[0].starting_balance + revenueResult[0].totalRevenue - expensesResult[0].totalExpenses;
 
     res.json({
-      totalRevenue: revenueResult.totalRevenue,
-      totalExpenses: expensesResult.totalExpenses,
+      totalRevenue: revenueResult[0].totalRevenue,
+      totalExpenses: expensesResult[0].totalExpenses,
       availableBalance: availableBalance,
     });
   } catch (error) {
