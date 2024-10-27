@@ -7,14 +7,17 @@ const dbFile = path.join(__dirname, "./.data/database.db");
 let db;
 
 // Open database without table creation
-dbWrapper.open({ filename: dbFile, driver: sqlite3.Database }).then(dBase => {
-  db = dBase;
-  console.log("Database initialized successfully");
-}).catch(dbError => {
-  console.error("Error initializing database:", dbError);
-});
+dbWrapper
+  .open({ filename: dbFile, driver: sqlite3.Database })
+  .then((dBase) => {
+    db = dBase;
+    console.log("Database initialized successfully");
+  })
+  .catch((dbError) => {
+    console.error("Error initializing database:", dbError);
+  });
 
-module.exports = { 
+module.exports = {
   getExpenses: async () => {
     try {
       return await db.all("SELECT * FROM expenses");
@@ -22,16 +25,17 @@ module.exports = {
       console.error("Error fetching expenses:", dbError);
     }
   },
-  addExpense: async expense => {
+  addExpense: async (expense) => {
     let success = false;
     try {
-      success = await db.run("INSERT INTO expenses (category, item, price, expense_date, last_updated) VALUES (?, ?, ?, ?, ?)", [
-        expense.category,
-        expense.item,
-        expense.price,
-        expense.expense_date,
-        expense.last_updated
-      ]);
+      success = await db.run(`
+  CREATE TABLE IF NOT EXISTS users (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    username TEXT UNIQUE,
+    password TEXT,
+    email TEXT
+  );
+`);
     } catch (dbError) {
       console.error("Error adding expense:", dbError);
     }
