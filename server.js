@@ -95,7 +95,7 @@ app.get("/api/revenue-report", async (req, res) => {
 // This snippet adds the expense report endpoint to filter and fetch data based on the selected filter options.
 app.get("/api/expense-report", async (req, res) => {
   const { filter, year, month, category } = req.query;
-  let query = "SELECT * FROM expenses WHERE strftime('%Y', expense_date) = ?";
+  let query = "SELECT category, item, price, expense_date, last_updated FROM expenses WHERE strftime('%Y', expense_date) = ?";
   let queryParams = [year];
 
   if (filter === "month") {
@@ -117,14 +117,12 @@ app.get("/api/expense-report", async (req, res) => {
 // Snippet 6: Budget Details Endpoint
 // This snippet adds the budget details endpoint to fetch data based on the selected year and month.
 app.get("/api/budget-details", async (req, res) => {
-  const { year, month } = req.query;
-  let revenueQuery =
-    "SELECT SUM(amount) AS totalRevenue FROM payments WHERE year = ?";
-  let expensesQuery =
-    "SELECT SUM(price) AS totalExpenses FROM expenses WHERE strftime('%Y', expense_date) = ?";
+  const { filter, year, month } = req.query;
+  let revenueQuery = "SELECT SUM(amount) AS totalRevenue FROM payments WHERE year = ?";
+  let expensesQuery = "SELECT SUM(price) AS totalExpenses FROM expenses WHERE strftime('%Y', expense_date) = ?";
   let queryParams = [year];
 
-  if (month) {
+  if (filter === "month") {
     revenueQuery += " AND month = ?";
     expensesQuery += " AND strftime('%m', expense_date) = ?";
     queryParams.push(month);
@@ -133,15 +131,9 @@ app.get("/api/budget-details", async (req, res) => {
   try {
     const revenueResult = await db.get(revenueQuery, queryParams);
     const expensesResult = await db.get(expensesQuery, queryParams);
-    const balanceResult = await db.get(
-      "SELECT starting_balance FROM balance WHERE year_id = (SELECT year_id FROM years WHERE year = ?)",
-      [year]
-    );
+    const balanceResult = await db.get("SELECT starting_balance FROM balance WHERE year_id = (SELECT year_id FROM years WHERE year = ?)", [year]);
 
-    const availableBalance =
-      balanceResult.starting_balance +
-      revenueResult.totalRevenue -
-      expensesResult.totalExpenses;
+    const availableBalance = balanceResult.starting_balance + revenueResult.totalRevenue - expensesResult.totalExpenses;
 
     res.json({
       totalRevenue: revenueResult.totalRevenue,
