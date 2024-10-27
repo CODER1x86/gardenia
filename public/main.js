@@ -10,18 +10,28 @@ document.addEventListener("DOMContentLoaded", function () {
   setInitialLanguage(); // Set initial language based on user preference
   setInitialYearOptions(); // Populate year options
 
-  document.getElementById("filter-option").addEventListener("change", handleFilterChange);
-  document.getElementById("run-report-btn").addEventListener("click", fetchReportData);
+  document
+    .getElementById("filter-option")
+    .addEventListener("change", handleFilterChange);
+  document
+    .getElementById("run-report-btn")
+    .addEventListener("click", fetchReportData);
 });
 
 //Snippet 2: Handle Filter Changes and Fetch Data
 
 function handleFilterChange() {
   const filter = document.getElementById("filter-option").value;
-  document.getElementById("year-select-container").style.display = filter === "year" || filter === "month" || filter === "unit" ? "block" : "none";
-  document.getElementById("month-select-container").style.display = filter === "month" ? "block" : "none";
-  document.getElementById("unit-select-container").style.display = filter === "unit" ? "block" : "none";
-  document.getElementById("floor-select-container").style.display = filter === "floor" ? "block" : "none";
+  document.getElementById("year-select-container").style.display =
+    filter === "year" || filter === "month" || filter === "unit"
+      ? "block"
+      : "none";
+  document.getElementById("month-select-container").style.display =
+    filter === "month" ? "block" : "none";
+  document.getElementById("unit-select-container").style.display =
+    filter === "unit" ? "block" : "none";
+  document.getElementById("floor-select-container").style.display =
+    filter === "floor" ? "block" : "none";
 
   if (filter === "unit") {
     populateUnitOptions();
@@ -86,12 +96,12 @@ function fetchReportData() {
   if (filter === "floor") query += `&floor=${floor}`;
 
   fetch(query)
-    .then(response => response.json())
-    .then(data => {
+    .then((response) => response.json())
+    .then((data) => {
       // Populate the table with the fetched data
       const tbody = document.getElementById("report-table-body");
       tbody.innerHTML = "";
-      data.forEach(record => {
+      data.forEach((record) => {
         const row = document.createElement("tr");
         row.innerHTML = `
           <td>${record.unit_number}</td>
@@ -107,7 +117,7 @@ function fetchReportData() {
         tbody.appendChild(row);
       });
     })
-    .catch(error => console.error("Error fetching report data:", error));
+    .catch((error) => console.error("Error fetching report data:", error));
 }
 
 //Snippet 4: Language Selection and Initial Language Setup
@@ -131,9 +141,12 @@ function fetchData() {
     .then((response) => response.json())
     .then((data) => {
       if (document.getElementById("available-balance")) {
-        document.getElementById("available-balance").textContent = data.availableBalance;
-        document.getElementById("total-revenue").textContent = data.totalRevenue;
-        document.getElementById("total-expenses").textContent = data.totalExpenses;
+        document.getElementById("available-balance").textContent =
+          data.availableBalance;
+        document.getElementById("total-revenue").textContent =
+          data.totalRevenue;
+        document.getElementById("total-expenses").textContent =
+          data.totalExpenses;
       }
     })
     .catch((error) => {
@@ -176,7 +189,9 @@ function loadContent() {
       break;
     case "/expense-input.html":
     case "/revenue-input.html":
-      document.getElementById("input-form").addEventListener("submit", handleFormSubmit);
+      document
+        .getElementById("input-form")
+        .addEventListener("submit", handleFormSubmit);
       loadUnitData(); // Load unit data
       break;
   }
@@ -205,9 +220,12 @@ function loadBudgetSummary() {
         if (!isNaN(totalPaid)) totalRevenue += totalPaid;
       });
       const availableBalance = totalRevenue - totalExpenses;
-      document.getElementById("available-balance").textContent = availableBalance.toFixed(2);
-      document.getElementById("total-revenue").textContent = totalRevenue.toFixed(2);
-      document.getElementById("total-expenses").textContent = totalExpenses.toFixed(2);
+      document.getElementById("available-balance").textContent =
+        availableBalance.toFixed(2);
+      document.getElementById("total-revenue").textContent =
+        totalRevenue.toFixed(2);
+      document.getElementById("total-expenses").textContent =
+        totalExpenses.toFixed(2);
     })
     .catch((error) => {
       console.error("Error loading budget summary:", error);
@@ -234,7 +252,8 @@ function loadExpenseReport() {
         tableBody.appendChild(rowElement);
         totalExpenses += parseFloat(row.price);
       });
-      document.getElementById("total-expenses").textContent = totalExpenses.toFixed(2);
+      document.getElementById("total-expenses").textContent =
+        totalExpenses.toFixed(2);
     })
     .catch((error) => {
       console.error("Error loading expense report:", error);
@@ -297,10 +316,14 @@ function loadUnitData() {
           floorField.textContent = unitData[selectedUnit].floor;
           ownerNameField.textContent = unitData[selectedUnit].owner;
           tenantNameField.textContent = unitData[selectedUnit].tenant || "";
-          document.getElementById("owner-phone").textContent = unitData[selectedUnit].ownerPhone;
-          document.getElementById("tenant-phone").textContent = unitData[selectedUnit].tenantPhone || "";
-          document.getElementById("last-payment-month").textContent = unitData[selectedUnit].lastPaymentMonth;
-          document.getElementById("last-payment-date").textContent = unitData[selectedUnit].lastPaymentDate;
+          document.getElementById("owner-phone").textContent =
+            unitData[selectedUnit].ownerPhone;
+          document.getElementById("tenant-phone").textContent =
+            unitData[selectedUnit].tenantPhone || "";
+          document.getElementById("last-payment-month").textContent =
+            unitData[selectedUnit].lastPaymentMonth;
+          document.getElementById("last-payment-date").textContent =
+            unitData[selectedUnit].lastPaymentDate;
           document.getElementById("unit-details").style.display = "block";
         } else {
           document.getElementById("unit-details").style.display = "none";
@@ -367,17 +390,17 @@ document.getElementById("login-button").addEventListener("click", () => {
   fetch("/login", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ username, password })
+    body: JSON.stringify({ username, password }),
   })
-    .then(response => response.json())
-    .then(data => {
+    .then((response) => response.json())
+    .then((data) => {
       if (data.success) {
         checkAuth();
       } else {
         alert("Login failed!");
       }
     })
-    .catch(error => console.error("Error during login:", error));
+    .catch((error) => console.error("Error during login:", error));
 });
 
 document.getElementById("logout-button").addEventListener("click", () => {

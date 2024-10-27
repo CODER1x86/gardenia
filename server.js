@@ -1,4 +1,4 @@
-//Defnitions
+//Snippet 1: Defnitions
 
 const fastify = require("fastify")({ logger: false });
 const path = require("path");
@@ -9,9 +9,10 @@ const session = require("@fastify/session");
 const cookie = require("@fastify/cookie");
 const bcrypt = require("bcrypt");
 const nodemailer = require("nodemailer");
-const errorMessage = "Whoops! Error connecting to the database–please try again!";
+const errorMessage =
+  "Whoops! Error connecting to the database–please try again!";
 
-// Ensure 'db' has the necessary methods to interact with the SQLite database
+// Snippet 2: Ensure 'db' has the necessary methods to interact with the SQLite database
 
 module.exports = {
   getExpenses: async () => {
@@ -21,16 +22,19 @@ module.exports = {
       console.error("Error fetching expenses:", dbError);
     }
   },
-  addExpense: async expense => {
+  addExpense: async (expense) => {
     let success = false;
     try {
-      success = await db.run("INSERT INTO expenses (category, item, price, expense_date, last_updated) VALUES (?, ?, ?, ?, ?)", [
-        expense.category,
-        expense.item,
-        expense.price,
-        expense.expense_date,
-        expense.last_updated
-      ]);
+      success = await db.run(
+        "INSERT INTO expenses (category, item, price, expense_date, last_updated) VALUES (?, ?, ?, ?, ?)",
+        [
+          expense.category,
+          expense.item,
+          expense.price,
+          expense.expense_date,
+          expense.last_updated,
+        ]
+      );
     } catch (dbError) {
       console.error("Error adding expense:", dbError);
     }
@@ -38,7 +42,9 @@ module.exports = {
   },
   getRevenue: async () => {
     try {
-      return await db.get("SELECT SUM(total_paid) AS totalRevenue FROM revenue");
+      return await db.get(
+        "SELECT SUM(total_paid) AS totalRevenue FROM revenue"
+      );
     } catch (dbError) {
       console.error("Error fetching revenue:", dbError);
     }
@@ -52,7 +58,9 @@ module.exports = {
   },
   getBalance: async () => {
     try {
-      return await db.get("SELECT starting_balance FROM balance WHERE year_id = (SELECT year_id FROM years WHERE year = strftime('%Y', 'now'))");
+      return await db.get(
+        "SELECT starting_balance FROM balance WHERE year_id = (SELECT year_id FROM years WHERE year = strftime('%Y', 'now'))"
+      );
     } catch (dbError) {
       console.error("Error fetching balance:", dbError);
     }
@@ -93,6 +101,9 @@ fastify.get("/api/revenue-report", async (request, reply) => {
     reply.status(500).send({ error: errorMessage });
   }
 });
+
+//Snippet 4: Add the expense report endpoint to filter and fetch data based on the selected filter options.
+
 fastify.get("/api/expense-report", async (request, reply) => {
   const { filter, year, month, category } = request.query;
   let query = "SELECT * FROM expenses WHERE strftime('%Y', expense_date) = ?";
@@ -114,10 +125,15 @@ fastify.get("/api/expense-report", async (request, reply) => {
     reply.status(500).send({ error: errorMessage });
   }
 });
+
+// Snippet 5: Add the budget details endpoint to fetch data based on the selected year and month.
+
 fastify.get("/api/budget-details", async (request, reply) => {
   const { year, month } = request.query;
-  let revenueQuery = "SELECT SUM(amount) AS totalRevenue FROM payments WHERE year = ?";
-  let expensesQuery = "SELECT SUM(price) AS totalExpenses FROM expenses WHERE strftime('%Y', expense_date) = ?";
+  let revenueQuery =
+    "SELECT SUM(amount) AS totalRevenue FROM payments WHERE year = ?";
+  let expensesQuery =
+    "SELECT SUM(price) AS totalExpenses FROM expenses WHERE strftime('%Y', expense_date) = ?";
   let queryParams = [year];
 
   if (month) {
@@ -130,20 +146,29 @@ fastify.get("/api/budget-details", async (request, reply) => {
     const revenueResult = await db.get(revenueQuery, queryParams);
     const expensesResult = await db.get(expensesQuery, queryParams);
 
-    const balanceResult = await db.get("SELECT starting_balance FROM balance WHERE year_id = (SELECT year_id FROM years WHERE year = ?)", [year]);
+    const balanceResult = await db.get(
+      "SELECT starting_balance FROM balance WHERE year_id = (SELECT year_id FROM years WHERE year = ?)",
+      [year]
+    );
 
-    const availableBalance = balanceResult.starting_balance + revenueResult.totalRevenue - expensesResult.totalExpenses;
+    const availableBalance =
+      balanceResult.starting_balance +
+      revenueResult.totalRevenue -
+      expensesResult.totalExpenses;
 
     reply.send({
       totalRevenue: revenueResult.totalRevenue,
       totalExpenses: expensesResult.totalExpenses,
-      availableBalance: availableBalance
+      availableBalance: availableBalance,
     });
   } catch (error) {
     console.error("Error fetching budget details:", error);
     reply.status(500).send({ error: errorMessage });
   }
 });
+
+//Snippet 6: Add the expense input endpoint to allow dynamic data input for expenses.
+
 fastify.post("/api/expense-input", async (request, reply) => {
   const { category, newCategory, item, amount, paymentDate } = request.body;
   const finalCategory = newCategory || category;
@@ -152,13 +177,10 @@ fastify.post("/api/expense-input", async (request, reply) => {
     if (newCategory) {
       await db.run("INSERT INTO categories (name) VALUES (?)", [newCategory]);
     }
-    await db.run("INSERT INTO expenses (category, item, price, expense_date, last_updated) VALUES (?, ?, ?, ?, ?)", [
-      finalCategory,
-      item,
-      amount,
-      paymentDate,
-      new Date().toISOString()
-    ]);
+    await db.run(
+      "INSERT INTO expenses (category, item, price, expense_date, last_updated) VALUES (?, ?, ?, ?, ?)",
+      [finalCategory, item, amount, paymentDate, new Date().toISOString()]
+    );
 
     reply.send({ success: true });
   } catch (error) {
@@ -166,18 +188,17 @@ fastify.post("/api/expense-input", async (request, reply) => {
     reply.status(500).send({ success: false, error: errorMessage });
   }
 });
+
+//Snippet 7: Add the revenue input endpoint to allow dynamic data input for revenues.
+
 fastify.post("/api/revenue-input", async (request, reply) => {
   const { unitNumber, amount, paymentDate, paymentMethod } = request.body;
 
   try {
-    await db.run("INSERT INTO payments (unit_id, year, month, amount, payment_date, method_id) VALUES (?, strftime('%Y', ?), strftime('%m', ?), ?, ?, ?)", [
-      unitNumber,
-      paymentDate,
-      paymentDate,
-      amount,
-      paymentDate,
-      paymentMethod
-    ]);
+    await db.run(
+      "INSERT INTO payments (unit_id, year, month, amount, payment_date, method_id) VALUES (?, strftime('%Y', ?), strftime('%m', ?), ?, ?, ?)",
+      [unitNumber, paymentDate, paymentDate, amount, paymentDate, paymentMethod]
+    );
 
     reply.send({ success: true });
   } catch (error) {
@@ -185,6 +206,9 @@ fastify.post("/api/revenue-input", async (request, reply) => {
     reply.status(500).send({ success: false, error: errorMessage });
   }
 });
+
+//Snippet 8: Add endpoints to fetch categories and payment methods dynamically.
+
 fastify.get("/api/categories", async (request, reply) => {
   try {
     const result = await db.all("SELECT name FROM categories");
@@ -197,7 +221,9 @@ fastify.get("/api/categories", async (request, reply) => {
 
 fastify.get("/api/payment-methods", async (request, reply) => {
   try {
-    const result = await db.all("SELECT method_id, method_name FROM payment_methods");
+    const result = await db.all(
+      "SELECT method_id, method_name FROM payment_methods"
+    );
     reply.send(result);
   } catch (error) {
     console.error("Error fetching payment methods:", error);

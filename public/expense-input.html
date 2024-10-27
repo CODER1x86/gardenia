@@ -1,53 +1,66 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Expense Input</title>
-  <link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;600&display=swap" rel="stylesheet">
-  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/css/materialize.min.css">
-  <link rel="stylesheet" href="/public/style.css">
-</head>
-<body>
-  <div id="header-placeholder"></div> <!-- Placeholder for the header -->
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Expense Input</title>
+    <link
+      href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;600&display=swap"
+      rel="stylesheet"
+    />
+    <link
+      href="https://fonts.googleapis.com/icon?family=Material+Icons"
+      rel="stylesheet"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/css/materialize.min.css"
+    />
+    <link rel="stylesheet" href="/public/style.css" />
+  </head>
+  <body>
+    <div id="header-placeholder"></div>
+    <!-- Placeholder for the header -->
 
-  <div class="container">
-    <h4>Enter Expense</h4>
-    <form id="expense-input-form">
-      <div class="input-field">
-        <label for="category">Category</label>
-        <select id="category" class="browser-default" required>
-          <option value="" disabled selected>Choose a category</option>
-          <!-- Categories will be populated dynamically -->
-        </select>
-      </div>
-      <div class="input-field">
-        <label for="new-category">Or define new category:</label>
-        <input type="text" id="new-category" placeholder="New Category" />
-      </div>
-      <div class="input-field">
-        <label for="item">Item</label>
-        <input type="text" id="item" required />
-      </div>
-      <div class="input-field">
-        <label for="amount">Amount</label>
-        <input type="number" id="amount" required />
-      </div>
-      <div class="input-field">
-        <label for="payment-date">Payment Date</label>
-        <input type="date" id="payment-date" required />
-      </div>
-      <div class="action-buttons">
-        <button type="submit" class="btn waves-effect waves-light">Submit</button>
-        <button type="reset" class="btn">Clear</button>
-      </div>
-    </form>
-  </div>
+    <div class="container">
+      <h4>Enter Expense</h4>
+      <form id="expense-input-form">
+        <div class="input-field">
+          <label for="category">Category</label>
+          <select id="category" class="browser-default" required>
+            <option value="" disabled selected>Choose a category</option>
+            <!-- Categories will be populated dynamically -->
+          </select>
+        </div>
+        <div class="input-field">
+          <label for="new-category">Or define new category:</label>
+          <input type="text" id="new-category" placeholder="New Category" />
+        </div>
+        <div class="input-field">
+          <label for="item">Item</label>
+          <input type="text" id="item" required />
+        </div>
+        <div class="input-field">
+          <label for="amount">Amount</label>
+          <input type="number" id="amount" required />
+        </div>
+        <div class="input-field">
+          <label for="payment-date">Payment Date</label>
+          <input type="date" id="payment-date" required />
+        </div>
+        <div class="action-buttons">
+          <button type="submit" class="btn waves-effect waves-light">
+            Submit
+          </button>
+          <button type="reset" class="btn">Clear</button>
+        </div>
+      </form>
+    </div>
 
-  <div id="footer-placeholder"></div> <!-- Placeholder for the footer -->
+    <div id="footer-placeholder"></div>
+    <!-- Placeholder for the footer -->
 
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/js/materialize.min.js"></script>
-  <script src="/public/main.js"></script>
-</body>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/js/materialize.min.js"></script>
+    <script src="/public/main.js"></script>
+  </body>
 </html>
