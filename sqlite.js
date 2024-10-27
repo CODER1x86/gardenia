@@ -40,6 +40,8 @@ const initializeDatabase = async () => {
       year INTEGER
     )`);
 
+    // Explicitly assign db to module.exports
+    module.exports.db = db;
   } catch (error) {
     console.error("Error initializing database:", error);
   }
@@ -58,7 +60,13 @@ const addExpense = async (expense) => {
   try {
     success = await db.run(
       "INSERT INTO expenses (category, item, price, expense_date, last_updated) VALUES (?, ?, ?, ?, ?)",
-      [expense.category, expense.item, expense.price, expense.expense_date, expense.last_updated]
+      [
+        expense.category,
+        expense.item,
+        expense.price,
+        expense.expense_date,
+        expense.last_updated,
+      ]
     );
   } catch (dbError) {
     console.error("Error adding expense:", dbError);
@@ -68,7 +76,9 @@ const addExpense = async (expense) => {
 
 const getRevenue = async () => {
   try {
-    return await db.get("SELECT SUM(amount) AS totalRevenue FROM payments WHERE year = strftime('%Y', 'now')");
+    return await db.get(
+      "SELECT SUM(amount) AS totalRevenue FROM payments WHERE year = strftime('%Y', 'now')"
+    );
   } catch (dbError) {
     console.error("Error fetching revenue:", dbError);
   }
@@ -76,7 +86,9 @@ const getRevenue = async () => {
 
 const getExpensesSum = async () => {
   try {
-    return await db.get("SELECT SUM(price) AS totalExpenses FROM expenses WHERE strftime('%Y', expense_date) = strftime('%Y', 'now')");
+    return await db.get(
+      "SELECT SUM(price) AS totalExpenses FROM expenses WHERE strftime('%Y', expense_date) = strftime('%Y', 'now')"
+    );
   } catch (dbError) {
     console.error("Error fetching total expenses:", dbError);
   }
@@ -84,10 +96,20 @@ const getExpensesSum = async () => {
 
 const getBalance = async () => {
   try {
-    return await db.get("SELECT starting_balance FROM balance WHERE year_id = (SELECT year_id FROM years WHERE year = strftime('%Y', 'now'))");
+    return await db.get(
+      "SELECT starting_balance FROM balance WHERE year_id = (SELECT year_id FROM years WHERE year = strftime('%Y', 'now'))"
+    );
   } catch (dbError) {
     console.error("Error fetching balance:", dbError);
   }
 };
 
-module.exports = { db, initializeDatabase, getExpenses, addExpense, getRevenue, getExpensesSum, getBalance };
+module.exports = {
+  db,
+  initializeDatabase,
+  getExpenses,
+  addExpense,
+  getRevenue,
+  getExpensesSum,
+  getBalance,
+};

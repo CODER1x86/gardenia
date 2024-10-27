@@ -2,7 +2,7 @@
 const express = require("express");
 const path = require("path");
 const fs = require("fs");
-const { initializeDatabase, db, getRevenue, getExpensesSum, getBalance } = require("./sqlite.js");
+const { initializeDatabase, getRevenue, getExpensesSum, getBalance } = require("./sqlite.js");
 const { sendWhatsAppMessage } = require("./twilioIntegration");
 const session = require("express-session");
 const cookieParser = require("cookie-parser");
@@ -13,14 +13,12 @@ const app = express();
 
 // Middleware setup
 app.use(cookieParser());
-app.use(
-  session({
-    secret: "a super secret key that should be stored securely",
-    resave: false,
-    saveUninitialized: false,
-    cookie: { secure: false },
-  })
-);
+app.use(session({
+  secret: "a super secret key that should be stored securely",
+  resave: false,
+  saveUninitialized: false,
+  cookie: { secure: false }
+}));
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json());
 app.use(express.static(path.join(__dirname, "public")));
@@ -34,8 +32,8 @@ const transporter = nodemailer.createTransport({
   },
 });
 
-const errorMessage =
-  "Whoops! Error connecting to the database–please try again!";
+const errorMessage = "Whoops! Error connecting to the database–please try again!";
+
 // Snippet 2: Root Route
 // This snippet defines the root route to serve the index.html file.
 app.get("/", (req, res) => {
@@ -66,34 +64,39 @@ pages.forEach((page) => {
 });
 // Snippet 4: Revenue Report Endpoint
 // This snippet adds the revenue report endpoint to filter and fetch data based on the selected filter options.
-app.get("/api/revenue-report", async (req, res) => {
-  const { filter, year, month, unit } = req.query;
-  let query =
-    "SELECT p.unit_id, p.amount, p.payment_date, pm.method_name, u.unit_number, u.floor, o.owner_name, t.tenant_name, p.year, p.month FROM payments p JOIN payment_methods pm ON p.method_id = pm.method_id JOIN units u ON p.unit_id = u.unit_id JOIN owners o ON u.owner_id = o.owner_id JOIN tenants t ON u.tenant_id = t.tenant_id WHERE p.year = ?";
-  let queryParams = [year];
+initializeDatabase().then(() => {
+  global.db = db; // Ensure db is globally accessible
+  
+  // Confirm db initialization
+  console.log('DB Initialized:', global.db);
 
-  if (filter === "month") {
-    query += " AND p.month = ?";
-    queryParams.push(month);
-  } else if (filter === "unit") {
-    query += " AND p.unit_id = ?";
-    queryParams.push(unit);
-  }
+  app.get("/api/revenue-report", async (req, res) => {
+    const { filter, year, month, unit } = req.query;
+    let query = "SELECT p.unit_id, p.amount, p.payment_date, pm.method_name, u.unit_number, u.floor, o.owner_name, t.tenant_name, p.year, p.month FROM payments p JOIN payment_methods pm ON p.method_id = pm.method_id JOIN units u ON p.unit_id = u.unit_id JOIN owners o ON u.owner_id = o.owner_id JOIN tenants t ON u.tenant_id = t.tenant_id WHERE p.year = ?";
+    let queryParams = [year];
 
-  try {
-    const result = await db.all(query, queryParams);
-    res.json(result);
-  } catch (error) {
-    console.error("Error fetching revenue report:", error);
-    res.status(500).json({ error: error.message });
-  }
+    if (filter === "month") {
+      query += " AND p.month = ?";
+      queryParams.push(month);
+    } else if (filter === "unit") {
+      query += " AND p.unit_id = ?";
+      queryParams.push(unit);
+    }
+
+    try {
+      const result = await global.db.all(query, queryParams);
+      res.json(result);
+    } catch (error) {
+      console.error("Error fetching revenue report:", error);
+      res.status(500).json({ error: error.message });
+    }
+  });
 });
 // Snippet 5: Expense Report Endpoint
 // This snippet adds the expense report endpoint to filter and fetch data based on the selected filter options.
 app.get("/api/expense-report", async (req, res) => {
   const { filter, year, month, category } = req.query;
-  let query =
-    "SELECT category, item, price, expense_date, last_updated FROM expenses WHERE strftime('%Y', expense_date) = ?";
+  let query = "SELECT category, item, price, expense_date, last_updated FROM expenses WHERE strftime('%Y', expense_date) = ?";
   let queryParams = [year];
 
   if (filter === "month") {
@@ -105,7 +108,7 @@ app.get("/api/expense-report", async (req, res) => {
   }
 
   try {
-    const result = await db.all(query, queryParams);
+    const result = await global.db.all(query, queryParams);
     res.json(result);
   } catch (error) {
     console.error("Error fetching expense report:", error);
@@ -116,10 +119,8 @@ app.get("/api/expense-report", async (req, res) => {
 // This snippet adds the budget details endpoint to fetch data based on the selected year and month.
 app.get("/api/budget-details", async (req, res) => {
   const { filter, year, month } = req.query;
-  let revenueQuery =
-    "SELECT SUM(amount) AS totalRevenue FROM payments WHERE year = ?";
-  let expensesQuery =
-    "SELECT SUM(price) AS totalExpenses FROM expenses WHERE strftime('%Y', expense_date) = ?";
+  let revenueQuery = "SELECT SUM(amount) AS totalRevenue FROM payments WHERE year = ?";
+  let expensesQuery = "SELECT SUM(price) AS totalExpenses FROM expenses WHERE strftime('%Y', expense_date) = ?";
   let queryParams = [year];
 
   if (filter === "month") {
@@ -129,17 +130,14 @@ app.get("/api/budget-details", async (req, res) => {
   }
 
   try {
-    const revenueResult = await db.get(revenueQuery, queryParams);
-    const expensesResult = await db.get(expensesQuery, queryParams);
-    const balanceResult = await db.get(
+    const revenueResult = await global.db.get(revenueQuery, queryParams);
+    const expensesResult = await global.db.get(expensesQuery, queryParams);
+    const balanceResult = await global.db.get(
       "SELECT starting_balance FROM balance WHERE year_id = (SELECT year_id FROM years WHERE year = ?)",
       [year]
     );
 
-    const availableBalance =
-      balanceResult.starting_balance +
-      revenueResult.totalRevenue -
-      expensesResult.totalExpenses;
+    const availableBalance = balanceResult.starting_balance + revenueResult.totalRevenue - expensesResult.totalExpenses;
 
     res.json({
       totalRevenue: revenueResult.totalRevenue,
@@ -155,11 +153,8 @@ app.get("/api/budget-details", async (req, res) => {
 app.get("/api/months", async (req, res) => {
   try {
     const year = req.query.year;
-    console.log("DB in /api/months:", db);
-    const result = await db.all(
-      "SELECT DISTINCT strftime('%m', expense_date) AS month FROM expenses WHERE strftime('%Y', expense_date) = ?",
-      [year]
-    );
+    console.log('DB in /api/months:', global.db);
+    const result = await global.db.all("SELECT DISTINCT strftime('%m', expense_date) AS month FROM expenses WHERE strftime('%Y', expense_date) = ?", [year]);
     res.json(result);
   } catch (error) {
     console.error("Error fetching months:", error);
@@ -169,7 +164,7 @@ app.get("/api/months", async (req, res) => {
 // Snippet 8: Fetch Available Years Endpoint
 app.get("/api/years", async (req, res) => {
   try {
-    console.log("DB in /api/years:", db);
+    console.log("DB in /api/years:", global.db);
     const result = await db.all("SELECT DISTINCT year FROM years");
     res.json(result);
   } catch (error) {
@@ -323,9 +318,9 @@ app.get("/api/check-auth", (req, res) => {
 
 // Snippet 17: Fetch Initial Data Endpoint with Enhanced Logging
 // Initialize database
-initializeDatabase().then((database) => {
-  global.db = database;
-  console.log("DB Initialized:", db);
+initializeDatabase().then(() => {
+ // global.db = database;
+  console.log("DB Initialized:", global.db);
   app.get("/api/data", async (req, res) => {
     try {
       console.log("Fetching revenue...");
