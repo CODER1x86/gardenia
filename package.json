@@ -16,6 +16,7 @@
     "fastify": "^4.28.1",
     "fastify-diagnostics-channel": "^1.1.0",
     "node-cron": "^3.0.3",
+    "nodemailer": "^6.9.15",
     "sqlite": "^5.0.1",
     "sqlite3": "^5.1.7",
     "twilio": "^5.3.5"
