@@ -71,26 +71,16 @@ pages.forEach((page) => {
 // Snippet 4: Revenue Report Endpoint
 // This snippet adds the revenue report endpoint to filter and fetch data based on the selected filter options.
 app.get("/api/revenue-report", async (req, res) => {
-  const { filter, year, month, unit, floor } = req.query;
-  let query = "SELECT * FROM payments WHERE year = ?";
+  const { filter, year, month, unit } = req.query;
+  let query = "SELECT p.unit_id, p.amount, p.payment_date, pm.method_name, u.unit_number, u.floor, o.owner_name, t.tenant_name, p.year, p.month FROM payments p JOIN payment_methods pm ON p.method_id = pm.method_id JOIN units u ON p.unit_id = u.unit_id JOIN owners o ON u.owner_id = o.owner_id JOIN tenants t ON u.tenant_id = t.tenant_id WHERE p.year = ?";
   let queryParams = [year];
 
   if (filter === "month") {
-    query += " AND month = ?";
+    query += " AND p.month = ?";
     queryParams.push(month);
   } else if (filter === "unit") {
-    query += " AND unit_id = ?";
+    query += " AND p.unit_id = ?";
     queryParams.push(unit);
-  } else if (filter === "floor") {
-    query = `
-      SELECT p.*, u.unit_number, u.floor, o.owner_name, t.tenant_name 
-      FROM payments p 
-      JOIN units u ON p.unit_id = u.unit_id 
-      JOIN owners o ON u.owner_id = o.owner_id 
-      JOIN tenants t ON u.tenant_id = t.tenant_id 
-      WHERE u.floor = ? AND p.year = ?
-    `;
-    queryParams = [floor, year];
   }
 
   try {
