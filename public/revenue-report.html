@@ -18,11 +18,26 @@
         </h4>
         <div class="filter-container">
             <label for="filter-option">Filter By:</label>
-            <div>
-                <label><input type="radio" name="filter-option" value="year" /> Year</label>
-                <label><input type="radio" name="filter-option" value="month" /> Month</label>
-                <label><input type="radio" name="filter-option" value="unit" /> Unit Number</label>
-            </div>
+            <form id="filter-form">
+                <p>
+                    <label>
+                        <input name="filter-option" type="radio" value="year" />
+                        <span>Year</span>
+                    </label>
+                </p>
+                <p>
+                    <label>
+                        <input name="filter-option" type="radio" value="month" />
+                        <span>Month</span>
+                    </label>
+                </p>
+                <p>
+                    <label>
+                        <input name="filter-option" type="radio" value="unit" />
+                        <span>Unit Number</span>
+                    </label>
+                </p>
+            </form>
             <div id="year-select-container" style="display: none">
                 <label for="year-select">Select Year:</label>
                 <select id="year-select" class="browser-default"></select>
