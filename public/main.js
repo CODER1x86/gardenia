@@ -25,20 +25,22 @@ document.addEventListener("DOMContentLoaded", function () {
   }
 });
 // Snippet 2: Handle Filter Changes and Fetch Data
-// This snippet defines functions to handle filter changes and fetch data based on the selected filters (year, month, unit, floor).
+// This snippet defines functions to handle filter changes and fetch data based on the selected filters (year, month, unit).
+
 function handleFilterChange() {
-  const filter = document.getElementById("filter-option").value;
-  document.getElementById("year-select-container").style.display = filter === "year" || filter === "month" || filter === "unit" ? "block" : "none";
+  const filter = document.querySelector('input[name="filter-option"]:checked').value;
+  document.getElementById("year-select-container").style.display = filter === "year" || filter === "month" ? "block" : "none";
   document.getElementById("month-select-container").style.display = filter === "month" ? "block" : "none";
   document.getElementById("unit-select-container").style.display = filter === "unit" ? "block" : "none";
-  document.getElementById("floor-select-container").style.display = filter === "floor" ? "block" : "none";
-
+  
   if (filter === "unit") {
     populateUnitOptions();
-  } else if (filter === "floor") {
-    populateFloorOptions();
   }
 }
+
+document.querySelectorAll('input[name="filter-option"]').forEach((elem) => {
+  elem.addEventListener("change", handleFilterChange);
+});
 
 function setInitialYearOptions() {
   const yearSelect = document.getElementById("year-select");
@@ -82,18 +84,18 @@ function populateFloorOptions() {
     })
     .catch((error) => console.error("Error fetching floor options:", error));
 }
+
 // Snippet 3: Fetch Report Data
 // This snippet defines the function to fetch and display report data based on selected filters.
 function fetchReportData() {
-  const filter = document.getElementById("filter-option").value;
+  const filter = document.querySelector('input[name="filter-option"]:checked').value;
   const year = document.getElementById("year-select").value;
   const month = document.getElementById("month-select").value;
   const unit = document.getElementById("unit-select").value;
-  const floor = document.getElementById("floor-select").value;
   let query = `/api/revenue-report?filter=${filter}&year=${year}`;
   if (filter === "month") query += `&month=${month}`;
   if (filter === "unit") query += `&unit=${unit}`;
-  if (filter === "floor") query += `&floor=${floor}`;
+
   fetch(query)
     .then((response) => {
       if (!response.ok) {
@@ -121,8 +123,29 @@ function fetchReportData() {
           tbody.appendChild(row);
         });
       }
+
+      // Update the "as of" text with selected filters
+      const reportInfo = document.getElementById("report-info");
+      const selectedFilters = document.getElementById("selected-filters");
+      if (reportInfo && selectedFilters) {
+        let filterText = '';
+        if (filter === 'year') {
+          filterText = year;
+        } else if (filter === 'month') {
+          filterText = `${month}/${year}`;
+        } else if (filter === 'unit') {
+          filterText = `Unit ${unit} for ${year}`;
+        }
+        selectedFilters.textContent = filterText;
+        reportInfo.style.display = 'inline';
+      }
     })
     .catch((error) => console.error("Error fetching report data:", error));
+}
+
+const runReportBtn = document.getElementById("run-report-btn");
+if (runReportBtn) {
+  runReportBtn.addEventListener("click", fetchReportData);
 }
 // Snippet 4: Language Selection and Initial Language Setup
 // This snippet defines functions to handle language selection and set the initial language based on user preferences.
