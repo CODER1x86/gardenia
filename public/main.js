@@ -3,13 +3,12 @@
 console.log("main.js is loaded");
 document.addEventListener("DOMContentLoaded", function () {
   loadHeaderFooter(); // Load common header and footer
-  const currentYear = new Date()..getFullYear();
+  const currentYear = new Date().getFullYear();
   document.getElementById("currentyear").textContent = currentYear;
   fetchData(); // Fetch data from Node.js server
   checkAuth(); // Check authentication status
   setInitialLanguage(); // Set initial language based on user preference
   setInitialYearOptions(); // Populate year options
-
   document.getElementById("filter-option").addEventListener("change", handleFilterChange);
   document.getElementById("run-report-btn").addEventListener("click", fetchReportData);
 });
@@ -143,7 +142,7 @@ function loadHeaderFooter() {
       initializeMenu(); // Make sure to initialize menu after loading header
     })
     .catch(error => console.error("Error loading header:", error));
-  
+
   fetch("/footer.html")
     .then(response => response.text())
     .then(html => {
@@ -359,35 +358,43 @@ function checkAuth() {
     .catch((error) => console.error("Error checking auth status:", error));
 }
 
-document.getElementById("login-button").addEventListener("click", () => {
-  console.log("Login button clicked");
-  const username = prompt("Enter username:");
-  const password = prompt("Enter password:");
-  fetch("/login", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ username, password }),
-  })
-    .then((response) => response.json())
-    .then((data) => {
-      if (data.success) {
-        checkAuth();
-      } else {
-        alert("Login failed!");
-      }
-    })
-    .catch((error) => console.error("Error during login:", error));
-});
+document.addEventListener("DOMContentLoaded", function () {
+  const loginButton = document.getElementById("login-button");
+  if (loginButton) {
+    loginButton.addEventListener("click", () => {
+      console.log("Login button clicked");
+      const username = prompt("Enter username:");
+      const password = prompt("Enter password:");
+      fetch("/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ username, password }),
+      })
+        .then((response) => response.json())
+        .then((data) => {
+          if (data.success) {
+            checkAuth();
+          } else {
+            alert("Login failed!");
+          }
+        })
+        .catch((error) => console.error("Error during login:", error));
+    });
+  }
 
-document.getElementById("logout-button").addEventListener("click", () => {
-  fetch("/logout", { method: "POST" })
-    .then((response) => response.json())
-    .then((data) => {
-      if (data.success) {
-        checkAuth();
-      }
-    })
-    .catch((error) => console.error("Error during logout:", error));
+  const logoutButton = document.getElementById("logout-button");
+  if (logoutButton) {
+    logoutButton.addEventListener("click", () => {
+      fetch("/logout", { method: "POST" })
+        .then((response) => response.json())
+        .then((data) => {
+          if (data.success) {
+            checkAuth();
+          }
+        })
+        .catch((error) => console.error("Error during logout:", error));
+    });
+  }
 });
 // Snippet 12: Handle Login Form Submission
 // This snippet ensures the login form submission triggers the backend login endpoint.
