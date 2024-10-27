@@ -7,12 +7,15 @@ const dbFile = path.join(__dirname, "./.data/database.db");
 let db;
 
 // Open database without table creation
-dbWrapper.open({ filename: dbFile, driver: sqlite3.Database }).then(dBase => {
-  db = dBase;
-  console.log("Database initialized successfully");
-}).catch(dbError => {
-  console.error("Error initializing database:", dbError);
-});
+dbWrapper
+  .open({ filename: dbFile, driver: sqlite3.Database })
+  .then((dBase) => {
+    db = dBase;
+    console.log("Database initialized successfully");
+  })
+  .catch((dbError) => {
+    console.error("Error initializing database:", dbError);
+  });
 
 // Snippet 2: Database Methods - Expenses, Revenue, Summary, Balance
 module.exports = {
@@ -23,12 +26,18 @@ module.exports = {
       console.error("Error fetching expenses:", dbError);
     }
   },
-  addExpense: async expense => {
+  addExpense: async (expense) => {
     let success = false;
     try {
       success = await db.run(
         "INSERT INTO expenses (category, item, price, expense_date, last_updated) VALUES (?, ?, ?, ?, ?)",
-        [expense.category, expense.item, expense.price, expense.expense_date, expense.last_updated]
+        [
+          expense.category,
+          expense.item,
+          expense.price,
+          expense.expense_date,
+          expense.last_updated,
+        ]
       );
     } catch (dbError) {
       console.error("Error adding expense:", dbError);
@@ -37,7 +46,9 @@ module.exports = {
   },
   getRevenue: async () => {
     try {
-      return await db.get("SELECT SUM(total_paid) AS totalRevenue FROM revenue");
+      return await db.get(
+        "SELECT SUM(total_paid) AS totalRevenue FROM revenue"
+      );
     } catch (dbError) {
       console.error("Error fetching revenue:", dbError);
     }
@@ -51,7 +62,9 @@ module.exports = {
   },
   getBalance: async () => {
     try {
-      return await db.get("SELECT starting_balance FROM balance WHERE year_id = (SELECT year_id FROM years WHERE year = strftime('%Y', 'now'))");
+      return await db.get(
+        "SELECT starting_balance FROM balance WHERE year_id = (SELECT year_id FROM years WHERE year = strftime('%Y', 'now'))"
+      );
     } catch (dbError) {
       console.error("Error fetching balance:", dbError);
     }
