@@ -9,6 +9,16 @@ const session = require("@fastify/session");
 const cookie = require("@fastify/cookie");
 const bcrypt = require("bcrypt");
 const nodemailer = require("nodemailer");
+// Middleware setup
+fastify.register(cookie);
+fastify.register(session, {
+  secret: "a super secret key that should be stored securely",
+  cookie: { secure: false },
+  saveUninitialized: false,
+  resave: false,
+});
+fastify.register(require("@fastify/formbody"));
+
 // Setup email transport
 const transporter = nodemailer.createTransport({
   service: "gmail", // Use your email service
@@ -19,6 +29,50 @@ const transporter = nodemailer.createTransport({
 });
 const errorMessage =
   "Whoops! Error connecting to the database–please try again!";
+
+//Snippet X: Root Route
+
+fastify.get("/", (request, reply) => {
+  const filePath = path.join(__dirname, "public", "index.html");
+  fs.readFile(filePath, (err, data) => {
+    if (err) {
+      reply.status(500).send("Internal Server Error");
+    } else {
+      reply.type("text/html").send(data);
+    }
+  });
+});
+
+// Snippet X: Routes
+const pages = [
+  "index.html",
+  "budget-summary.html",
+  "budget-details.html",
+  "expense-report.html",
+  "revenue-report.html",
+  "expense-input.html",
+  "revenue-input.html",
+  "login.html",
+  "forget-password.html",
+  "header.html",
+  "footer.html",
+  "footer-settings.html",
+  "style-modifier.html"
+];
+
+pages.forEach((page) => {
+  fastify.get(`/${page}`, (request, reply) => {
+    const filePath = path.join(__dirname, "public", page);
+    fs.readFile(filePath, (err, data) => {
+      if (err) {
+        reply.status(500).send("Internal Server Error");
+      } else {
+        reply.type("text/html").send(data);
+      }
+    });
+  });
+});
+
 
 // Snippet 2: Ensure 'db' has the necessary methods to interact with the SQLite database
 
@@ -327,3 +381,22 @@ function sendResetEmail(email, token) {
     console.log("Reset email sent: " + info.response);
   });
 }
+
+//Server Wakeup Probe
+
+fastify.get("/wakeup", (request, reply) => {
+  console.log("I'm awake");
+  reply.send("I'm awake");
+});
+
+// Start the server
+fastify.listen(
+  { port: process.env.PORT || 3000, host: "0.0.0.0" },
+  function (err, address) {
+    if (err) {
+      console.error(err);
+      process.exit(1);
+    }
+    console.log(`Your app is listening on ${address}`);
+  }
+);
