@@ -25,26 +25,26 @@ const users = [
 ];
 // Setup email transport
 const transporter = nodemailer.createTransport({
-  service: 'gmail', // Use your email service
+  service: "gmail", // Use your email service
   auth: {
-    user: 'your-email@gmail.com',
-    pass: 'your-email-password'
-  }
+    user: "your-email@gmail.com",
+    pass: "your-email-password",
+  },
 });
 
 function sendResetEmail(email, token) {
   const mailOptions = {
-    from: 'your-email@gmail.com',
+    from: "your-email@gmail.com",
     to: email,
-    subject: 'Password Reset',
-    text: `Please use the following token to reset your password: ${token}`
+    subject: "Password Reset",
+    text: `Please use the following token to reset your password: ${token}`,
   };
 
   transporter.sendMail(mailOptions, (error, info) => {
     if (error) {
       return console.log(error);
     }
-    console.log('Email sent: ' + info.response);
+    console.log("Email sent: " + info.response);
   });
 }
 // Serve static files manually
@@ -62,15 +62,21 @@ fastify.get("/public/*", (request, reply) => {
 function getContentType(filePath) {
   const ext = path.extname(filePath).toLowerCase();
   switch (ext) {
-    case ".html": return "text/html";
-    case ".css": return "text/css";
-    case ".js": return "application/javascript";
-    case ".json": return "application/json";
-    default: return "application/octet-stream";
+    case ".html":
+      return "text/html";
+    case ".css":
+      return "text/css";
+    case ".js":
+      return "application/javascript";
+    case ".json":
+      return "application/json";
+    default:
+      return "application/octet-stream";
   }
 }
 
-const errorMessage = "Whoops! Error connecting to the database–please try again!";
+const errorMessage =
+  "Whoops! Error connecting to the database–please try again!";
 
 // Serve index.html for the home route
 fastify.get("/", (request, reply) => {
@@ -85,7 +91,13 @@ fastify.get("/", (request, reply) => {
 });
 
 // Serve other HTML pages explicitly
-const pages = ["budget-summary.html", "budget-details.html", "expense-report.html", "revenue-report.html", "index.html"];
+const pages = [
+  "budget-summary.html",
+  "budget-details.html",
+  "expense-report.html",
+  "revenue-report.html",
+  "index.html",
+];
 pages.forEach((page) => {
   fastify.get(`/${page}`, (request, reply) => {
     const filePath = path.join(__dirname, "public", page);
@@ -111,6 +123,21 @@ fastify.get("/api/expenses", async (request, reply) => {
   const status = data.error ? 400 : 200;
   reply.status(status).send(data);
 });
+// API route to get budget summary data
+fastify.get("/api/data", async (request, reply) => {
+  let data = {};
+  try {
+    // Replace with your actual database query to fetch data
+    const result = await db.get("SELECT * FROM budget_summary_table");
+    data.availableBalance = result.availableBalance;
+    data.totalRevenue = result.totalRevenue;
+    data.totalExpenses = result.totalExpenses;
+    reply.send(data);
+  } catch (error) {
+    console.error("Error fetching data:", error);
+    reply.status(500).send({ error: errorMessage });
+  }
+});
 
 // API route to add a new expense
 fastify.post("/api/expenses", async (request, reply) => {
@@ -122,7 +149,10 @@ fastify.post("/api/expenses", async (request, reply) => {
     try {
       data.success = await db.addExpense(request.body.expense);
       if (data.success) {
-        sendWhatsAppMessage(request.body.expense.phoneNumber, request.body.expense.unit);
+        sendWhatsAppMessage(
+          request.body.expense.phoneNumber,
+          request.body.expense.unit
+        );
       }
     } catch (error) {
       console.error(error);
@@ -156,7 +186,9 @@ fastify.post("/register", async (request, reply) => {
 fastify.post("/login", async (request, reply) => {
   const { username, password } = request.body;
   try {
-    const user = await db.get("SELECT * FROM users WHERE username = ?", [username]);
+    const user = await db.get("SELECT * FROM users WHERE username = ?", [
+      username,
+    ]);
     if (user && bcrypt.compareSync(password, user.password)) {
       request.session.authenticated = true;
       reply.send({ success: true });
@@ -178,13 +210,16 @@ fastify.get("/api/check-auth", (request, reply) => {
   reply.send({ authenticated: isAuthenticated });
 });
 
-fastify.post('/request-password-reset', async (request, reply) => {
+fastify.post("/request-password-reset", async (request, reply) => {
   const { email } = request.body;
   const user = await db.get("SELECT * FROM users WHERE email = ?", [email]);
   if (user) {
     const resetToken = generateResetToken();
-    await db.run("UPDATE users SET reset_token = ? WHERE email = ?", [resetToken, email]);
-    sendResetEmail(email, resetToken);  // Implement sendResetEmail function
+    await db.run("UPDATE users SET reset_token = ? WHERE email = ?", [
+      resetToken,
+      email,
+    ]);
+    sendResetEmail(email, resetToken); // Implement sendResetEmail function
     reply.send({ success: true, message: "Reset email sent" });
   } else {
     reply.send({ success: false, message: "Email not found" });
@@ -194,12 +229,18 @@ fastify.post('/request-password-reset', async (request, reply) => {
 function generateResetToken() {
   return Math.random().toString(36).substr(2);
 }
-fastify.post('/reset-password', async (request, reply) => {
+fastify.post("/reset-password", async (request, reply) => {
   const { email, resetToken, newPassword } = request.body;
-  const user = await db.get("SELECT * FROM users WHERE email = ? AND reset_token = ?", [email, resetToken]);
+  const user = await db.get(
+    "SELECT * FROM users WHERE email = ? AND reset_token = ?",
+    [email, resetToken]
+  );
   if (user) {
     const hashedPassword = bcrypt.hashSync(newPassword, 10);
-    await db.run("UPDATE users SET password = ?, reset_token = NULL WHERE email = ?", [hashedPassword, email]);
+    await db.run(
+      "UPDATE users SET password = ?, reset_token = NULL WHERE email = ?",
+      [hashedPassword, email]
+    );
     reply.send({ success: true, message: "Password reset successful" });
   } else {
     reply.send({ success: false, message: "Invalid token or email" });
@@ -218,10 +259,13 @@ fastify.addHook("preHandler", (request, reply, done) => {
 });
 
 // Start the server
-fastify.listen({ port: process.env.PORT || 3000, host: "0.0.0.0" }, function (err, address) {
-  if (err) {
-    console.error(err);
-    process.exit(1);
+fastify.listen(
+  { port: process.env.PORT || 3000, host: "0.0.0.0" },
+  function (err, address) {
+    if (err) {
+      console.error(err);
+      process.exit(1);
+    }
+    console.log(`Your app is listening on ${address}`);
   }
-  console.log(`Your app is listening on ${address}`);
-});
+);
