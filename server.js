@@ -312,51 +312,37 @@ app.get("/api/check-auth", (req, res) => {
 
 // Snippet 15: Fetch Initial Data Endpoint with Enhanced Logging
 initializeDatabase().then(() => {
-app.get("/api/data", async (req, res) => {
-  try {
-    console.log("Fetching revenue...");
-    const revenueResult = await db.all(
-      "SELECT SUM(amount) AS totalRevenue FROM payments"
-    );
-    console.log("Revenue result:", revenueResult);
+  app.get("/api/data", async (req, res) => {
+    try {
+      console.log("Fetching revenue...");
+      const revenueResult = await getRevenue();
+      console.log("Revenue result:", revenueResult);
 
-    console.log("Fetching expenses...");
-    const expensesResult = await db.all(
-      "SELECT SUM(price) AS totalExpenses FROM expenses"
-    );
-    console.log("Expenses result:", expensesResult);
+      console.log("Fetching expenses...");
+      const expensesResult = await getExpensesSum();
+      console.log("Expenses result:", expensesResult);
 
-    console.log("Fetching balance...");
-    const balanceResult = await db.all(
-      "SELECT starting_balance FROM balance WHERE year_id = (SELECT year_id FROM years WHERE year = strftime('%Y', 'now'))"
-    );
-    console.log("Balance result:", balanceResult);
+      console.log("Fetching balance...");
+      const balanceResult = await getBalance();
+      console.log("Balance result:", balanceResult);
 
-    if (
-      !balanceResult.length ||
-      !revenueResult.length ||
-      !expensesResult.length
-    ) {
-      throw new Error(
-        "Failed to fetch one or more components of initial data."
-      );
+      if (!balanceResult || !revenueResult || !expensesResult) {
+        throw new Error("Failed to fetch one or more components of initial data.");
+      }
+
+      const availableBalance = balanceResult.starting_balance + revenueResult.totalRevenue - expensesResult.totalExpenses;
+
+      res.json({
+        totalRevenue: revenueResult.totalRevenue,
+        totalExpenses: expensesResult.totalExpenses,
+        availableBalance: availableBalance,
+      });
+    } catch (error) {
+      console.error("Error fetching initial data:", error);
+      res.status(500).json({ error: error.message });
     }
-
-    const availableBalance =
-      balanceResult[0].starting_balance +
-      revenueResult[0].totalRevenue -
-      expensesResult[0].totalExpenses;
-
-    res.json({
-      totalRevenue: revenueResult[0].totalRevenue,
-      totalExpenses: expensesResult[0].totalExpenses,
-      availableBalance: availableBalance,
-    });
-  } catch (error) {
-    console.error("Error fetching initial data:", error);
-    res.status(500).json({ error: error.message });
-  }
-});
+  });
+  });
 
 // Start the server
 const PORT = process.env.PORT || 3000;
