@@ -1,6 +1,8 @@
 // Snippet 1: Initial Setup and Event Listeners
 // This snippet sets up the initial event listeners and calls functions to load the header/footer, fetch data, check authentication status, set the initial language, and populate year options.
+
 console.log("main.js is loaded");
+
 document.addEventListener("DOMContentLoaded", function () {
   loadHeaderFooter(); // Load common header and footer
 
@@ -13,6 +15,7 @@ document.addEventListener("DOMContentLoaded", function () {
   checkAuth(); // Check authentication status
   setInitialLanguage(); // Set initial language based on user preference
   setInitialYearOptions(); // Populate year options
+  setInitialMonthOptions(); // Populate month options (NEW)
 
   const filterOption = document.getElementById("filter-option");
   if (filterOption) {
@@ -28,11 +31,16 @@ document.addEventListener("DOMContentLoaded", function () {
 // This snippet defines functions to handle filter changes and fetch data based on the selected filters (year, month, unit).
 
 function handleFilterChange() {
-  const filter = document.querySelector('input[name="filter-option"]:checked').value;
-  document.getElementById("year-select-container").style.display = filter === "year" || filter === "month" ? "block" : "none";
-  document.getElementById("month-select-container").style.display = filter === "month" ? "block" : "none";
-  document.getElementById("unit-select-container").style.display = filter === "unit" ? "block" : "none";
-  
+  const filter = document.querySelector(
+    'input[name="filter-option"]:checked'
+  ).value;
+  document.getElementById("year-select-container").style.display =
+    filter === "year" || filter === "month" ? "block" : "none";
+  document.getElementById("month-select-container").style.display =
+    filter === "month" ? "block" : "none";
+  document.getElementById("unit-select-container").style.display =
+    filter === "unit" ? "block" : "none";
+
   if (filter === "unit") {
     populateUnitOptions();
   }
@@ -43,16 +51,43 @@ document.querySelectorAll('input[name="filter-option"]').forEach((elem) => {
 });
 
 function setInitialYearOptions() {
-  const yearSelect = document.getElementById("year-select");
-  if (yearSelect) {
-    const currentYear = new Date().getFullYear();
-    for (let year = currentYear; year >= 2020; year--) {
-      const option = document.createElement("option");
-      option.value = year;
-      option.textContent = year;
-      yearSelect.appendChild(option);
-    }
-  }
+  fetch("/api/years")
+    .then((response) => response.json())
+    .then((data) => {
+      const yearSelect = document.getElementById("year-select");
+      if (yearSelect) {
+        yearSelect.innerHTML = ''; // Clear existing options
+        data.forEach((year) => {
+          const option = document.createElement("option");
+          option.value = year.year;
+          option.textContent = year.year;
+          yearSelect.appendChild(option);
+        });
+      }
+    })
+    .catch((error) => console.error("Error fetching years:", error));
+}
+
+function setInitialMonthOptions() {
+  const year = document.getElementById("year-select").value;
+  fetch(`/api/months?year=${year}`)
+    .then((response) => response.json())
+    .then((data) => {
+      const monthSelect = document.getElementById("month-select");
+      if (monthSelect) {
+        monthSelect.innerHTML = ""; // Clear existing options
+        data.forEach((item) => {
+          const option = document.createElement("option");
+          option.value = item.month;
+          option.textContent = new Date(2024, item.month - 1).toLocaleString(
+            "default",
+            { month: "long" }
+          ); // Convert month number to month name
+          monthSelect.appendChild(option);
+        });
+      }
+    })
+    .catch((error) => console.error("Error fetching months:", error));
 }
 
 function populateUnitOptions() {
@@ -88,13 +123,13 @@ function populateFloorOptions() {
 // Snippet 3: Fetch Report Data
 // This snippet defines the function to fetch and display report data based on selected filters.
 function fetchReportData() {
-  const filter = document.querySelector('input[name="filter-option"]:checked').value;
+  const filter = document.querySelector(
+    'input[name="filter-option"]:checked'
+  ).value;
   const year = document.getElementById("year-select").value;
   const month = document.getElementById("month-select").value;
-  const unit = document.getElementById("unit-select").value;
-  let query = `/api/revenue-report?filter=${filter}&year=${year}`;
+  let query = `/api/budget-details?filter=${filter}&year=${year}`;
   if (filter === "month") query += `&month=${month}`;
-  if (filter === "unit") query += `&unit=${unit}`;
 
   fetch(query)
     .then((response) => {
@@ -104,40 +139,24 @@ function fetchReportData() {
       return response.json();
     })
     .then((data) => {
-      const tbody = document.getElementById("report-table-body");
+      const tbody = document.getElementById("budget-table-body");
       if (tbody) {
-        tbody.innerHTML = "";
-        data.forEach((record) => {
-          const row = document.createElement("tr");
-          row.innerHTML = `
-            <td>${record.unit_number}</td>
-            <td>${record.floor}</td>
-            <td>${record.owner_name}</td>
-            <td>${record.tenant_name}</td>
-            <td>${record.year}</td>
-            <td>${record.month}</td>
-            <td>${record.amount}</td>
-            <td>${record.payment_date}</td>
-            <td>${record.payment_method}</td>
-          `;
-          tbody.appendChild(row);
-        });
+        tbody.innerHTML = `
+          <tr>
+            <td>${data.totalRevenue}</td>
+            <td>${data.totalExpenses}</td>
+            <td>${data.availableBalance}</td>
+          </tr>
+        `;
       }
 
       // Update the "as of" text with selected filters
       const reportInfo = document.getElementById("report-info");
       const selectedFilters = document.getElementById("selected-filters");
       if (reportInfo && selectedFilters) {
-        let filterText = '';
-        if (filter === 'year') {
-          filterText = year;
-        } else if (filter === 'month') {
-          filterText = `${month}/${year}`;
-        } else if (filter === 'unit') {
-          filterText = `Unit ${unit} for ${year}`;
-        }
+        let filterText = filter === "year" ? year : `${month}/${year}`;
         selectedFilters.textContent = filterText;
-        reportInfo.style.display = 'inline';
+        reportInfo.style.display = "inline";
       }
     })
     .catch((error) => console.error("Error fetching report data:", error));
@@ -163,13 +182,13 @@ function setInitialLanguage() {
 // This snippet defines the function to fetch initial data for the budget summary and display it.
 function fetchData() {
   fetch("/api/data") // Updated to use your new API endpoint
-    .then(response => {
+    .then((response) => {
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
       return response.json();
     })
-    .then(data => {
+    .then((data) => {
       const availableBalance = document.getElementById("available-balance");
       const totalRevenue = document.getElementById("total-revenue");
       const totalExpenses = document.getElementById("total-expenses");
@@ -184,7 +203,7 @@ function fetchData() {
         totalExpenses.textContent = data.totalExpenses;
       }
     })
-    .catch(error => {
+    .catch((error) => {
       console.error("Error fetching data:", error);
     });
 }
@@ -193,25 +212,25 @@ function fetchData() {
 // This snippet defines functions to load the header and footer, and initialize the menu after loading the header.
 function loadHeaderFooter() {
   fetch("/header.html")
-    .then(response => response.text())
-    .then(html => {
+    .then((response) => response.text())
+    .then((html) => {
       const headerPlaceholder = document.getElementById("header-placeholder");
       if (headerPlaceholder) {
         headerPlaceholder.innerHTML = html;
         initializeMenu(); // Make sure to initialize menu after loading header
       }
     })
-    .catch(error => console.error("Error loading header:", error));
+    .catch((error) => console.error("Error loading header:", error));
 
   fetch("/footer.html")
-    .then(response => response.text())
-    .then(html => {
+    .then((response) => response.text())
+    .then((html) => {
       const footerPlaceholder = document.getElementById("footer-placeholder");
       if (footerPlaceholder) {
         footerPlaceholder.innerHTML = html;
       }
     })
-    .catch(error => console.error("Error loading footer:", error));
+    .catch((error) => console.error("Error loading footer:", error));
 }
 
 function initializeMenu() {
@@ -401,10 +420,14 @@ function loadUnitData() {
             floorField.textContent = unitData[selectedUnit].floor;
             ownerNameField.textContent = unitData[selectedUnit].owner;
             tenantNameField.textContent = unitData[selectedUnit].tenant || "";
-            document.getElementById("owner-phone").textContent = unitData[selectedUnit].ownerPhone;
-            document.getElementById("tenant-phone").textContent = unitData[selectedUnit].tenantPhone || "";
-            document.getElementById("last-payment-month").textContent = unitData[selectedUnit].lastPaymentMonth;
-            document.getElementById("last-payment-date").textContent = unitData[selectedUnit].lastPaymentDate;
+            document.getElementById("owner-phone").textContent =
+              unitData[selectedUnit].ownerPhone;
+            document.getElementById("tenant-phone").textContent =
+              unitData[selectedUnit].tenantPhone || "";
+            document.getElementById("last-payment-month").textContent =
+              unitData[selectedUnit].lastPaymentMonth;
+            document.getElementById("last-payment-date").textContent =
+              unitData[selectedUnit].lastPaymentDate;
             document.getElementById("unit-details").style.display = "block";
           } else {
             document.getElementById("unit-details").style.display = "none";
@@ -451,17 +474,17 @@ function saveData(data) {
 // This snippet defines functions to handle authentication, including checking auth status, logging in, and logging out.
 function checkAuth() {
   fetch("/api/check-auth")
-    .then(response => {
+    .then((response) => {
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
       return response.json();
     })
-    .then(data => {
+    .then((data) => {
       const authenticatedLinks = document.getElementById("authenticated-links");
       const loginLink = document.getElementById("login-link");
       const logoutLink = document.getElementById("logout-link");
-      
+
       if (data.authenticated) {
         if (authenticatedLinks) authenticatedLinks.style.display = "block";
         if (loginLink) loginLink.style.display = "none";
@@ -472,7 +495,7 @@ function checkAuth() {
         if (logoutLink) logoutLink.style.display = "none";
       }
     })
-    .catch(error => console.error("Error checking auth status:", error));
+    .catch((error) => console.error("Error checking auth status:", error));
 }
 
 // Attach event listeners conditionally
@@ -583,7 +606,9 @@ document.addEventListener("DOMContentLoaded", function () {
             alert("Email not found!");
           }
         })
-        .catch((error) => console.error("Error requesting password reset:", error));
+        .catch((error) =>
+          console.error("Error requesting password reset:", error)
+        );
     });
   }
 });

@@ -146,6 +146,29 @@ app.get("/api/budget-details", async (req, res) => {
   }
 });
 
+// Snippet 6: Fetch Available Months Endpoint
+app.get("/api/months", async (req, res) => {
+  try {
+    const year = req.query.year;
+    const result = await db.all("SELECT DISTINCT strftime('%m', expense_date) AS month FROM expenses WHERE strftime('%Y', expense_date) = ?", [year]);
+    res.json(result);
+  } catch (error) {
+    console.error("Error fetching months:", error);
+    res.status(500).json({ error: error.message });
+  }
+});
+// Snippet: Fetch Available Years Endpoint
+app.get("/api/years", async (req, res) => {
+  try {
+    const result = await db.all("SELECT DISTINCT year FROM years");
+    res.json(result);
+  } catch (error) {
+    console.error("Error fetching years:", error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+
 // Snippet 7: Expense Input Endpoint
 // This snippet adds the expense input endpoint to allow dynamic data input for expenses.
 app.post("/api/expense-input", async (req, res) => {
