@@ -268,3 +268,168 @@ function loadRevenueReport() {
       console.error("Error loading revenue report:", error);
     });
 }
+// Snippet 9: Load Unit Data
+// This snippet defines the function to load unit data and display relevant information based on the selected unit.
+function loadUnitData() {
+  const unitNumberSelect = document.getElementById("unit-number");
+  const floorField = document.getElementById("floor");
+  const ownerNameField = document.getElementById("owner-name");
+  const tenantNameField = document.getElementById("tenant-name");
+
+  fetch("/api/units") // Updated to use your new API endpoint
+    .then((response) => response.json())
+    .then((data) => {
+      const unitData = data.reduce((acc, unit) => {
+        acc[unit.unit_number] = {
+          floor: unit.floor,
+          owner: unit.owner,
+          ownerPhone: unit.ownerPhone,
+          tenant: unit.tenant,
+          tenantPhone: unit.tenantPhone,
+          lastPaymentMonth: unit.lastPaymentMonth,
+          lastPaymentDate: unit.lastPaymentDate,
+        };
+        return acc;
+      }, {});
+
+      unitNumberSelect.addEventListener("change", function () {
+        const selectedUnit = this.value;
+        if (unitData[selectedUnit]) {
+          floorField.textContent = unitData[selectedUnit].floor;
+          ownerNameField.textContent = unitData[selectedUnit].owner;
+          tenantNameField.textContent = unitData[selectedUnit].tenant || "";
+          document.getElementById("owner-phone").textContent = unitData[selectedUnit].ownerPhone;
+          document.getElementById("tenant-phone").textContent = unitData[selectedUnit].tenantPhone || "";
+          document.getElementById("last-payment-month").textContent = unitData[selectedUnit].lastPaymentMonth;
+          document.getElementById("last-payment-date").textContent = unitData[selectedUnit].lastPaymentDate;
+          document.getElementById("unit-details").style.display = "block";
+        } else {
+          document.getElementById("unit-details").style.display = "none";
+        }
+      });
+    })
+    .catch((error) => {
+      console.error("Error loading unit data:", error);
+    });
+}
+// Snippet 10: Save Data and Dynamic Input Handling
+// This snippet defines the function to save form data and dynamically handle input for expenses and revenues.
+function saveData(data) {
+  const pathname = window.location.pathname;
+  let apiUrl;
+  if (pathname === "/expense-input.html") {
+    apiUrl = "/api/expense-input"; // Updated to use your new API endpoint
+  } else if (pathname === "/revenue-input.html") {
+    apiUrl = "/api/revenue-input"; // Updated to use your new API endpoint
+  }
+  fetch(apiUrl, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(data),
+  })
+    .then((response) => {
+      if (response.ok) {
+        alert("Data saved successfully!");
+        document.getElementById("input-form").reset();
+      } else {
+        alert("Failed to save data.");
+      }
+    })
+    .catch((error) => {
+      console.error("Error saving data:", error);
+      alert("Failed to save data.");
+    });
+}
+// Snippet 11: Authentication and Authorization
+// This snippet defines functions to handle authentication, including checking auth status, logging in, and logging out.
+function checkAuth() {
+  fetch("/api/check-auth")
+    .then((response) => response.json())
+    .then((data) => {
+      if (data.authenticated) {
+        document.getElementById("authenticated-links").style.display = "block";
+        document.getElementById("login-link").style.display = "none";
+        document.getElementById("logout-link").style.display = "block";
+      } else {
+        document.getElementById("authenticated-links").style.display = "none";
+        document.getElementById("login-link").style.display = "block";
+        document.getElementById("logout-link").style.display = "none";
+      }
+    })
+    .catch((error) => console.error("Error checking auth status:", error));
+}
+
+document.getElementById("login-button").addEventListener("click", () => {
+  console.log("Login button clicked");
+  const username = prompt("Enter username:");
+  const password = prompt("Enter password:");
+  fetch("/login", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ username, password }),
+  })
+    .then((response) => response.json())
+    .then((data) => {
+      if (data.success) {
+        checkAuth();
+      } else {
+        alert("Login failed!");
+      }
+    })
+    .catch((error) => console.error("Error during login:", error));
+});
+
+document.getElementById("logout-button").addEventListener("click", () => {
+  fetch("/logout", { method: "POST" })
+    .then((response) => response.json())
+    .then((data) => {
+      if (data.success) {
+        checkAuth();
+      }
+    })
+    .catch((error) => console.error("Error during logout:", error));
+});
+// Snippet 12: Handle Login Form Submission
+// This snippet ensures the login form submission triggers the backend login endpoint.
+document.getElementById("login-form").addEventListener("submit", function (event) {
+  event.preventDefault();
+  const username = document.getElementById("username").value;
+  const password = document.getElementById("password").value;
+  fetch("/login", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ username, password }),
+  })
+    .then((response) => response.json())
+    .then((data) => {
+      if (data.success) {
+        checkAuth();
+        window.location.href = "/budget-summary.html"; // Redirect after successful login
+      } else {
+        alert("Login failed!");
+      }
+    })
+    .catch((error) => console.error("Error during login:", error));
+});
+// Snippet 13: Handle Forget Password Form Submission
+// This snippet ensures the forget password form submission triggers the backend password reset request endpoint.
+document.getElementById("forget-password-form").addEventListener("submit", function (event) {
+  event.preventDefault();
+  const email = document.getElementById("email").value;
+  fetch("/request-password-reset", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ email }),
+  })
+    .then((response) => response.json())
+    .then((data) => {
+      if (data.success) {
+        alert("Reset email sent!");
+      } else {
+        alert("Email not found!");
+      }
+    })
+    .catch((error) => console.error("Error requesting password reset:", error));
+});
+
+checkAuth(); // Check auth status on page load
