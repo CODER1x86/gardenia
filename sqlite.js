@@ -46,6 +46,7 @@ const initializeDatabase = async () => {
     console.error("Error initializing database:", error);
   }
 };
+const getDb = () => db;
 
 const getExpenses = async () => {
   try {
