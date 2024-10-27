@@ -15,15 +15,17 @@ const app = express();
 
 // Middleware setup
 app.use(cookieParser());
-app.use(session({
-  secret: "a super secret key that should be stored securely",
-  resave: false,
-  saveUninitialized: false,
-  cookie: { secure: false }
-}));
+app.use(
+  session({
+    secret: "a super secret key that should be stored securely",
+    resave: false,
+    saveUninitialized: false,
+    cookie: { secure: false },
+  })
+);
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json());
-app.use(express.static(path.join(__dirname, 'public')));
+app.use(express.static(path.join(__dirname, "public")));
 
 // Setup email transport
 const transporter = nodemailer.createTransport({
@@ -34,7 +36,8 @@ const transporter = nodemailer.createTransport({
   },
 });
 
-const errorMessage = "Whoops! Error connecting to the database–please try again!";
+const errorMessage =
+  "Whoops! Error connecting to the database–please try again!";
 
 // Snippet 2: Root Route
 // This snippet defines the root route to serve the index.html file.
@@ -125,8 +128,10 @@ app.get("/api/expense-report", async (req, res) => {
 // This snippet adds the budget details endpoint to fetch data based on the selected year and month.
 app.get("/api/budget-details", async (req, res) => {
   const { year, month } = req.query;
-  let revenueQuery = "SELECT SUM(amount) AS totalRevenue FROM payments WHERE year = ?";
-  let expensesQuery = "SELECT SUM(price) AS totalExpenses FROM expenses WHERE strftime('%Y', expense_date) = ?";
+  let revenueQuery =
+    "SELECT SUM(amount) AS totalRevenue FROM payments WHERE year = ?";
+  let expensesQuery =
+    "SELECT SUM(price) AS totalExpenses FROM expenses WHERE strftime('%Y', expense_date) = ?";
   let queryParams = [year];
 
   if (month) {
@@ -138,9 +143,15 @@ app.get("/api/budget-details", async (req, res) => {
   try {
     const revenueResult = await db.get(revenueQuery, queryParams);
     const expensesResult = await db.get(expensesQuery, queryParams);
-    const balanceResult = await db.get("SELECT starting_balance FROM balance WHERE year_id = (SELECT year_id FROM years WHERE year = ?)", [year]);
+    const balanceResult = await db.get(
+      "SELECT starting_balance FROM balance WHERE year_id = (SELECT year_id FROM years WHERE year = ?)",
+      [year]
+    );
 
-    const availableBalance = balanceResult.starting_balance + revenueResult.totalRevenue - expensesResult.totalExpenses;
+    const availableBalance =
+      balanceResult.starting_balance +
+      revenueResult.totalRevenue -
+      expensesResult.totalExpenses;
 
     res.json({
       totalRevenue: revenueResult.totalRevenue,
@@ -202,7 +213,9 @@ app.get("/api/categories", async (req, res) => {
 
 app.get("/api/payment-methods", async (req, res) => {
   try {
-    const result = await db.all("SELECT method_id, method_name FROM payment_methods");
+    const result = await db.all(
+      "SELECT method_id, method_name FROM payment_methods"
+    );
     res.json(result);
   } catch (error) {
     console.error("Error fetching payment methods:", error);
@@ -223,7 +236,9 @@ app.get("/forget-password", (req, res) => {
 app.post("/login", async (req, res) => {
   const { username, password } = req.body;
   try {
-    const user = await db.get("SELECT * FROM users WHERE username = ?", [username]);
+    const user = await db.get("SELECT * FROM users WHERE username = ?", [
+      username,
+    ]);
     if (user && bcrypt.compareSync(password, user.password)) {
       req.session.authenticated = true;
       res.json({ success: true });
@@ -243,7 +258,10 @@ app.post("/request-password-reset", async (req, res) => {
     const user = await db.get("SELECT * FROM users WHERE email = ?", [email]);
     if (user) {
       const resetToken = generateResetToken();
-      await db.run("UPDATE users SET reset_token = ? WHERE email = ?", [resetToken, email]);
+      await db.run("UPDATE users SET reset_token = ? WHERE email = ?", [
+        resetToken,
+        email,
+      ]);
       sendResetEmail(email, resetToken); // Implement sendResetEmail function
       res.json({ success: true, message: "Reset email sent" });
     } else {
@@ -264,7 +282,7 @@ function sendResetEmail(email, token) {
     from: "your-email@gmail.com",
     to: email,
     subject: "Password Reset",
-    text: `Please use the following token to reset your password: ${token}`
+    text: `Please use the following token to reset your password: ${token}`,
   };
 
   transporter.sendMail(mailOptions, (error, info) => {
@@ -279,6 +297,43 @@ function sendResetEmail(email, token) {
 app.get("/wakeup", (req, res) => {
   console.log("I'm awake");
   res.send("I'm awake");
+});
+// Snippet 14: Check Authentication Status Endpoint
+app.get("/api/check-auth", (req, res) => {
+  if (req.session.authenticated) {
+    res.json({ authenticated: true });
+  } else {
+    res.json({ authenticated: false });
+  }
+});
+
+// Snippet 15: Fetch Initial Data Endpoint
+app.get("/api/data", async (req, res) => {
+  try {
+    const revenueResult = await db.get(
+      "SELECT SUM(amount) AS totalRevenue FROM payments"
+    );
+    const expensesResult = await db.get(
+      "SELECT SUM(price) AS totalExpenses FROM expenses"
+    );
+    const balanceResult = await db.get(
+      "SELECT starting_balance FROM balance WHERE year_id = (SELECT year_id FROM years WHERE year = strftime('%Y', 'now'))"
+    );
+
+    const availableBalance =
+      balanceResult.starting_balance +
+      revenueResult.totalRevenue -
+      expensesResult.totalExpenses;
+
+    res.json({
+      totalRevenue: revenueResult.totalRevenue,
+      totalExpenses: expensesResult.totalExpenses,
+      availableBalance: availableBalance,
+    });
+  } catch (error) {
+    console.error("Error fetching initial data:", error);
+    res.status(500).json({ error: errorMessage });
+  }
 });
 
 // Start the server
