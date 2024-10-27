@@ -1,28 +1,33 @@
 // Snippet 1: Definitions and Middleware Setup
-// This snippet includes necessary definitions and sets up middleware for Fastify, session handling, cookies, and form parsing.
-const fastify = require("fastify")({ logger: false });
+// This snippet includes necessary definitions and sets up middleware for Express.js.
+const express = require("express");
 const path = require("path");
 const fs = require("fs");
 const db = require("./sqlite.js");
 const { sendWhatsAppMessage } = require("./twilioIntegration");
-const session = require("@fastify/session");
-const cookie = require("@fastify/cookie");
+const session = require("express-session");
+const cookieParser = require("cookie-parser");
 const bcrypt = require("bcrypt");
 const nodemailer = require("nodemailer");
+const bodyParser = require("body-parser");
+
+const app = express();
 
 // Middleware setup
-fastify.register(cookie);
-fastify.register(session, {
+app.use(cookieParser());
+app.use(session({
   secret: "a super secret key that should be stored securely",
-  cookie: { secure: false },
-  saveUninitialized: false,
   resave: false,
-});
-fastify.register(require("@fastify/formbody"));
+  saveUninitialized: false,
+  cookie: { secure: false }
+}));
+app.use(bodyParser.urlencoded({ extended: true }));
+app.use(bodyParser.json());
+app.use(express.static(path.join(__dirname, 'public')));
 
 // Setup email transport
 const transporter = nodemailer.createTransport({
-  service: "gmail", // Use your email service
+  service: "gmail",
   auth: {
     user: "your-email@gmail.com",
     pass: "your-email-password",
@@ -30,27 +35,15 @@ const transporter = nodemailer.createTransport({
 });
 
 const errorMessage = "Whoops! Error connecting to the database–please try again!";
+
 // Snippet 2: Root Route
 // This snippet defines the root route to serve the index.html file.
-fastify.get("/", (request, reply) => {
-  const filePath = path.join(__dirname, "public", "index.html");
-  fs.readFile(filePath, (err, data) => {
-    if (err) {
-      reply.status(500).send("Internal Server Error");
-    } else {
-      reply.type("text/html").send(data);
-    }
-  });
-});
-// Snippet 3: Serve Static and Dynamic Routes Pages
-// This snippet ensures that static files like CSS and JavaScript are served correctly.
-const fastifyStatic = require('fastify-static');
-fastify.register(fastifyStatic, {
-  root: path.join(__dirname, 'public'),
-  prefix: '/public/', // optional: default '/'
+app.get("/", (req, res) => {
+  res.sendFile(path.join(__dirname, "public", "index.html"));
 });
 
-// This snippet defines routes to serve static pages from the public folder.
+// Snippet 3: Serve Static and Dynamic Routes Pages
+// This snippet ensures that static files like CSS and JavaScript are served correctly.
 const pages = [
   "index.html",
   "budget-summary.html",
@@ -68,21 +61,14 @@ const pages = [
 ];
 
 pages.forEach((page) => {
-  fastify.get(`/${page}`, (request, reply) => {
-    const filePath = path.join(__dirname, "public", page);
-    fs.readFile(filePath, (err, data) => {
-      if (err) {
-        reply.status(500).send("Internal Server Error");
-      } else {
-        reply.type("text/html").send(data);
-      }
-    });
+  app.get(`/${page}`, (req, res) => {
+    res.sendFile(path.join(__dirname, "public", page));
   });
 });
 // Snippet 4: Revenue Report Endpoint
 // This snippet adds the revenue report endpoint to filter and fetch data based on the selected filter options.
-fastify.get("/api/revenue-report", async (request, reply) => {
-  const { filter, year, month, unit, floor } = request.query;
+app.get("/api/revenue-report", async (req, res) => {
+  const { filter, year, month, unit, floor } = req.query;
   let query = "SELECT * FROM payments WHERE year = ?";
   let queryParams = [year];
 
@@ -106,16 +92,16 @@ fastify.get("/api/revenue-report", async (request, reply) => {
 
   try {
     const result = await db.all(query, queryParams);
-    reply.send(result);
+    res.json(result);
   } catch (error) {
     console.error("Error fetching revenue report:", error);
-    reply.status(500).send({ error: errorMessage });
+    res.status(500).json({ error: errorMessage });
   }
 });
 // Snippet 5: Expense Report Endpoint
 // This snippet adds the expense report endpoint to filter and fetch data based on the selected filter options.
-fastify.get("/api/expense-report", async (request, reply) => {
-  const { filter, year, month, category } = request.query;
+app.get("/api/expense-report", async (req, res) => {
+  const { filter, year, month, category } = req.query;
   let query = "SELECT * FROM expenses WHERE strftime('%Y', expense_date) = ?";
   let queryParams = [year];
 
@@ -129,16 +115,16 @@ fastify.get("/api/expense-report", async (request, reply) => {
 
   try {
     const result = await db.all(query, queryParams);
-    reply.send(result);
+    res.json(result);
   } catch (error) {
     console.error("Error fetching expense report:", error);
-    reply.status(500).send({ error: errorMessage });
+    res.status(500).json({ error: errorMessage });
   }
 });
 // Snippet 6: Budget Details Endpoint
 // This snippet adds the budget details endpoint to fetch data based on the selected year and month.
-fastify.get("/api/budget-details", async (request, reply) => {
-  const { year, month } = request.query;
+app.get("/api/budget-details", async (req, res) => {
+  const { year, month } = req.query;
   let revenueQuery = "SELECT SUM(amount) AS totalRevenue FROM payments WHERE year = ?";
   let expensesQuery = "SELECT SUM(price) AS totalExpenses FROM expenses WHERE strftime('%Y', expense_date) = ?";
   let queryParams = [year];
@@ -156,20 +142,20 @@ fastify.get("/api/budget-details", async (request, reply) => {
 
     const availableBalance = balanceResult.starting_balance + revenueResult.totalRevenue - expensesResult.totalExpenses;
 
-    reply.send({
+    res.json({
       totalRevenue: revenueResult.totalRevenue,
       totalExpenses: expensesResult.totalExpenses,
       availableBalance: availableBalance,
     });
   } catch (error) {
     console.error("Error fetching budget details:", error);
-    reply.status(500).send({ error: errorMessage });
+    res.status(500).json({ error: errorMessage });
   }
 });
 // Snippet 7: Expense Input Endpoint
 // This snippet adds the expense input endpoint to allow dynamic data input for expenses.
-fastify.post("/api/expense-input", async (request, reply) => {
-  const { category, newCategory, item, amount, paymentDate } = request.body;
+app.post("/api/expense-input", async (req, res) => {
+  const { category, newCategory, item, amount, paymentDate } = req.body;
   const finalCategory = newCategory || category;
 
   try {
@@ -180,107 +166,92 @@ fastify.post("/api/expense-input", async (request, reply) => {
       "INSERT INTO expenses (category, item, price, expense_date, last_updated) VALUES (?, ?, ?, ?, ?)",
       [finalCategory, item, amount, paymentDate, new Date().toISOString()]
     );
-    reply.send({ success: true });
+    res.json({ success: true });
   } catch (error) {
     console.error("Error adding expense:", error);
-    reply.status(500).send({ success: false, error: errorMessage });
+    res.status(500).json({ success: false, error: errorMessage });
   }
 });
 // Snippet 8: Revenue Input Endpoint
 // This snippet adds the revenue input endpoint to allow dynamic data input for revenues.
-fastify.post("/api/revenue-input", async (request, reply) => {
-  const { unitNumber, amount, paymentDate, paymentMethod } = request.body;
+app.post("/api/revenue-input", async (req, res) => {
+  const { unitNumber, amount, paymentDate, paymentMethod } = req.body;
 
   try {
     await db.run(
       "INSERT INTO payments (unit_id, year, month, amount, payment_date, method_id) VALUES (?, strftime('%Y', ?), strftime('%m', ?), ?, ?, ?)",
       [unitNumber, paymentDate, paymentDate, amount, paymentDate, paymentMethod]
     );
-    reply.send({ success: true });
+    res.json({ success: true });
   } catch (error) {
     console.error("Error adding revenue:", error);
-    reply.status(500).send({ success: false, error: errorMessage });
+    res.status(500).json({ success: false, error: errorMessage });
   }
 });
 // Snippet 9: Fetch Categories and Payment Methods Endpoints
 // This snippet adds endpoints to fetch categories and payment methods dynamically.
-fastify.get("/api/categories", async (request, reply) => {
+app.get("/api/categories", async (req, res) => {
   try {
     const result = await db.all("SELECT name FROM categories");
-    reply.send(result);
+    res.json(result);
   } catch (error) {
     console.error("Error fetching categories:", error);
-    reply.status(500).send({ error: errorMessage });
+    res.status(500).json({ error: errorMessage });
   }
 });
 
-fastify.get("/api/payment-methods", async (request, reply) => {
+app.get("/api/payment-methods", async (req, res) => {
   try {
     const result = await db.all("SELECT method_id, method_name FROM payment_methods");
-    reply.send(result);
+    res.json(result);
   } catch (error) {
     console.error("Error fetching payment methods:", error);
-    reply.status(500).send({ error: errorMessage });
+    res.status(500).json({ error: errorMessage });
   }
 });
 // Snippet 10: Configure Server to Handle Clean URLs
 // This snippet configures the server to handle clean URLs for login and forget password pages.
-fastify.get("/login", (request, reply) => {
-  const filePath = path.join(__dirname, "public", "login.html");
-  fs.readFile(filePath, (err, data) => {
-    if (err) {
-      reply.status(500).send("Internal Server Error");
-    } else {
-      reply.type("text/html").send(data);
-    }
-  });
+app.get("/login", (req, res) => {
+  res.sendFile(path.join(__dirname, "public", "login.html"));
 });
 
-// Serve forget password page without .html extension
-fastify.get("/forget-password", (request, reply) => {
-  const filePath = path.join(__dirname, "public", "forget-password.html");
-  fs.readFile(filePath, (err, data) => {
-    if (err) {
-      reply.status(500).send("Internal Server Error");
-    } else {
-      reply.type("text/html").send(data);
-    }
-  });
+app.get("/forget-password", (req, res) => {
+  res.sendFile(path.join(__dirname, "public", "forget-password.html"));
 });
 // Snippet 11: Login Endpoint
 // This snippet handles login requests by verifying user credentials.
-fastify.post("/login", async (request, reply) => {
-  const { username, password } = request.body;
+app.post("/login", async (req, res) => {
+  const { username, password } = req.body;
   try {
     const user = await db.get("SELECT * FROM users WHERE username = ?", [username]);
     if (user && bcrypt.compareSync(password, user.password)) {
-      request.session.authenticated = true;
-      reply.send({ success: true });
+      req.session.authenticated = true;
+      res.json({ success: true });
     } else {
-      reply.send({ success: false });
+      res.json({ success: false });
     }
   } catch (error) {
     console.error("Error logging in:", error);
-    reply.send({ success: false });
+    res.json({ success: false });
   }
 });
 // Snippet 12: Password Reset Request Endpoint
 // This snippet handles requests to send a password reset email.
-fastify.post("/request-password-reset", async (request, reply) => {
-  const { email } = request.body;
+app.post("/request-password-reset", async (req, res) => {
+  const { email } = req.body;
   try {
     const user = await db.get("SELECT * FROM users WHERE email = ?", [email]);
     if (user) {
       const resetToken = generateResetToken();
       await db.run("UPDATE users SET reset_token = ? WHERE email = ?", [resetToken, email]);
       sendResetEmail(email, resetToken); // Implement sendResetEmail function
-      reply.send({ success: true, message: "Reset email sent" });
+      res.json({ success: true, message: "Reset email sent" });
     } else {
-      reply.send({ success: false, message: "Email not found" });
+      res.json({ success: false, message: "Email not found" });
     }
   } catch (error) {
     console.error("Error requesting password reset:", error);
-    reply.send({ success: false });
+    res.json({ success: false });
   }
 });
 
@@ -305,16 +276,13 @@ function sendResetEmail(email, token) {
 }
 // Snippet 13: Server Wakeup Probe and Start the Server
 // This snippet adds a wakeup probe endpoint and starts the server.
-fastify.get("/wakeup", (request, reply) => {
+app.get("/wakeup", (req, res) => {
   console.log("I'm awake");
-  reply.send("I'm awake");
+  res.send("I'm awake");
 });
 
 // Start the server
-fastify.listen({ port: process.env.PORT || 3000, host: "0.0.0.0" }, function (err, address) {
-  if (err) {
-    console.error(err);
-    process.exit(1);
-  }
-  console.log(`Your app is listening on ${address}`);
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => {
+  console.log(`Your app is listening on port ${PORT}`);
 });
