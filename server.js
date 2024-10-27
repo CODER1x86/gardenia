@@ -1,3 +1,5 @@
+//Defnitions
+
 const fastify = require("fastify")({ logger: false });
 const path = require("path");
 const fs = require("fs");
@@ -8,6 +10,7 @@ const cookie = require("@fastify/cookie");
 const bcrypt = require("bcrypt");
 const nodemailer = require("nodemailer");
 const errorMessage = "Whoops! Error connecting to the database–please try again!";
+
 // Ensure 'db' has the necessary methods to interact with the SQLite database
 
 module.exports = {
@@ -56,6 +59,9 @@ module.exports = {
   },
   // Add more methods for other operations as needed
 };
+
+//Snippet 3: Add the revenue report endpoint to filter and fetch data based on the selected filter options.
+
 fastify.get("/api/revenue-report", async (request, reply) => {
   const { filter, year, month, unit, floor } = request.query;
   let query = "SELECT * FROM payments WHERE year = ?";
