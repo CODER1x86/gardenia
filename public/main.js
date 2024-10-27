@@ -264,3 +264,52 @@ document.querySelector('form').onsubmit = (e) => {
     e.preventDefault();
   }
 };
+function checkAuth() {
+  fetch("/api/check-auth")
+    .then(response => response.json())
+    .then(data => {
+      if (data.authenticated) {
+        document.getElementById("authenticated-links").style.display = "block";
+        document.getElementById("login-link").style.display = "none";
+        document.getElementById("logout-link").style.display = "block";
+      } else {
+        document.getElementById("authenticated-links").style.display = "none";
+        document.getElementById("login-link").style.display = "block";
+        document.getElementById("logout-link").style.display = "none";
+      }
+    })
+    .catch(error => console.error("Error checking auth status:", error));
+}
+
+document.getElementById("login-button").addEventListener("click", () => {
+  const username = prompt("Enter username:");
+  const password = prompt("Enter password:");
+  fetch("/login", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ username, password })
+  })
+    .then(response => response.json())
+    .then(data => {
+      if (data.success) {
+        checkAuth();
+      } else {
+        alert("Login failed!");
+      }
+    })
+    .catch(error => console.error("Error during login:", error));
+});
+
+document.getElementById("logout-button").addEventListener("click", () => {
+  fetch("/logout", { method: "POST" })
+    .then(response => response.json())
+    .then(data => {
+      if (data.success) {
+        checkAuth();
+      }
+    })
+    .catch(error => console.error("Error during logout:", error));
+});
+
+checkAuth(); // Check auth status on page load
+

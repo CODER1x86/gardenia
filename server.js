@@ -3,8 +3,20 @@ const path = require('path');
 const fs = require('fs');
 const db = require("./sqlite.js");
 const { sendWhatsAppMessage } = require("./twilioIntegration");
+const session = require('@fastify/session');
+const cookie = require('@fastify/cookie');
+const bcrypt = require('bcrypt');
 
-fastify.register(require("@fastify/formbody"));
+fastify.register(cookie);
+fastify.register(session, {
+  secret: 'a super secret key that should be stored securely',
+  cookie: { secure: false }, // Set to true in production
+  saveUninitialized: false,
+  resave: false
+});
+
+// User data (replace with a proper database in production)
+const users = [{ username: 'admin', password: bcrypt.hashSync('password', 10) }];
 
 // Serve static files manually
 fastify.get("/public/*", (request, reply) => {
@@ -57,6 +69,7 @@ pages.forEach(page => {
     });
   });
 });
+
 // API route to get expenses
 fastify.get("/api/expenses", async (request, reply) => {
   let data = {};
@@ -70,6 +83,7 @@ fastify.get("/api/expenses", async (request, reply) => {
   const status = data.error ? 400 : 200;
   reply.status(status).send(data);
 });
+
 // API route to add a new expense
 fastify.post("/api/expenses", async (request, reply) => {
   let data = {};
@@ -90,10 +104,39 @@ fastify.post("/api/expenses", async (request, reply) => {
   const status = data.success ? 201 : auth ? 400 : 401;
   reply.status(status).send(data);
 });
+
+// Login route
+fastify.post('/login', (request, reply) => {
+  const { username, password } = request.body;
+  const user = users.find(u => u.username === username);
+  if (user && bcrypt.compareSync(password, user.password)) {
+    request.session.authenticated = true;
+    reply.send({ success: true });
+  } else {
+    reply.send({ success: false });
+  }
+});
+
+// Logout route
+fastify.post('/logout', (request, reply) => {
+  request.session.authenticated = false;
+  reply.send({ success: true });
+});
+
+// Middleware to protect routes
+fastify.addHook('preHandler', (request, reply, done) => {
+  if (request.raw.url.startsWith('/protected') && !request.session.authenticated) {
+    reply.status(401).send({ error: 'Not authenticated' });
+  } else {
+    done();
+  }
+});
+
 // Helper function to authenticate the user key
 const authorized = key => {
   return key && key === process.env.ADMIN_KEY;
 };
+
 // Start the server
 fastify.listen({ port: process.env.PORT || 3000, host: '0.0.0.0' }, function (err, address) {
   if (err) {
