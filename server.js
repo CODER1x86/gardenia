@@ -9,7 +9,9 @@ const session = require("@fastify/session");
 const cookie = require("@fastify/cookie");
 const bcrypt = require("bcrypt");
 const nodemailer = require("nodemailer");
+
 // Middleware setup
+
 fastify.register(cookie);
 fastify.register(session, {
   secret: "a super secret key that should be stored securely",
@@ -20,6 +22,7 @@ fastify.register(session, {
 fastify.register(require("@fastify/formbody"));
 
 // Setup email transport
+
 const transporter = nodemailer.createTransport({
   service: "gmail", // Use your email service
   auth: {
@@ -57,7 +60,7 @@ const pages = [
   "header.html",
   "footer.html",
   "footer-settings.html",
-  "style-modifier.html"
+  "style-modifier.html",
 ];
 
 pages.forEach((page) => {
@@ -70,6 +73,30 @@ pages.forEach((page) => {
         reply.type("text/html").send(data);
       }
     });
+  });
+});
+
+// Snippet: Header and Footer Route
+
+fastify.get("/header.html", (request, reply) => {
+  const filePath = path.join(__dirname, "public", "header.html");
+  fs.readFile(filePath, (err, data) => {
+    if (err) {
+      reply.status(500).send("Internal Server Error");
+    } else {
+      reply.type("text/html").send(data);
+    }
+  });
+});
+
+fastify.get("/footer.html", (request, reply) => {
+  const filePath = path.join(__dirname, "public", "footer.html");
+  fs.readFile(filePath, (err, data) => {
+    if (err) {
+      reply.status(500).send("Internal Server Error");
+    } else {
+      reply.type("text/html").send(data);
+    }
   });
 });
 
