@@ -10,6 +10,7 @@ const cookie = require("@fastify/cookie");
 const bcrypt = require("bcrypt");
 const nodemailer = require("nodemailer");
 
+
 // Middleware setup
 fastify.register(cookie);
 fastify.register(session, {
