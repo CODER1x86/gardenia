@@ -39,6 +39,7 @@ const initializeDatabase = async () => {
       year_id INTEGER PRIMARY KEY AUTOINCREMENT,
       year INTEGER
     )`);
+
   } catch (error) {
     console.error("Error initializing database:", error);
   }
@@ -89,11 +90,4 @@ const getBalance = async () => {
   }
 };
 
-module.exports = {
-  initializeDatabase,
-  getExpenses,
-  addExpense,
-  getRevenue,
-  getExpensesSum,
-  getBalance
-};
+module.exports = { db, initializeDatabase, getExpenses, addExpense, getRevenue, getExpensesSum, getBalance };

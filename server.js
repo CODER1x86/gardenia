@@ -3,7 +3,13 @@
 const express = require("express");
 const path = require("path");
 const fs = require("fs");
-const { initializeDatabase, getRevenue, getExpensesSum, getBalance } = require("./sqlite.js");
+const {
+  initializeDatabase,
+  db,
+  getRevenue,
+  getExpensesSum,
+  getBalance,
+} = require("./sqlite.js");
 const { sendWhatsAppMessage } = require("./twilioIntegration");
 const session = require("express-session");
 const cookieParser = require("cookie-parser");
@@ -72,7 +78,8 @@ pages.forEach((page) => {
 // This snippet adds the revenue report endpoint to filter and fetch data based on the selected filter options.
 app.get("/api/revenue-report", async (req, res) => {
   const { filter, year, month, unit } = req.query;
-  let query = "SELECT p.unit_id, p.amount, p.payment_date, pm.method_name, u.unit_number, u.floor, o.owner_name, t.tenant_name, p.year, p.month FROM payments p JOIN payment_methods pm ON p.method_id = pm.method_id JOIN units u ON p.unit_id = u.unit_id JOIN owners o ON u.owner_id = o.owner_id JOIN tenants t ON u.tenant_id = t.tenant_id WHERE p.year = ?";
+  let query =
+    "SELECT p.unit_id, p.amount, p.payment_date, pm.method_name, u.unit_number, u.floor, o.owner_name, t.tenant_name, p.year, p.month FROM payments p JOIN payment_methods pm ON p.method_id = pm.method_id JOIN units u ON p.unit_id = u.unit_id JOIN owners o ON u.owner_id = o.owner_id JOIN tenants t ON u.tenant_id = t.tenant_id WHERE p.year = ?";
   let queryParams = [year];
 
   if (filter === "month") {
@@ -95,7 +102,8 @@ app.get("/api/revenue-report", async (req, res) => {
 // This snippet adds the expense report endpoint to filter and fetch data based on the selected filter options.
 app.get("/api/expense-report", async (req, res) => {
   const { filter, year, month, category } = req.query;
-  let query = "SELECT category, item, price, expense_date, last_updated FROM expenses WHERE strftime('%Y', expense_date) = ?";
+  let query =
+    "SELECT category, item, price, expense_date, last_updated FROM expenses WHERE strftime('%Y', expense_date) = ?";
   let queryParams = [year];
 
   if (filter === "month") {
@@ -118,8 +126,10 @@ app.get("/api/expense-report", async (req, res) => {
 // This snippet adds the budget details endpoint to fetch data based on the selected year and month.
 app.get("/api/budget-details", async (req, res) => {
   const { filter, year, month } = req.query;
-  let revenueQuery = "SELECT SUM(amount) AS totalRevenue FROM payments WHERE year = ?";
-  let expensesQuery = "SELECT SUM(price) AS totalExpenses FROM expenses WHERE strftime('%Y', expense_date) = ?";
+  let revenueQuery =
+    "SELECT SUM(amount) AS totalRevenue FROM payments WHERE year = ?";
+  let expensesQuery =
+    "SELECT SUM(price) AS totalExpenses FROM expenses WHERE strftime('%Y', expense_date) = ?";
   let queryParams = [year];
 
   if (filter === "month") {
@@ -131,9 +141,15 @@ app.get("/api/budget-details", async (req, res) => {
   try {
     const revenueResult = await db.get(revenueQuery, queryParams);
     const expensesResult = await db.get(expensesQuery, queryParams);
-    const balanceResult = await db.get("SELECT starting_balance FROM balance WHERE year_id = (SELECT year_id FROM years WHERE year = ?)", [year]);
+    const balanceResult = await db.get(
+      "SELECT starting_balance FROM balance WHERE year_id = (SELECT year_id FROM years WHERE year = ?)",
+      [year]
+    );
 
-    const availableBalance = balanceResult.starting_balance + revenueResult.totalRevenue - expensesResult.totalExpenses;
+    const availableBalance =
+      balanceResult.starting_balance +
+      revenueResult.totalRevenue -
+      expensesResult.totalExpenses;
 
     res.json({
       totalRevenue: revenueResult.totalRevenue,
@@ -150,7 +166,10 @@ app.get("/api/budget-details", async (req, res) => {
 app.get("/api/months", async (req, res) => {
   try {
     const year = req.query.year;
-    const result = await db.all("SELECT DISTINCT strftime('%m', expense_date) AS month FROM expenses WHERE strftime('%Y', expense_date) = ?", [year]);
+    const result = await db.all(
+      "SELECT DISTINCT strftime('%m', expense_date) AS month FROM expenses WHERE strftime('%Y', expense_date) = ?",
+      [year]
+    );
     res.json(result);
   } catch (error) {
     console.error("Error fetching months:", error);
@@ -167,7 +186,6 @@ app.get("/api/years", async (req, res) => {
     res.status(500).json({ error: error.message });
   }
 });
-
 
 // Snippet 7: Expense Input Endpoint
 // This snippet adds the expense input endpoint to allow dynamic data input for expenses.
@@ -315,8 +333,11 @@ app.get("/api/check-auth", (req, res) => {
   }
 });
 
-// Snippet 15: Fetch Initial Data Endpoint with Enhanced Logging
-initializeDatabase().then(() => {
+/// Snippet 15: Fetch Initial Data Endpoint with Enhanced Logging
+// Initialize database
+initializeDatabase().then((database) => {
+  global.db = database;
+
   app.get("/api/data", async (req, res) => {
     try {
       console.log("Fetching revenue...");
@@ -332,10 +353,15 @@ initializeDatabase().then(() => {
       console.log("Balance result:", balanceResult);
 
       if (!balanceResult || !revenueResult || !expensesResult) {
-        throw new Error("Failed to fetch one or more components of initial data.");
+        throw new Error(
+          "Failed to fetch one or more components of initial data."
+        );
       }
 
-      const availableBalance = balanceResult.starting_balance + revenueResult.totalRevenue - expensesResult.totalExpenses;
+      const availableBalance =
+        balanceResult.starting_balance +
+        revenueResult.totalRevenue -
+        expensesResult.totalExpenses;
 
       res.json({
         totalRevenue: revenueResult.totalRevenue,
@@ -347,7 +373,7 @@ initializeDatabase().then(() => {
       res.status(500).json({ error: error.message });
     }
   });
-  });
+});
 
 // Start the server
 const PORT = process.env.PORT || 3000;
