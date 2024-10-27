@@ -134,18 +134,24 @@ function setInitialLanguage() {
 // This snippet defines the function to fetch initial data for the budget summary and display it.
 function fetchData() {
   fetch("/api/data") // Updated to use your new API endpoint
-    .then((response) => response.json())
-    .then((data) => {
+    .then(response => {
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      return response.json();
+    })
+    .then(data => {
       if (document.getElementById("available-balance")) {
         document.getElementById("available-balance").textContent = data.availableBalance;
         document.getElementById("total-revenue").textContent = data.totalRevenue;
         document.getElementById("total-expenses").textContent = data.totalExpenses;
       }
     })
-    .catch((error) => {
+    .catch(error => {
       console.error("Error fetching data:", error);
     });
 }
+
 // Snippet 6: Load Header and Footer
 // This snippet defines functions to load the header and footer, and initialize the menu after loading the header.
 function loadHeaderFooter() {
@@ -355,10 +361,16 @@ function saveData(data) {
 }
 // Snippet 11: Authentication and Authorization
 // This snippet defines functions to handle authentication, including checking auth status, logging in, and logging out.
+// Snippet 11: Authentication and Authorization
 function checkAuth() {
   fetch("/api/check-auth")
-    .then((response) => response.json())
-    .then((data) => {
+    .then(response => {
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      return response.json();
+    })
+    .then(data => {
       const authenticatedLinks = document.getElementById("authenticated-links");
       const loginLink = document.getElementById("login-link");
       const logoutLink = document.getElementById("logout-link");
@@ -373,8 +385,11 @@ function checkAuth() {
         if (logoutLink) logoutLink.style.display = "none";
       }
     })
-    .catch((error) => console.error("Error checking auth status:", error));
+    .catch(error => {
+      console.error("Error checking auth status:", error);
+    });
 }
+
 
 // Attach event listeners conditionally
 document.addEventListener("DOMContentLoaded", function () {

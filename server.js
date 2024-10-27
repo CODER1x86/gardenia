@@ -307,14 +307,41 @@ app.get("/api/check-auth", (req, res) => {
   }
 });
 
-// Snippet 15: Fetch Initial Data Endpoint
+// Snippet 15: Fetch Initial Data Endpoint with Enhanced Logging
 app.get("/api/data", async (req, res) => {
   try {
-    const revenueResult = await db.all("SELECT SUM(amount) AS totalRevenue FROM payments");
-    const expensesResult = await db.all("SELECT SUM(price) AS totalExpenses FROM expenses");
-    const balanceResult = await db.all("SELECT starting_balance FROM balance WHERE year_id = (SELECT year_id FROM years WHERE year = strftime('%Y', 'now'))");
+    console.log("Fetching revenue...");
+    const revenueResult = await db.all(
+      "SELECT SUM(amount) AS totalRevenue FROM payments"
+    );
+    console.log("Revenue result:", revenueResult);
 
-    const availableBalance = balanceResult[0].starting_balance + revenueResult[0].totalRevenue - expensesResult[0].totalExpenses;
+    console.log("Fetching expenses...");
+    const expensesResult = await db.all(
+      "SELECT SUM(price) AS totalExpenses FROM expenses"
+    );
+    console.log("Expenses result:", expensesResult);
+
+    console.log("Fetching balance...");
+    const balanceResult = await db.all(
+      "SELECT starting_balance FROM balance WHERE year_id = (SELECT year_id FROM years WHERE year = strftime('%Y', 'now'))"
+    );
+    console.log("Balance result:", balanceResult);
+
+    if (
+      !balanceResult.length ||
+      !revenueResult.length ||
+      !expensesResult.length
+    ) {
+      throw new Error(
+        "Failed to fetch one or more components of initial data."
+      );
+    }
+
+    const availableBalance =
+      balanceResult[0].starting_balance +
+      revenueResult[0].totalRevenue -
+      expensesResult[0].totalExpenses;
 
     res.json({
       totalRevenue: revenueResult[0].totalRevenue,
@@ -323,7 +350,7 @@ app.get("/api/data", async (req, res) => {
     });
   } catch (error) {
     console.error("Error fetching initial data:", error);
-    res.status(500).json({ error: errorMessage });
+    res.status(500).json({ error: error.message });
   }
 });
 
