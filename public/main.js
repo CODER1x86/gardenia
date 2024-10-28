@@ -181,3 +181,127 @@ function initializeMenu() {
     M.Dropdown.init(dropdowns);
   }
 }
+// Snippet 6: Data Fetching for Budget Summary
+// Fetches initial budget data to populate the budget summary section.
+function fetchData() {
+  fetch("/api/data")
+    .then((response) => {
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      return response.json();
+    })
+    .then((data) => {
+      const availableBalance = document.getElementById("available-balance");
+      const totalRevenue = document.getElementById("total-revenue");
+      const totalExpenses = document.getElementById("total-expenses");
+      if (availableBalance) {
+        availableBalance.textContent = data.availableBalance;
+      }
+      if (totalRevenue) {
+        totalRevenue.textContent = data.totalRevenue;
+      }
+      if (totalExpenses) {
+        totalExpenses.textContent = data.totalExpenses;
+      }
+    })
+    .catch((error) => console.error("Error fetching budget data:", error));
+}
+// Snippet 7: Authentication Handling
+// Checks authentication status and controls visibility of authenticated links.
+function checkAuth() {
+  fetch("/api/check-auth")
+    .then((response) => {
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      return response.json();
+    })
+    .then((data) => {
+      const authenticatedLinks = document.getElementById("authenticated-links");
+      const loginLink = document.getElementById("login-link");
+      const logoutLink = document.getElementById("logout-link");
+      if (data.authenticated) {
+        if (authenticatedLinks) authenticatedLinks.style.display = "block";
+        if (loginLink) loginLink.style.display = "none";
+        if (logoutLink) logoutLink.style.display = "block";
+      } else {
+        if (authenticatedLinks) authenticatedLinks.style.display = "none";
+        if (loginLink) loginLink.style.display = "block";
+        if (logoutLink) logoutLink.style.display = "none";
+      }
+    })
+    .catch((error) => console.error("Error checking auth status:", error));
+}
+// Snippet 8: Populate Floor Options
+// Function to populate floor options from the server
+function populateFloorOptions() {
+  fetch("/api/floors")
+    .then((response) => response.json())
+    .then((data) => {
+      const floorSelect = document.getElementById("floor-select");
+      if (floorSelect) {
+        floorSelect.innerHTML = ''; // Clear existing options
+        data.forEach((floor) => {
+          const option = document.createElement("option");
+          option.value = floor.name;
+          option.textContent = floor.name;
+          floorSelect.appendChild(option);
+        });
+      }
+    })
+    .catch((error) => console.error("Error fetching floor options:", error));
+}
+// Snippet 9: Load Unit Data and Handle Display
+// Function to load unit data and handle the display of detailed information
+function loadUnitData() {
+  const unitNumberSelect = document.getElementById("unit-number");
+  const floorField = document.getElementById("floor");
+  const ownerNameField = document.getElementById("owner-name");
+  const tenantNameField = document.getElementById("tenant-name");
+
+  fetch("/api/units")
+    .then((response) => {
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      return response.json();
+    })
+    .then((data) => {
+      const unitData = data.reduce((acc, unit) => {
+        acc[unit.unit_number] = {
+          floor: unit.floor,
+          owner: unit.owner,
+          ownerPhone: unit.ownerPhone,
+          tenant: unit.tenant,
+          tenantPhone: unit.tenantPhone,
+          lastPaymentMonth: unit.lastPaymentMonth,
+          lastPaymentDate: unit.lastPaymentDate,
+        };
+        return acc;
+      }, {});
+
+      if (unitNumberSelect) {
+        unitNumberSelect.addEventListener("change", function () {
+          const selectedUnit = this.value;
+          if (unitData[selectedUnit]) {
+            floorField.textContent = unitData[selectedUnit].floor;
+            ownerNameField.textContent = unitData[selectedUnit].owner;
+            tenantNameField.textContent = unitData[selectedUnit].tenant || "";
+            document.getElementById("owner-phone").textContent =
+              unitData[selectedUnit].ownerPhone;
+            document.getElementById("tenant-phone").textContent =
+              unitData[selectedUnit].tenantPhone || "";
+            document.getElementById("last-payment-month").textContent =
+              unitData[selectedUnit].lastPaymentMonth;
+            document.getElementById("last-payment-date").textContent =
+              unitData[selectedUnit].lastPaymentDate;
+            document.getElementById("unit-details").style.display = "block";
+          } else {
+            document.getElementById("unit-details").style.display = "none";
+          }
+        });
+      }
+    })
+    .catch((error) => console.error("Error loading unit data:", error));
+}
