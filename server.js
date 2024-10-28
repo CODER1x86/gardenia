@@ -206,3 +206,135 @@ app.post("/api/revenue-input", async (req, res) => {
     res.status(500).json({ success: false, error: error.message });
   }
 });
+// Snippet 10: Fetch Categories Endpoint
+// This snippet adds an endpoint to fetch categories dynamically.
+app.get("/api/categories", async (req, res) => {
+  try {
+    const result = await global.db.all("SELECT name FROM categories");
+    res.json(result);
+  } catch (error) {
+    console.error("Error fetching categories:", error);
+    res.status(500).json({ error: error.message });
+  }
+});
+// Snippet 11: Fetch Payment Methods Endpoint
+// This snippet adds an endpoint to fetch payment methods dynamically.
+app.get("/api/payment-methods", async (req, res) => {
+  try {
+    const result = await global.db.all("SELECT method_id, method_name FROM payment_methods");
+    res.json(result);
+  } catch (error) {
+    console.error("Error fetching payment methods:", error);
+    res.status(500).json({ error: error.message });
+  }
+});
+// Snippet 13: Login Endpoint
+// This snippet handles login requests by verifying user credentials.
+app.post("/login", async (req, res) => {
+  const { username, password } = req.body;
+  try {
+    const user = await global.db.get("SELECT * FROM users WHERE username = ?", [username]);
+    if (user && bcrypt.compareSync(password, user.password)) {
+      req.session.authenticated = true;
+      res.json({ success: true });
+    } else {
+      res.json({ success: false });
+    }
+  } catch (error) {
+    console.error("Error logging in:", error);
+    res.json({ success: false });
+  }
+});
+// Snippet 14: Password Reset Request Endpoint
+// This snippet handles requests to send a password reset email.
+app.post("/request-password-reset", async (req, res) => {
+  const { email } = req.body;
+  try {
+    const user = await global.db.get("SELECT * FROM users WHERE email = ?", [email]);
+    if (user) {
+      const resetToken = generateResetToken();
+      await global.db.run("UPDATE users SET reset_token = ? WHERE email = ?", [
+        resetToken,
+        email,
+      ]);
+      sendResetEmail(email, resetToken); // Implement sendResetEmail function
+      res.json({ success: true, message: "Reset email sent" });
+    } else {
+      res.json({ success: false, message: "Email not found" });
+    }
+  } catch (error) {
+    console.error("Error requesting password reset:", error);
+    res.json({ success: false });
+  }
+});
+
+function generateResetToken() {
+  return Math.random().toString(36).substr(2);
+}
+
+function sendResetEmail(email, token) {
+  const mailOptions = {
+    from: "your-email@gmail.com",
+    to: email,
+    subject: "Password Reset",
+    text: `Please use the following token to reset your password: ${token}`,
+  };
+  transporter.sendMail(mailOptions, (error, info) => {
+    if (error) {
+      return console.error("Error sending reset email:", error);
+    }
+    console.log("Reset email sent: " + info.response);
+  });
+}
+// Snippet 15: Fetch Initial Data Endpoint with Enhanced Logging
+// This snippet adds an endpoint to fetch initial data with enhanced logging.
+app.get("/api/data", async (req, res) => {
+  try {
+    console.log('DB in /api/data:', global.db);
+    console.log("Fetching revenue...");
+    const revenueResult = await getRevenue();
+    console.log("Revenue result:", revenueResult);
+    console.log("Fetching expenses...");
+    const expensesResult = await getExpensesSum();
+    console.log("Expenses result:", expensesResult);
+    console.log("Fetching balance...");
+    const balanceResult = await getBalance();
+    console.log("Balance result:", balanceResult);
+
+    if (!balanceResult || !revenueResult || !expensesResult) {
+      throw new Error("Failed to fetch one or more components of initial data.");
+    }
+
+    const availableBalance = balanceResult.starting_balance + revenueResult.totalRevenue - expensesResult.totalExpenses;
+    res.json({
+      totalRevenue: revenueResult.totalRevenue,
+      totalExpenses: expensesResult.totalExpenses,
+      availableBalance,
+    });
+  } catch (err) {
+    console.error("Error fetching initial data:", err);
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+// Snippet 16: Check Authentication Status Endpoint
+// This snippet adds an endpoint to check the user's authentication status.
+app.get("/api/check-auth", (req, res) => {
+  if (req.session.authenticated) {
+    res.json({ authenticated: true });
+  } else {
+    res.json({ authenticated: false });
+  }
+});
+// Snippet 17: Server Wakeup Probe
+// This snippet adds a wakeup probe endpoint to wake the server up.
+app.get("/wakeup", (req, res) => {
+  console.log("I'm awake");
+  res.send("I'm awake");
+});
+// Snippet 18: Start the Server
+// This snippet starts the server and listens on the specified port.
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => {
+  console.log(`Server is running on port ${PORT}`);
+});
+});
