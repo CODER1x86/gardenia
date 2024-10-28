@@ -234,26 +234,31 @@ initializeDatabase().then(() => {
 
   // Endpoint: Fetch Initial Data
   app.get("/api/data", async (req, res) => {
-    try {
-      const revenueResult = await getRevenue();
-      const expensesResult = await getExpensesSum();
-      const balanceResult = await getBalance();
+  try {
+    const revenueResult = await getRevenue();
+    console.log("Revenue Result:", revenueResult);
 
-      if (!balanceResult || !revenueResult || !expensesResult) {
-        throw new Error("Failed to fetch one or more components of initial data.");
-      }
+    const expensesResult = await getExpensesSum();
+    console.log("Expenses Result:", expensesResult);
 
-      const availableBalance = balanceResult.starting_balance + revenueResult.totalRevenue - expensesResult.totalExpenses;
-      res.json({
-        totalRevenue: revenueResult.totalRevenue,
-        totalExpenses: expensesResult.totalExpenses,
-        availableBalance,
-      });
-    } catch (err) {
-      console.error("Error fetching initial data:", err);
-      res.status(500).json({ success: false, error: err.message });
+    const balanceResult = await getBalance();
+    console.log("Balance Result:", balanceResult);
+
+    if (!balanceResult || !revenueResult || !expensesResult) {
+      throw new Error("Failed to fetch one or more components of initial data.");
     }
-  });
+
+    const availableBalance = balanceResult.starting_balance + revenueResult.totalRevenue - expensesResult.totalExpenses;
+    res.json({
+      totalRevenue: revenueResult.totalRevenue,
+      totalExpenses: expensesResult.totalExpenses,
+      availableBalance,
+    });
+  } catch (err) {
+    console.error("Error fetching initial data:", err);
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
   
   // Start Server
   const PORT = process.env.PORT || 3000;
