@@ -13,6 +13,7 @@ document.addEventListener("DOMContentLoaded", function () {
   setInitialLanguage(); // Set language based on user preference
   setInitialYearOptions(); // Populate year options
   setInitialMonthOptions(); // Populate month options
+  setInitialCategoryOptions(); //Populate category options
   const filterOption = document.getElementById("filter-option");
   if (filterOption) {
     filterOption.addEventListener("change", handleFilterChange);
