@@ -1,4 +1,3 @@
-// Imports and Definitions
 const fs = require("fs");
 const path = require("path");
 const sqlite3 = require("sqlite3").verbose();
@@ -23,7 +22,6 @@ const initializeDatabase = async () => {
       payment_date TEXT,
       method_id INTEGER
     )`);
-
     await db.run(`CREATE TABLE IF NOT EXISTS expenses (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       category TEXT,
@@ -32,13 +30,11 @@ const initializeDatabase = async () => {
       expense_date TEXT,
       last_updated TEXT
     )`);
-
     await db.run(`CREATE TABLE IF NOT EXISTS balance (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       year_id INTEGER,
       starting_balance REAL
     )`);
-
     await db.run(`CREATE TABLE IF NOT EXISTS years (
       year_id INTEGER PRIMARY KEY AUTOINCREMENT,
       year INTEGER UNIQUE
@@ -61,27 +57,10 @@ const getExpenses = async () => {
   }
 };
 
-// Insert a new expense
-const addExpense = async (expense) => {
-  try {
-    const result = await db.run(
-      "INSERT INTO expenses (category, item, price, expense_date, last_updated) VALUES (?, ?, ?, ?, ?)",
-      [expense.category, expense.item, expense.price, expense.expense_date, expense.last_updated]
-    );
-    return result.changes > 0;
-  } catch (error) {
-    console.error("Error adding expense:", error);
-    throw error;
-  }
-};
-
 // Calculate total revenue for the specified year
-const getRevenue = async (year) => {
+const getRevenue = async () => {
   try {
-    return await db.get(
-      "SELECT SUM(amount) AS totalRevenue FROM payments WHERE year = ?",
-      [year]
-    );
+    return await db.get("SELECT SUM(amount) AS totalRevenue FROM payments WHERE year = strftime('%Y', 'now')");
   } catch (error) {
     console.error("Error fetching revenue:", error);
     throw error;
@@ -89,12 +68,9 @@ const getRevenue = async (year) => {
 };
 
 // Calculate total expenses for the specified year
-const getExpensesSum = async (year) => {
+const getExpensesSum = async () => {
   try {
-    return await db.get(
-      "SELECT SUM(price) AS totalExpenses FROM expenses WHERE strftime('%Y', expense_date) = ?",
-      [year]
-    );
+    return await db.get("SELECT SUM(price) AS totalExpenses FROM expenses WHERE strftime('%Y', expense_date) = strftime('%Y', 'now')");
   } catch (error) {
     console.error("Error fetching total expenses:", error);
     throw error;
@@ -102,13 +78,12 @@ const getExpensesSum = async (year) => {
 };
 
 // Retrieve starting balance for the specified year
-const getBalance = async (year) => {
+const getBalance = async () => {
   try {
     return await db.get(
-      `SELECT starting_balance 
-       FROM balance 
-       WHERE year_id = (SELECT year_id FROM years WHERE year = ?)`,
-      [year]
+      `SELECT starting_balance
+       FROM balance
+       WHERE year_id = (SELECT year_id FROM years WHERE year = strftime('%Y', 'now'))`
     );
   } catch (error) {
     console.error("Error fetching balance:", error);
@@ -116,13 +91,4 @@ const getBalance = async (year) => {
   }
 };
 
-// Module Exports
-module.exports = {
-  getDb,
-  initializeDatabase,
-  getExpenses,
-  addExpense,
-  getRevenue,
-  getExpensesSum,
-  getBalance,
-};
+module.exports = { initializeDatabase, getDb, getExpenses, getRevenue, getExpensesSum, getBalance };

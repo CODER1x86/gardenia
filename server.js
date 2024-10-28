@@ -2,7 +2,7 @@
 const express = require("express");
 const path = require("path");
 const fs = require("fs");
-const { initializeDatabase, getRevenue, getExpensesSum, getBalance } = require("./sqlite.js");
+const { initializeDatabase, getDb, getRevenue, getExpensesSum, getBalance } = require("./sqlite.js");
 const { sendWhatsAppMessage } = require("./twilioIntegration");
 const session = require("express-session");
 const cookieParser = require("cookie-parser");
@@ -35,7 +35,7 @@ const transporter = nodemailer.createTransport({
 const errorMessage = "Whoops! Error connecting to the database–please try again!";
 // Snippet 2: Database Initialization and Static File Routing
 initializeDatabase().then((db) => {
-  global.db = db; // Ensure db is globally accessible
+  global.db = getDb(); // Ensure db is globally accessible
 
   // Confirm db initialization
   console.log('DB Initialized:', global.db);
