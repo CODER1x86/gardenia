@@ -48,6 +48,7 @@ function setInitialYearOptions() {
   fetch("/api/years")
     .then((response) => response.json())
     .then((data) => {
+      console.log("Years fetched from API:", data);
       const yearSelect = document.getElementById("year-select");
       if (yearSelect) {
         yearSelect.innerHTML = ''; // Clear existing options
@@ -67,6 +68,7 @@ function setInitialMonthOptions() {
   fetch(`/api/months?year=${year}`)
     .then((response) => response.json())
     .then((data) => {
+      console.log("Months fetched from API:", data);
       const monthSelect = document.getElementById("month-select");
       if (monthSelect) {
         monthSelect.innerHTML = ""; // Clear existing options
