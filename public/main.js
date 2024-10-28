@@ -29,15 +29,22 @@ function handleFilterChange() {
   const filter = document.querySelector(
     'input[name="filter-option"]:checked'
   ).value;
+
   document.getElementById("year-select-container").style.display =
     filter === "year" || filter === "month" ? "block" : "none";
   document.getElementById("month-select-container").style.display =
     filter === "month" ? "block" : "none";
-  document.getElementById("unit-select-container").style.display =
-    filter === "unit" ? "block" : "none";
-  if (filter === "unit") {
+  document.getElementById("category-select-container").style.display =
+    filter === "category" ? "block" : "none";
+
+  if (filter === "category") {
+    setInitialCategoryOptions(); // Ensure categories are fetched when category filter is selected
+  } else if (filter === "unit") {
     populateUnitOptions();
   }
+
+  document.getElementById("unit-select-container").style.display =
+    filter === "unit" ? "block" : "none";
 }
 
 document.querySelectorAll('input[name="filter-option"]').forEach((elem) => {
@@ -51,7 +58,7 @@ function setInitialYearOptions() {
       console.log("Years fetched from API:", data);
       const yearSelect = document.getElementById("year-select");
       if (yearSelect) {
-        yearSelect.innerHTML = ''; // Clear existing options
+        yearSelect.innerHTML = ""; // Clear existing options
         data.forEach((year) => {
           const option = document.createElement("option");
           option.value = year.year;
@@ -84,6 +91,24 @@ function setInitialMonthOptions() {
       }
     })
     .catch((error) => console.error("Error fetching months:", error));
+}
+// Add function to set initial category options
+function setInitialCategoryOptions() {
+  fetch("/api/categories")
+    .then((response) => response.json())
+    .then((data) => {
+      const categorySelect = document.getElementById("category-select");
+      if (categorySelect) {
+        categorySelect.innerHTML = ""; // Clear existing options
+        data.forEach((category) => {
+          const option = document.createElement("option");
+          option.value = category.name;
+          option.textContent = category.name;
+          categorySelect.appendChild(option);
+        });
+      }
+    })
+    .catch((error) => console.error("Error fetching categories:", error));
 }
 
 function populateUnitOptions() {
@@ -243,7 +268,7 @@ function populateFloorOptions() {
     .then((data) => {
       const floorSelect = document.getElementById("floor-select");
       if (floorSelect) {
-        floorSelect.innerHTML = ''; // Clear existing options
+        floorSelect.innerHTML = ""; // Clear existing options
         data.forEach((floor) => {
           const option = document.createElement("option");
           option.value = floor.name;
