@@ -125,3 +125,149 @@ function populateUnitOptions() {
     })
     .catch((error) => console.error("Error fetching unit options:", error));
 }
+// Fetches report data based on selected filters and displays it in the table.
+function fetchReportData() {
+  const filter = document.querySelector('input[name="filter-option"]:checked').value;
+  const year = document.getElementById("year-select").value;
+  const month = document.getElementById("month-select").value;
+  let query = `/api/budget-details?filter=${filter}&year=${year}`;
+  if (filter === "month") query += `&month=${month}`;
+
+  fetch(query)
+    .then((response) => {
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      return response.json();
+    })
+    .then((data) => {
+      const tbody = document.getElementById("budget-table-body");
+      if (tbody) {
+        tbody.innerHTML = `
+          <tr>
+            <td>${data.totalRevenue}</td>
+            <td>${data.totalExpenses}</td>
+            <td>${data.availableBalance}</td>
+          </tr>
+        `;
+      }
+      const reportInfo = document.getElementById("report-info");
+      const selectedFilters = document.getElementById("selected-filters");
+      if (reportInfo && selectedFilters) {
+        let filterText = filter === "year" ? year : `${month}/${year}`;
+        selectedFilters.textContent = filterText;
+        reportInfo.style.display = "inline";
+      }
+    })
+    .catch((error) => console.error("Error fetching report data:", error));
+}
+// Set language preference and apply it to the document.
+function setLanguage(language) {
+  localStorage.setItem("language", language);
+  document.documentElement.lang = language;
+}
+
+function setInitialLanguage() {
+  const language = localStorage.getItem("language") || "en";
+  setLanguage(language);
+}
+// Loads header and footer templates, and initializes the menu after loading the header.
+function loadHeaderFooter() {
+  fetch("/header.html")
+    .then((response) => response.text())
+    .then((html) => {
+      const headerPlaceholder = document.getElementById("header-placeholder");
+      if (headerPlaceholder) {
+        headerPlaceholder.innerHTML = html;
+        initializeMenu();
+      }
+    })
+    .catch((error) => console.error("Error loading header:", error));
+
+  fetch("/footer.html")
+    .then((response) => response.text())
+    .then((html) => {
+      const footerPlaceholder = document.getElementById("footer-placeholder");
+      if (footerPlaceholder) {
+        footerPlaceholder.innerHTML = html;
+      }
+    })
+    .catch((error) => console.error("Error loading footer:", error));
+}
+
+function initializeMenu() {
+  const dropdowns = document.querySelectorAll(".dropdown-trigger");
+  if (typeof M !== "undefined") {
+    M.Dropdown.init(dropdowns);
+  }
+}
+// Fetches initial budget data to populate the budget summary section.
+function fetchData() {
+  fetch("/api/data")
+    .then((response) => {
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      return response.json();
+    })
+    .then((data) => {
+      const availableBalance = document.getElementById("available-balance");
+      const totalRevenue = document.getElementById("total-revenue");
+      const totalExpenses = document.getElementById("total-expenses");
+
+      if (availableBalance) {
+        availableBalance.textContent = data.availableBalance;
+      }
+      if (totalRevenue) {
+        totalRevenue.textContent = data.totalRevenue;
+      }
+      if (totalExpenses) {
+        totalExpenses.textContent = data.totalExpenses;
+      }
+    })
+    .catch((error) => console.error("Error fetching budget data:", error));
+}
+// Checks authentication status and controls visibility of authenticated links.
+function checkAuth() {
+  fetch("/api/check-auth")
+    .then((response) => {
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      return response.json();
+    })
+    .then((data) => {
+      const authenticatedLinks = document.getElementById("authenticated-links");
+      const loginLink = document.getElementById("login-link");
+      const logoutLink = document.getElementById("logout-link");
+
+      if (data.authenticated) {
+        if (authenticatedLinks) authenticatedLinks.style.display = "block";
+        if (loginLink) loginLink.style.display = "none";
+        if (logoutLink) logoutLink.style.display = "block";
+      } else {
+        if (authenticatedLinks) authenticatedLinks.style.display = "none";
+        if (loginLink) loginLink.style.display = "block";
+        if (logoutLink) logoutLink.style.display = "none";
+      }
+    })
+    .catch((error) => console.error("Error checking auth status:", error));
+}
+// Function to populate floor options from the server
+function populateFloorOptions() {
+  fetch("/api/floors")
+    .then((response) => response.json())
+    .then((data) => {
+      const floorSelect = document.getElementById("floor-select");
+      if (floorSelect) {
+        floorSelect.innerHTML = ""; // Clear existing options
+        data.forEach((floor) => {
+          const option = document.createElement("option");
+          option.value = floor;
+          option.textContent = floor;
+          floorSelect.appendChild(option);
+        });
+      }
+    })
+    .catch((error) => console.error("Error fetching floor options:", error));
+}
