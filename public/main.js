@@ -271,3 +271,55 @@ function populateFloorOptions() {
     })
     .catch((error) => console.error("Error fetching floor options:", error));
 }
+// Function to load unit data and handle the display of detailed information
+function loadUnitData() {
+  const unitNumberSelect = document.getElementById("unit-number");
+  const floorField = document.getElementById("floor");
+  const ownerNameField = document.getElementById("owner-name");
+  const tenantNameField = document.getElementById("tenant-name");
+
+  fetch("/api/units")
+    .then((response) => {
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      return response.json();
+    })
+    .then((data) => {
+      const unitData = data.reduce((acc, unit) => {
+        acc[unit.unit_number] = {
+          floor: unit.floor,
+          owner: unit.owner,
+          ownerPhone: unit.owner_phone,
+          tenant: unit.tenant,
+          tenantPhone: unit.tenant_phone,
+          lastPaymentMonth: unit.last_payment_month,
+          lastPaymentDate: unit.last_payment_date,
+        };
+        return acc;
+      }, {});
+
+      if (unitNumberSelect) {
+        unitNumberSelect.addEventListener("change", function () {
+          const selectedUnit = this.value;
+          if (unitData[selectedUnit]) {
+            floorField.textContent = unitData[selectedUnit].floor;
+            ownerNameField.textContent = unitData[selectedUnit].owner;
+            tenantNameField.textContent = unitData[selectedUnit].tenant || "";
+            document.getElementById("owner-phone").textContent =
+              unitData[selectedUnit].ownerPhone;
+            document.getElementById("tenant-phone").textContent =
+              unitData[selectedUnit].tenantPhone || "";
+            document.getElementById("last-payment-month").textContent =
+              unitData[selectedUnit].lastPaymentMonth;
+            document.getElementById("last-payment-date").textContent =
+              unitData[selectedUnit].lastPaymentDate;
+            document.getElementById("unit-details").style.display = "block";
+          } else {
+            document.getElementById("unit-details").style.display = "none";
+          }
+        });
+      }
+    })
+    .catch((error) => console.error("Error loading unit data:", error));
+}
