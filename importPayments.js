@@ -19,6 +19,12 @@ fs.createReadStream('./payments.csv')
         const year = row['year'];
 
         const monthData = {
+            'January': row['January'],
+            'February': row['February'],
+            'March': row['March'],
+            'April': row['April'],
+            'May': row['May'],
+            'June': row['June'],
             'July': row['July'],
             'August': row['August'],
             'September': row['September'],
@@ -33,6 +39,8 @@ fs.createReadStream('./payments.csv')
             const method_id = row[`${month} Method`];
 
             if (amount) {
+                console.log(`Inserting payment: unit_id=${unit_id}, amount=${amount}, date=${date}, method_id=${method_id}`);
+                
                 db.run(insertPaymentMethod, [method_id], (err) => {
                     if (err) {
                         console.error(err.message);
