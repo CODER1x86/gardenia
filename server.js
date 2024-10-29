@@ -293,14 +293,51 @@ app.get("/api/data", async (req, res) => {
     console.log("Fetching balance...");
     const balanceResult = await getBalance();
     console.log("Balance result:", balanceResult);
+
     if (!balanceResult || !revenueResult || !expensesResult) {
       throw new Error("Failed to fetch one or more components of initial data.");
     }
+    
     const availableBalance = balanceResult.starting_balance + revenueResult.totalRevenue - expensesResult.totalExpenses;
+
     res.json({
       totalRevenue: revenueResult.totalRevenue,
       totalExpenses: expensesResult.totalExpenses,
       availableBalance,
     });
   } catch (err) {
-    console.error("Error fetching
+    console.error("Error fetching initial data:", err);
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+// Snippet 15: Check Authentication Status Endpoint
+// This snippet adds an endpoint to check the user's authentication status.
+app.get("/api/check-auth", (req, res) => {
+  if (req.session.authenticated) {
+    res.json({ authenticated: true });
+  } else {
+    res.json({ authenticated: false });
+  }
+});
+// Snippet 16: Check Authentication Status Endpoint
+// This snippet adds an endpoint to check the user's authentication status.
+app.get("/api/check-auth", (req, res) => {
+  if (req.session.authenticated) {
+    res.json({ authenticated: true });
+  } else {
+    res.json({ authenticated: false });
+  }
+});
+// Snippet 17: Server Wakeup Probe
+// This snippet adds a wakeup probe endpoint to wake the server up.
+app.get("/wakeup", (req, res) => {
+  console.log("I'm awake");
+  res.send("I'm awake");
+});
+// Snippet 18: Start the Server
+// This snippet starts the server and listens on the specified port.
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => {
+  console.log(`Server is running on port ${PORT}`);
+});
+
