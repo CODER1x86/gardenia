@@ -104,6 +104,32 @@ function toggleAuthLinks(isAuthenticated) {
   });
 }
 
+// Mock authentication function
+function login(username, password) {
+  // Here, you would normally verify the credentials with your server
+  const authenticated = true; // Simulate successful authentication
+
+  if (authenticated) {
+    document.getElementById('facility-management').style.display = 'block';
+    document.getElementById('site-settings').style.display = 'block';
+    document.getElementById('login-link').style.display = 'none';
+    document.getElementById('logout-link').style.display = 'block';
+    alert('Login successful!');
+  } else {
+    alert('Login failed. Please try again.');
+  }
+}
+
+// Logout functionality
+document.getElementById('logout-button').addEventListener('click', () => {
+  document.getElementById('facility-management').style.display = 'none';
+  document.getElementById('site-settings').style.display = 'none';
+  document.getElementById('login-link').style.display = 'block';
+  document.getElementById('logout-link').style.display = 'none';
+  alert('Logged out successfully!');
+});
+
+
 // Set Language Preference
 function setLanguagePreference() {
   const language = localStorage.getItem("language") || "en";
