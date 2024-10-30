@@ -19,12 +19,14 @@ const initializeDatabase = async () => {
       owner_phone TEXT NOT NULL,
       created_at TEXT
     )`);
+
     await db.run(`CREATE TABLE IF NOT EXISTS tenants (
       tenant_id INTEGER PRIMARY KEY,
       tenant_name TEXT,
       tenant_phone TEXT,
       created_at TEXT
     )`);
+
     await db.run(`CREATE TABLE IF NOT EXISTS units (
       unit_id INTEGER PRIMARY KEY,
       floor TEXT NOT NULL,
@@ -36,10 +38,12 @@ const initializeDatabase = async () => {
       FOREIGN KEY (owner_id) REFERENCES owners(owner_id),
       FOREIGN KEY (tenant_id) REFERENCES tenants(tenant_id)
     )`);
+
     await db.run(`CREATE TABLE IF NOT EXISTS payment_methods (
       method_id INTEGER PRIMARY KEY,
       method_name TEXT NOT NULL UNIQUE
     )`);
+
     await db.run(`CREATE TABLE IF NOT EXISTS revenue (
       revenue_id INTEGER PRIMARY KEY,
       unit_id INTEGER,
@@ -49,6 +53,7 @@ const initializeDatabase = async () => {
       FOREIGN KEY (unit_id) REFERENCES units(unit_id),
       FOREIGN KEY (method_id) REFERENCES payment_methods(method_id)
     )`);
+
     await db.run(`CREATE TABLE IF NOT EXISTS expenses (
       expense_id INTEGER PRIMARY KEY,
       category TEXT,
@@ -59,6 +64,7 @@ const initializeDatabase = async () => {
       unit_id INTEGER REFERENCES units(unit_id),
       receipt_photo BLOB
     )`);
+
     await db.run(`CREATE TABLE IF NOT EXISTS inventory (
       inventory_id INTEGER PRIMARY KEY,
       expense_id INTEGER REFERENCES expenses(expense_id),
@@ -67,6 +73,7 @@ const initializeDatabase = async () => {
       last_updated TEXT,
       status TEXT
     )`);
+
     await db.run(`CREATE TABLE IF NOT EXISTS users (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       username TEXT UNIQUE,
@@ -75,6 +82,7 @@ const initializeDatabase = async () => {
       reset_token TEXT,
       created_at TEXT
     )`);
+
     await db.run(`CREATE TABLE IF NOT EXISTS balance (
       balance_id INTEGER PRIMARY KEY AUTOINCREMENT,
       year INTEGER NOT NULL,
@@ -84,59 +92,68 @@ const initializeDatabase = async () => {
       available_balance INT NOT NULL,
       created_at TEXT DEFAULT CURRENT_TIMESTAMP
     )`);
+
+    // Create indexes
+    await db.run("CREATE INDEX IF NOT EXISTS idx_payment_date ON revenue(payment_date)");
+    await db.run("CREATE INDEX IF NOT EXISTS idx_expense_date ON expenses(expense_date)");
+
   } catch (error) {
     console.error("Error initializing database:", error);
   }
 };
 
-// Accessor for the database instance
 const getDb = () => db;
 
-// Fetch all expenses
+// Helper function to run database queries with parameterized statements
+const dbQuery = async (query, params = []) => {
+  return new Promise((resolve, reject) => {
+    db.all(query, params, (error, rows) => {
+      if (error) reject(error);
+      else resolve(rows);
+    });
+  });
+};
+
 const getExpenses = async () => {
   try {
-    return await db.all("SELECT * FROM expenses");
+    return await dbQuery("SELECT * FROM expenses");
   } catch (error) {
     console.error("Error fetching expenses:", error);
     throw error;
   }
 };
 
-// Calculate and retrieve the total revenue for a specific year
 const getRevenue = async (year) => {
   try {
-    const result = await db.get("SELECT SUM(amount) AS totalRevenue FROM revenue WHERE strftime('%Y', payment_date) = ?", [year]);
+    const result = await dbQuery("SELECT SUM(amount) AS totalRevenue FROM revenue WHERE strftime('%Y', payment_date) = ?", [year]);
     console.log(`Revenue result for year ${year}:`, result);
-    return result;
+    return result[0]; // Assuming we get a single row
   } catch (error) {
     console.error("Error fetching revenue:", error);
     throw error;
   }
 };
 
-// Calculate and retrieve the total expenses for a specific year
 const getExpensesSum = async (year) => {
   try {
-    const result = await db.get("SELECT SUM(price) AS totalExpenses FROM expenses WHERE strftime('%Y', expense_date) = ?", [year]);
+    const result = await dbQuery("SELECT SUM(price) AS totalExpenses FROM expenses WHERE strftime('%Y', expense_date) = ?", [year]);
     console.log(`Expenses result for year ${year}:`, result);
-    return result;
+    return result[0]; // Assuming we get a single row
   } catch (error) {
     console.error("Error fetching total expenses:", error);
     throw error;
   }
 };
 
-// Fetch all inventory items
 const getInventory = async () => {
   try {
-    return await db.all("SELECT * FROM inventory");
+    return await dbQuery("SELECT * FROM inventory");
   } catch (error) {
     console.error("Error fetching inventory:", error);
     throw error;
   }
 };
 
-// Add a new inventory item with details
 const addInventoryItem = async (expense_id, location, usage_date, status) => {
   try {
     await db.run(
@@ -149,36 +166,33 @@ const addInventoryItem = async (expense_id, location, usage_date, status) => {
   }
 };
 
-// Calculate the starting balance for a specific year
 const getStartingBalance = async (year) => {
   try {
     if (year === 2024) {
-      return 12362; // Set manually for the initial year
+      return 12362; // Manually set for the initial year
     }
     const previousYear = year - 1;
-    const result = await db.get(`
+    const result = await dbQuery(`
       SELECT
         (SELECT SUM(amount) FROM revenue WHERE strftime('%Y', payment_date) = ?) -
         (SELECT SUM(price) FROM expenses WHERE strftime('%Y', expense_date) = ?) AS availableBalance
     `, [previousYear, previousYear]);
-    return result.availableBalance;
+    return result[0].availableBalance;
   } catch (error) {
     console.error("Error fetching starting balance:", error);
     throw error;
   }
 };
 
-// Calculate and insert balance for the specified year
+// Add a function to calculate and insert balance data
 const calculateAndInsertBalance = async (year) => {
   try {
     const startingBalance = await getStartingBalance(year);
     const totalRevenue = (await getRevenue(year)).totalRevenue || 0;
     const totalExpenses = (await getExpensesSum(year)).totalExpenses || 0;
     const availableBalance = startingBalance + totalRevenue - totalExpenses;
-    await db.run(
-      `INSERT INTO balance (year, starting_balance, total_revenue, total_expenses, available_balance) VALUES (?, ?, ?, ?, ?)`,
-      [year, startingBalance, totalRevenue, totalExpenses, availableBalance]
-    );
+    await db.run(`INSERT INTO balance (year, starting_balance, total_revenue, total_expenses, available_balance) VALUES (?, ?, ?, ?, ?)`, 
+       [year, startingBalance, totalRevenue, totalExpenses, availableBalance]);
   } catch (error) {
     console.error("Error calculating and inserting balance:", error);
     throw error;
@@ -195,5 +209,5 @@ module.exports = {
   getInventory,
   addInventoryItem,
   getStartingBalance,
-  calculateAndInsertBalance,
+  calculateAndInsertBalance // Add this to exports
 };
