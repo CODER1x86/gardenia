@@ -2,6 +2,18 @@ console.log("main.js is loaded");
 
 document.addEventListener("DOMContentLoaded", function () {
   initializeApp();
+
+  // Logout functionality
+  const logoutButton = document.getElementById('logout-button');
+  if (logoutButton) {
+    logoutButton.addEventListener('click', () => {
+      document.getElementById('facility-management').style.display = 'none';
+      document.getElementById('site-settings').style.display = 'none';
+      document.getElementById('login-link').style.display = 'block';
+      document.getElementById('logout-link').style.display = 'none';
+      alert('Logged out successfully!');
+    });
+  }
 });
 
 // Initialize Application Setup
@@ -15,6 +27,28 @@ function initializeApp() {
   setupEventListeners();
 }
 
+// Utility Functions
+function showLoadingSpinner() {
+  const spinner = document.getElementById("loading-spinner");
+  if (spinner) spinner.style.display = "block";
+}
+
+function hideLoadingSpinner() {
+  const spinner = document.getElementById("loading-spinner");
+  if (spinner) spinner.style.display = "none";
+}
+
+function showError(message) {
+  const errorElement = document.getElementById("error-message");
+  if (errorElement) {
+    errorElement.textContent = message;
+    errorElement.style.display = "block";
+    setTimeout(() => {
+      errorElement.style.display = "none";
+    }, 5000); // Hide after 5 seconds
+  }
+}
+
 // Display Current Year
 function displayCurrentYear() {
   const currentYearElement = document.getElementById("currentyear");
@@ -22,6 +56,7 @@ function displayCurrentYear() {
     currentYearElement.textContent = new Date().getFullYear();
   }
 }
+
 // Load Header and Footer Templates
 function loadHeaderFooter() {
   loadTemplate("/header.html", "header-placeholder", initializeMenu);
@@ -48,6 +83,7 @@ function initializeMenu() {
   const dropdowns = document.querySelectorAll(".dropdown-trigger");
   if (typeof M !== "undefined") M.Dropdown.init(dropdowns);
 }
+
 // Fetch Budget Summary Data
 function fetchData() {
   showLoadingSpinner(); // Show loading spinner
@@ -83,6 +119,7 @@ function updateElementText(elementId, text) {
   const element = document.getElementById(elementId);
   if (element) element.textContent = text;
 }
+
 // Check Authentication Status
 function checkAuth() {
   fetch("/api/check-auth")
@@ -101,31 +138,7 @@ function toggleAuthLinks(isAuthenticated) {
   });
 }
 
-// Mock authentication function
-function login(username, password) {
-  // Here, you would normally verify the credentials with your server
-  const authenticated = true; // Simulate successful authentication
-  if (authenticated) {
-    document.getElementById('facility-management').style.display = 'block';
-    document.getElementById('site-settings').style.display = 'block';
-    document.getElementById('login-link').style.display = 'none';
-    document.getElementById('logout-link').style.display = 'block';
-    alert('Login successful!');
-  } else {
-    alert('Login failed. Please try again.');
-  }
-}
-
-// Logout functionality
-const logoutButton = document.getElementById('logout-button');
-  if (logoutButton) {
-    logoutButton.addEventListener('click', () => {
-      document.getElementById('facility-management').style.display = 'none';
-      document.getElementById('site-settings').style.display = 'none';
-      document.getElementById('login-link').style.display = 'block';
-      document.getElementById('logout-link').style.display = 'none';
-      alert('Logged out successfully!');
-    });// Set Language Preference
+// Set Language Preference
 function setLanguagePreference() {
   const language = localStorage.getItem("language") || "en";
   setLanguage(language);
@@ -177,6 +190,7 @@ function fetchOptions(apiUrl, selectId, mapFunction) {
       showError("Failed to load options.");
     });
 }
+
 // Populate Select Element with Data
 function populateSelect(selectId, data, mapFunction) {
   const selectElement = document.getElementById(selectId);
@@ -203,89 +217,95 @@ function setupEventListeners() {
 function handleFilterChange() {
   const filter = document.querySelector('input[name="filter-option"]:checked').value;
   toggleFilterContainers(filter);
-  if (filter === "unit") populateUnitOptions();
-}
+    if (filter === "unit") populateUnitOptions();
+  }
 
-// Toggle Filter Containers Display
-function toggleFilterContainers(filter) {
-  toggleContainerDisplay("year-select-container", ["year", "month"].includes(filter));
-  toggleContainerDisplay("month-select-container", filter === "month");
-  toggleContainerDisplay("category-select-container", filter === "category");
-  toggleContainerDisplay("unit-select-container", filter === "unit");
-}
+  // Toggle Filter Containers Display
+  function toggleFilterContainers(filter) {
+    toggleContainerDisplay(
+      "year-select-container",
+      ["year", "month"].includes(filter)
+    );
+    toggleContainerDisplay("month-select-container", filter === "month");
+    toggleContainerDisplay("category-select-container", filter === "category");
+    toggleContainerDisplay("unit-select-container", filter === "unit");
+  }
 
-// Show or Hide Container Based on Condition
-function toggleContainerDisplay(containerId, condition) {
-  const container = document.getElementById(containerId);
-  if (container) container.style.display = condition ? "block" : "none";
-}
-// Fetch Report Data
-function fetchReportData() {
-  const filter = document.querySelector('input[name="filter-option"]:checked').value;
-  const year = document.getElementById("year-select").value;
-  const month = document.getElementById("month-select").value;
-  let query = `/api/budget-details?filter=${filter}&year=${year}`;
-  if (filter === "month") query += `&month=${month}`;
-  fetch(query)
-    .then(response => validateResponse(response))
-    .then(data => updateReportTable(data, filter, year, month))
-    .catch(error => {
-      console.error("Error fetching report data:", error);
-      showError("Failed to load report data.");
-    });
-}
+  // Show or Hide Container Based on Condition
+  function toggleContainerDisplay(containerId, condition) {
+    const container = document.getElementById(containerId);
+    if (container) container.style.display = condition ? "block" : "none";
+  }
+  // Fetch Report Data
+  function fetchReportData() {
+    const filter = document.querySelector(
+      'input[name="filter-option"]:checked'
+    ).value;
+    const year = document.getElementById("year-select").value;
+    const month = document.getElementById("month-select").value;
+    let query = `/api/budget-details?filter=${filter}&year=${year}`;
+    if (filter === "month") query += `&month=${month}`;
+    fetch(query)
+      .then((response) => validateResponse(response))
+      .then((data) => updateReportTable(data, filter, year, month))
+      .catch((error) => {
+        console.error("Error fetching report data:", error);
+        showError("Failed to load report data.");
+      });
+  }
 
-// Update Report Table
-function updateReportTable(data, filter, year, month) {
-  const { totalRevenue, totalExpenses, availableBalance } = data;
-  updateReportRow(totalRevenue, totalExpenses, availableBalance);
-  displaySelectedFilters(filter, year, month);
-}
+  // Update Report Table
+  function updateReportTable(data, filter, year, month) {
+    const { totalRevenue, totalExpenses, availableBalance } = data;
+    updateReportRow(totalRevenue, totalExpenses, availableBalance);
+    displaySelectedFilters(filter, year, month);
+  }
 
-// Update Report Row with Data
-function updateReportRow(totalRevenue, totalExpenses, availableBalance) {
-  const tbody = document.getElementById("budget-table-body");
-  if (tbody) {
-    tbody.innerHTML = `
+  // Update Report Row with Data
+  function updateReportRow(totalRevenue, totalExpenses, availableBalance) {
+    const tbody = document.getElementById("budget-table-body");
+    if (tbody) {
+      tbody.innerHTML = `
       <tr>
         <td>${totalRevenue}</td>
         <td>${totalExpenses}</td>
         <td>${availableBalance}</td>
       </tr>
     `;
+    }
   }
-}
 
-// Display Selected Filters
-function displaySelectedFilters(filter, year, month) {
-  const reportInfo = document.getElementById("report-info");
-  const selectedFilters = document.getElementById("selected-filters");
-  if (reportInfo && selectedFilters) {
-    const filterText = filter === "year" ? year : `${month}/${year}`;
-    selectedFilters.textContent = filterText;
-    reportInfo.style.display = "inline";
+  // Display Selected Filters
+  function displaySelectedFilters(filter, year, month) {
+    const reportInfo = document.getElementById("report-info");
+    const selectedFilters = document.getElementById("selected-filters");
+    if (reportInfo && selectedFilters) {
+      const filterText = filter === "year" ? year : `${month}/${year}`;
+      selectedFilters.textContent = filterText;
+      reportInfo.style.display = "inline";
+    }
   }
-}
-// Show loading spinner
-function showLoadingSpinner() {
-  const spinner = document.getElementById("loading-spinner");
-  if (spinner) spinner.style.display = "block";
-}
+  // Show loading spinner
+  function showLoadingSpinner() {
+    const spinner = document.getElementById("loading-spinner");
+    if (spinner) spinner.style.display = "block";
+  }
 
-// Hide loading spinner
-function hideLoadingSpinner() {
-  const spinner = document.getElementById("loading-spinner");
-  if (spinner) spinner.style.display = "none";
-}
+  // Hide loading spinner
+  function hideLoadingSpinner() {
+    const spinner = document.getElementById("loading-spinner");
+    if (spinner) spinner.style.display = "none";
+  }
 
-// Show error message
-function showError(message) {
-  const errorElement = document.getElementById("error-message");
-  if (errorElement) {
-    errorElement.textContent = message;
-    errorElement.style.display = "block";
-    setTimeout(() => {
-      errorElement.style.display = "none";
-    }, 5000); // Hide after 5 seconds
+  // Show error message
+  function showError(message) {
+    const errorElement = document.getElementById("error-message");
+    if (errorElement) {
+      errorElement.textContent = message;
+      errorElement.style.display = "block";
+      setTimeout(() => {
+        errorElement.style.display = "none";
+      }, 5000); // Hide after 5 seconds
+    }
   }
 }
