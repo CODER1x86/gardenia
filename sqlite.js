@@ -100,7 +100,9 @@ const getExpenses = async () => {
 
 const getRevenue = async (year) => {
   try {
-    return await db.get("SELECT SUM(amount) AS totalRevenue FROM revenue WHERE strftime('%Y', payment_date) = ?", [year]);
+    const result = await db.get("SELECT SUM(amount) AS totalRevenue FROM revenue WHERE strftime('%Y', payment_date) = ?", [year]);
+    console.log(`Revenue result for year ${year}:`, result);
+    return result;
   } catch (error) {
     console.error("Error fetching revenue:", error);
     throw error;
@@ -109,7 +111,9 @@ const getRevenue = async (year) => {
 
 const getExpensesSum = async (year) => {
   try {
-    return await db.get("SELECT SUM(price) AS totalExpenses FROM expenses WHERE strftime('%Y', expense_date) = ?", [year]);
+    const result = await db.get("SELECT SUM(price) AS totalExpenses FROM expenses WHERE strftime('%Y', expense_date) = ?", [year]);
+    console.log(`Expenses result for year ${year}:`, result);
+    return result;
   } catch (error) {
     console.error("Error fetching total expenses:", error);
     throw error;
