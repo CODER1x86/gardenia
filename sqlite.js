@@ -3,7 +3,6 @@ const path = require("path");
 const sqlite3 = require("sqlite3").verbose();
 const dbWrapper = require("sqlite");
 const dbFile = path.join(__dirname, "./.data/database.db");
-
 let db;
 
 // Initialize and set up the database
@@ -19,14 +18,12 @@ const initializeDatabase = async () => {
       owner_phone TEXT NOT NULL,
       created_at TEXT
     )`);
-
     await db.run(`CREATE TABLE IF NOT EXISTS tenants (
       tenant_id INTEGER PRIMARY KEY,
       tenant_name TEXT,
       tenant_phone TEXT,
       created_at TEXT
     )`);
-
     await db.run(`CREATE TABLE IF NOT EXISTS units (
       unit_id INTEGER PRIMARY KEY,
       floor TEXT NOT NULL,
@@ -38,65 +35,61 @@ const initializeDatabase = async () => {
       FOREIGN KEY (owner_id) REFERENCES owners(owner_id),
       FOREIGN KEY (tenant_id) REFERENCES tenants(tenant_id)
     )`);
+await db.run(`CREATE TABLE IF NOT EXISTS payment_methods (
+  method_id INTEGER PRIMARY KEY,
+  method_name TEXT NOT NULL UNIQUE
+)`);
 
-    await db.run(`CREATE TABLE IF NOT EXISTS payment_methods (
-      method_id INTEGER PRIMARY KEY,
-      method_name TEXT NOT NULL UNIQUE
-    )`);
+await db.run(`CREATE TABLE IF NOT EXISTS revenue (
+  revenue_id INTEGER PRIMARY KEY,
+  unit_id INTEGER,
+  amount INT,
+  payment_date TEXT,
+  method_id INTEGER,
+  FOREIGN KEY (unit_id) REFERENCES units(unit_id),
+  FOREIGN KEY (method_id) REFERENCES payment_methods(method_id)
+)`);
 
-    await db.run(`CREATE TABLE IF NOT EXISTS revenue (
-      revenue_id INTEGER PRIMARY KEY,
-      unit_id INTEGER,
-      amount INT,
-      payment_date TEXT,
-      method_id INTEGER,
-      FOREIGN KEY (unit_id) REFERENCES units(unit_id),
-      FOREIGN KEY (method_id) REFERENCES payment_methods(method_id)
-    )`);
+await db.run(`CREATE TABLE IF NOT EXISTS expenses (
+  expense_id INTEGER PRIMARY KEY,
+  category TEXT,
+  item TEXT,
+  price INT,
+  expense_date TEXT,
+  last_updated TEXT,
+  unit_id INTEGER REFERENCES units(unit_id),
+  receipt_photo BLOB
+)`);
+await db.run(`CREATE TABLE IF NOT EXISTS inventory (
+  inventory_id INTEGER PRIMARY KEY,
+  expense_id INTEGER REFERENCES expenses(expense_id),
+  location TEXT,
+  usage_date TEXT,
+  last_updated TEXT,
+  status TEXT
+)`);
+await db.run(`CREATE TABLE IF NOT EXISTS users (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  username TEXT UNIQUE,
+  password TEXT,
+  email TEXT,
+  reset_token TEXT,
+  created_at TEXT
+)`);
 
-    await db.run(`CREATE TABLE IF NOT EXISTS expenses (
-      expense_id INTEGER PRIMARY KEY,
-      category TEXT,
-      item TEXT,
-      price INT,
-      expense_date TEXT,
-      last_updated TEXT,
-      unit_id INTEGER REFERENCES units(unit_id),
-      receipt_photo BLOB
-    )`);
+await db.run(`CREATE TABLE IF NOT EXISTS balance (
+  balance_id INTEGER PRIMARY KEY AUTOINCREMENT,
+  year INTEGER NOT NULL,
+  starting_balance INT NOT NULL,
+  total_revenue INT NOT NULL,
+  total_expenses INT NOT NULL,
+  available_balance INT NOT NULL,
+  created_at TEXT DEFAULT CURRENT_TIMESTAMP
+)`);
 
-    await db.run(`CREATE TABLE IF NOT EXISTS inventory (
-      inventory_id INTEGER PRIMARY KEY,
-      expense_id INTEGER REFERENCES expenses(expense_id),
-      location TEXT,
-      usage_date TEXT,
-      last_updated TEXT,
-      status TEXT
-    )`);
-
-    await db.run(`CREATE TABLE IF NOT EXISTS users (
-      id INTEGER PRIMARY KEY AUTOINCREMENT,
-      username TEXT UNIQUE,
-      password TEXT,
-      email TEXT,
-      reset_token TEXT,
-      created_at TEXT
-    )`);
-
-    await db.run(`CREATE TABLE IF NOT EXISTS balance (
-      balance_id INTEGER PRIMARY KEY AUTOINCREMENT,
-      year INTEGER NOT NULL,
-      starting_balance INT NOT NULL,
-      total_revenue INT NOT NULL,
-      total_expenses INT NOT NULL,
-      available_balance INT NOT NULL,
-      created_at TEXT DEFAULT CURRENT_TIMESTAMP
-    )`);
-  } catch (error) {
-    console.error("Error initializing database:", error);
-  }
-};
-
+} catch (error) {
+  console.error("Error initializing database:", error);
+}};
 const getDb = () => db;
 
 const getExpenses = async () => {
@@ -118,7 +111,6 @@ const getRevenue = async (year) => {
     throw error;
   }
 };
-
 const getExpensesSum = async (year) => {
   try {
     const result = await db.get("SELECT SUM(price) AS totalExpenses FROM expenses WHERE strftime('%Y', expense_date) = ?", [year]);
@@ -138,7 +130,6 @@ const getInventory = async () => {
     throw error;
   }
 };
-
 const addInventoryItem = async (expense_id, location, usage_date, status) => {
   try {
     await db.run(
@@ -168,18 +159,15 @@ const getStartingBalance = async (year) => {
     throw error;
   }
 };
-
 // Add a function to calculate and insert balance data
 const calculateAndInsertBalance = async (year) => {
   try {
     const startingBalance = await getStartingBalance(year);
     const totalRevenue = (await getRevenue(year)).totalRevenue || 0;
     const totalExpenses = (await getExpensesSum(year)).totalExpenses || 0;
-
     const availableBalance = startingBalance + totalRevenue - totalExpenses;
-
     await db.run(`INSERT INTO balance (year, starting_balance, total_revenue, total_expenses, available_balance) VALUES (?, ?, ?, ?, ?)`, 
-      [year, startingBalance, totalRevenue, totalExpenses, availableBalance]);
+       [year, startingBalance, totalRevenue, totalExpenses, availableBalance]);
   } catch (error) {
     console.error("Error calculating and inserting balance:", error);
     throw error;

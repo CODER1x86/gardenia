@@ -1,6 +1,5 @@
 // Snippet 1: Import and Initialize Dependencies
 // Make sure the initial imports and middleware setup are correctly done
-
 const express = require("express");
 const path = require("path");
 const fs = require("fs");
@@ -13,7 +12,6 @@ const bcrypt = require("bcrypt");
 const nodemailer = require("nodemailer");
 const bodyParser = require("body-parser");
 const app = express();
-
 // Middleware setup
 app.use(cookieParser());
 app.use(session({
@@ -36,12 +34,10 @@ const transporter = nodemailer.createTransport({
 });
 
 const errorMessage = "Whoops! Error connecting to the database–please try again!";
-
 initializeDatabase().then((db) => {
   global.db = getDb(); // Ensure db is globally accessible
   // Confirm db initialization
   console.log('DB Initialized:', global.db);
-
   // Root Route: Serve index.html
   app.get("/", (req, res) => {
     res.sendFile(path.join(__dirname, "public", "index.html"));
@@ -60,7 +56,6 @@ initializeDatabase().then((db) => {
     });
   });
 });
-
 // Snippet 2: Revenue Report Endpoint
 app.get("/api/revenue-report", async (req, res) => {
   const { filter, year, month, unit } = req.query;
@@ -88,7 +83,6 @@ app.get("/api/revenue-report", async (req, res) => {
     res.status(500).json({ error: error.message });
   }
 });
-
 // Snippet 3: Expense Report Endpoint
 app.get("/api/expense-report", async (req, res) => {
   const { filter, year, month, category } = req.query;
@@ -109,7 +103,6 @@ app.get("/api/expense-report", async (req, res) => {
     res.status(500).json({ error: error.message });
   }
 });
-
 // Snippet 4: Budget Details Endpoint
 app.get("/api/budget-details", async (req, res) => {
   const { filter, year, month } = req.query;
@@ -135,7 +128,6 @@ app.get("/api/budget-details", async (req, res) => {
     res.status(500).json({ error: error.message });
   }
 });
-
 // Snippet 5: Fetch Available Months Endpoint
 app.get("/api/months", async (req, res) => {
   const year = req.query.year;
@@ -155,7 +147,6 @@ app.get("/api/months", async (req, res) => {
     res.status(500).json({ error: error.message });
   }
 });
-
 // Snippet 6: Fetch Available Years Endpoint
 app.get("/api/years", async (req, res) => {
   try {
@@ -171,7 +162,6 @@ app.get("/api/years", async (req, res) => {
     res.status(500).json({ error: error.message });
   }
 });
-
 // Snippet 7: Expense Input Endpoint
 app.post("/api/expense-input", async (req, res) => {
   const { unit_id, category, item, price, expense_date, receipt_photo } = req.body;
@@ -186,7 +176,6 @@ app.post("/api/expense-input", async (req, res) => {
     res.status(500).json({ success: false, error: error.message });
   }
 });
-
 // Snippet 8: Revenue Input Endpoint
 app.post("/api/revenue-input", async (req, res) => {
   const { unit_id, amount, payment_date, method_id } = req.body;
@@ -201,83 +190,3 @@ app.post("/api/revenue-input", async (req, res) => {
     res.status(500).json({ success: false, error: error.message });
   }
 });
-
-// Snippet 9: Fetch Categories Endpoint
-app.get("/api/categories", async (req, res) => {
-  try {
-    const result = await global.db.all("SELECT DISTINCT category FROM expenses");
-    res.json(result.map(row => row.category));
-  } catch (error) {
-    console.error("Error fetching categories:", error);
-    res.status(500).json({ error: error.message });
-  }
-});
-
-// Snippet 10: Fetch Payment Methods Endpoint
-app.get("/api/payment-methods", async (req, res) => {
-  try {
-    const result = await global.db.all("SELECT method_id, method_name FROM payment_methods");
-    res.json(result);
-  } catch (error) {
-    console.error("Error fetching payment methods:", error);
-    res.status(500).json({ error: error.message });
-  }
-});
-
-// Snippet 11: Login Endpoint
-app.post("/login", async (req, res) => {
-  const { username, password } = req.body;
-  try {
-    const user = await global.db.get("SELECT * FROM users WHERE username = ?", [username]);
-    if (user && await bcrypt.compare(password, user.password)) {
-      req.session.userId = user.id; // Assign session variable
-      res.redirect("/"); // Redirect to the home page
-    } else {
-      res.status(401).send("Invalid username or password");
-    }
-  } catch (error) {
-    console.error("Error during login:", error);
-    res.status(500).send("Server error");
-  }
-});
-
-// Snippet 12: Password Reset Endpoint
-app.post("/forget-password", async (req, res) => {
-  const { email } = req.body;
-  try {
-    const user = await global.db.get("SELECT * FROM users WHERE email = ?", [email]);
-    if (user) {
-      // Generate a temporary reset token and set an expiration time
-      const resetToken = Math.random().toString(36).substring(2, 15);
-      const resetExpires = Date.now() + 3600000; // 1 hour
-      await global.db.run("UPDATE users SET reset_token = ?, reset_expires = ? WHERE email = ?", [resetToken, resetExpires, email]);
-
-      const mailOptions = {
-        from: "your-email@gmail.com",
-        to: email,
-        subject: "Password Reset",
-        text: `Click the link to reset your password: http://localhost:3000/reset-password/${resetToken}`,
-      };
-
-      transporter.sendMail(mailOptions, (error, info) => {
-        if (error) {
-          console.error("Error sending email:", error);
-          return res.status(500).send("Error sending email");
-        }
-        res.send("Password reset email sent");
-      });
-    } else {
-      res.status(404).send("Email not found");
-    }
-  } catch (error) {
-    console.error("Error during password reset:", error);
-    res.status(500).send("Server error");
-  }
-});
-
-// Snippet 13: Start the Server
-const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => {
-  console.log(`Server is running on http://localhost:${PORT}`);
-});
-
