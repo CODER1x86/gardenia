@@ -4,7 +4,8 @@
 const express = require("express");
 const path = require("path");
 const fs = require("fs");
-const { initializeDatabase, getDb, getRevenue, getExpensesSum, getInventory, addInventoryItem, getStartingBalance, db } = require("./sqlite.js");
+const { initializeDatabase, getDb, getRevenue, getExpensesSum, getInventory, addInventoryItem, getStartingBalance } = require("./sqlite.js");
+const sqlite3 = require('sqlite3').verbose();
 const { sendWhatsAppMessage } = require("./twilioIntegration");
 const session = require("express-session");
 const cookieParser = require("cookie-parser");
