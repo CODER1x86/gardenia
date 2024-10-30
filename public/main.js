@@ -226,6 +226,7 @@ function handleFilterChange() {
       "year-select-container",
       ["year", "month"].includes(filter)
     );
+    toggleContainerDisplay("year-select-container", ["year", "month"].includes(filter));
     toggleContainerDisplay("month-select-container", filter === "month");
     toggleContainerDisplay("category-select-container", filter === "category");
     toggleContainerDisplay("unit-select-container", filter === "unit");
@@ -308,4 +309,4 @@ function handleFilterChange() {
       }, 5000); // Hide after 5 seconds
     }
   }
-}
+};
