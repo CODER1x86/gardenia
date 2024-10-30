@@ -117,14 +117,15 @@ function login(username, password) {
 }
 
 // Logout functionality
-document.getElementById('logout-button').addEventListener('click', () => {
-  document.getElementById('facility-management').style.display = 'none';
-  document.getElementById('site-settings').style.display = 'none';
-  document.getElementById('login-link').style.display = 'block';
-  document.getElementById('logout-link').style.display = 'none';
-  alert('Logged out successfully!');
-});
-// Set Language Preference
+const logoutButton = document.getElementById('logout-button');
+  if (logoutButton) {
+    logoutButton.addEventListener('click', () => {
+      document.getElementById('facility-management').style.display = 'none';
+      document.getElementById('site-settings').style.display = 'none';
+      document.getElementById('login-link').style.display = 'block';
+      document.getElementById('logout-link').style.display = 'none';
+      alert('Logged out successfully!');
+    });// Set Language Preference
 function setLanguagePreference() {
   const language = localStorage.getItem("language") || "en";
   setLanguage(language);
