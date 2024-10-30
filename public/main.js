@@ -1,501 +1,233 @@
 console.log("main.js is loaded");
 
 document.addEventListener("DOMContentLoaded", function () {
-  loadHeaderFooter(); // Load common header and footer
+  initializeApp();
+});
+
+// Initialize Application Setup
+function initializeApp() {
+  loadHeaderFooter();
+  displayCurrentYear();
+  checkAuth();
+  fetchData(); // Fetch budget summary data
+  setLanguagePreference();
+  initializeOptions();
+  setupEventListeners();
+}
+
+// Display Current Year
+function displayCurrentYear() {
   const currentYearElement = document.getElementById("currentyear");
   if (currentYearElement) {
     currentYearElement.textContent = new Date().getFullYear();
   }
-  fetchData(); // Fetch budget data from the server
-  checkAuth(); // Check authentication status
-  setInitialLanguage(); // Set language based on user preference
-  setInitialYearOptions(); // Populate year options
-  setInitialMonthOptions(); // Populate month options
-  setInitialCategoryOptions(); // Populate category options
-
-  const filterOption = document.getElementById("filter-option");
-  if (filterOption) {
-    filterOption.addEventListener("change", handleFilterChange);
-  }
-
-  const runReportBtn = document.getElementById("run-report-btn");
-  if (runReportBtn) {
-    runReportBtn.addEventListener("click", fetchReportData);
-  }
-});
-// Functions to handle filter changes and fetch data based on selected filters (year, month, unit).
-function handleFilterChange() {
-  const filter = document.querySelector('input[name="filter-option"]:checked').value;
-  document.getElementById("year-select-container").style.display =
-    filter === "year" || filter === "month" ? "block" : "none";
-  document.getElementById("month-select-container").style.display =
-    filter === "month" ? "block" : "none";
-  document.getElementById("category-select-container").style.display =
-    filter === "category" ? "block" : "none";
-
-  if (filter === "category") {
-    setInitialCategoryOptions(); // Ensure categories are fetched when category filter is selected
-  } else if (filter === "unit") {
-    populateUnitOptions();
-  }
-
-  document.getElementById("unit-select-container").style.display =
-    filter === "unit" ? "block" : "none";
 }
 
-document.querySelectorAll('input[name="filter-option"]').forEach((elem) => {
-  elem.addEventListener("change", handleFilterChange);
-});
-
-function setInitialYearOptions() {
-  fetch("/api/years")
-    .then((response) => response.json())
-    .then((data) => {
-      console.log("Years fetched from API:", data);
-      const yearSelect = document.getElementById("year-select");
-      if (yearSelect) {
-        yearSelect.innerHTML = ""; // Clear existing options
-        data.forEach((year) => {
-          const option = document.createElement("option");
-          option.value = year;
-          option.textContent = year;
-          yearSelect.appendChild(option);
-        });
-      }
-    })
-    .catch((error) => console.error("Error fetching years:", error));
+// Load Header and Footer Templates
+function loadHeaderFooter() {
+  loadTemplate("/header.html", "header-placeholder", initializeMenu);
+  loadTemplate("/footer.html", "footer-placeholder");
 }
 
-function setInitialMonthOptions() {
-  const year = document.getElementById("year-select").value;
-  fetch(`/api/months?year=${year}`)
-    .then((response) => response.json())
-    .then((data) => {
-      console.log("Months fetched from API:", data);
-      const monthSelect = document.getElementById("month-select");
-      if (monthSelect) {
-        monthSelect.innerHTML = ""; // Clear existing options
-        data.forEach((item) => {
-          const option = document.createElement("option");
-          option.value = item;
-          option.textContent = new Date(2024, item - 1).toLocaleString(
-            "default",
-            { month: "long" }
-          ); // Convert month number to month name
-          monthSelect.appendChild(option);
-        });
-      }
+// Generic Template Loader
+function loadTemplate(url, placeholderId, callback) {
+  fetch(url)
+    .then(response => response.text())
+    .then(html => {
+      const placeholder = document.getElementById(placeholderId);
+      if (placeholder) placeholder.innerHTML = html;
+      if (callback) callback();
     })
-    .catch((error) => console.error("Error fetching months:", error));
+    .catch(error => console.error(`Error loading ${url}:`, error));
 }
 
-// Add function to set initial category options
-function setInitialCategoryOptions() {
-  fetch("/api/categories")
-    .then((response) => response.json())
-    .then((data) => {
-      const categorySelect = document.getElementById("category-select");
-      if (categorySelect) {
-        categorySelect.innerHTML = ""; // Clear existing options
-        data.forEach((category) => {
-          const option = document.createElement("option");
-          option.value = category;
-          option.textContent = category;
-          categorySelect.appendChild(option);
-        });
-      }
-    })
-    .catch((error) => console.error("Error fetching categories:", error));
+// Initialize Menu Dropdown
+function initializeMenu() {
+  const dropdowns = document.querySelectorAll(".dropdown-trigger");
+  if (typeof M !== "undefined") M.Dropdown.init(dropdowns);
 }
 
-function populateUnitOptions() {
-  fetch("/api/units")
-    .then((response) => response.json())
-    .then((data) => {
-      const unitSelect = document.getElementById("unit-select");
-      if (unitSelect) {
-        unitSelect.innerHTML = ""; // Clear existing options
-        data.forEach((unit) => {
-          const option = document.createElement("option");
-          option.value = unit.unit_number;
-          option.textContent = unit.unit_number;
-          unitSelect.appendChild(option);
-        });
-      }
-    })
-    .catch((error) => console.error("Error fetching unit options:", error));
-}
-// Fetches report data based on selected filters and displays it in the table.
-function fetchReportData() {
-  const filter = document.querySelector('input[name="filter-option"]:checked').value;
-  const year = document.getElementById("year-select").value;
-  const month = document.getElementById("month-select").value;
-  let query = `/api/budget-details?filter=${filter}&year=${year}`;
-  if (filter === "month") query += `&month=${month}`;
-
-  fetch(query)
-    .then((response) => {
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-      return response.json();
-    })
-    .then((data) => {
-      const tbody = document.getElementById("budget-table-body");
-      if (tbody) {
-        tbody.innerHTML = `
-          <tr>
-            <td>${data.totalRevenue}</td>
-            <td>${data.totalExpenses}</td>
-            <td>${data.availableBalance}</td>
-          </tr>
-        `;
-      }
-      const reportInfo = document.getElementById("report-info");
-      const selectedFilters = document.getElementById("selected-filters");
-      if (reportInfo && selectedFilters) {
-        let filterText = filter === "year" ? year : `${month}/${year}`;
-        selectedFilters.textContent = filterText;
-        reportInfo.style.display = "inline";
-      }
-    })
-    .catch((error) => console.error("Error fetching report data:", error));
-}
-// Snippet 1: Initial Setup and Event Listeners
-// This snippet handles initial setup, event listeners, and loads common elements.
-
-console.log("main.js is loaded");
-
-document.addEventListener("DOMContentLoaded", function () {
-  loadHeaderFooter(); // Load common header and footer
-  const currentYearElement = document.getElementById("currentyear");
-  if (currentYearElement) {
-    currentYearElement.textContent = new Date().getFullYear();
-  }
-  fetchData(); // Fetch budget data from the server
-  checkAuth(); // Check authentication status
-  setInitialLanguage(); // Set language based on user preference
-  setInitialYearOptions(); // Populate year options
-  setInitialMonthOptions(); // Populate month options
-  setInitialCategoryOptions(); // Populate category options
-  const filterOption = document.getElementById("filter-option");
-  if (filterOption) {
-    filterOption.addEventListener("change", handleFilterChange);
-  }
-  const runReportBtn = document.getElementById("run-report-btn");
-  if (runReportBtn) {
-    runReportBtn.addEventListener("click", fetchReportData);
-  }
-});
-
-// Functions to handle filter changes and fetch data based on selected filters (year, month, unit).
-function handleFilterChange() {
-  const filter = document.querySelector('input[name="filter-option"]:checked').value;
-  document.getElementById("year-select-container").style.display =
-    filter === "year" || filter === "month" ? "block" : "none";
-  document.getElementById("month-select-container").style.display =
-    filter === "month" ? "block" : "none";
-  document.getElementById("category-select-container").style.display =
-    filter === "category" ? "block" : "none";
-  if (filter === "category") {
-    setInitialCategoryOptions(); // Ensure categories are fetched when category filter is selected
-  } else if (filter === "unit") {
-    populateUnitOptions();
-  }
-  document.getElementById("unit-select-container").style.display =
-    filter === "unit" ? "block" : "none";
+// Fetch Budget Summary Data
+function fetchData() {
+  fetch("/api/data")
+    .then(response => validateResponse(response))
+    .then(data => updateBudgetSummary(data))
+    .catch(error => console.error("Error fetching budget data:", error));
 }
 
-document.querySelectorAll('input[name="filter-option"]').forEach((elem) => {
-  elem.addEventListener("change", handleFilterChange);
-});
-// Snippet 2: Set Initial Options and Handle Filters
-// This snippet sets initial options for year, month, and category. It also handles filter changes.
-
-function setInitialYearOptions() {
-  fetch("/api/years")
-    .then((response) => response.json())
-    .then((data) => {
-      console.log("Years fetched from API:", data);
-      const yearSelect = document.getElementById("year-select");
-      if (yearSelect) {
-        yearSelect.innerHTML = ""; // Clear existing options
-        data.forEach((year) => {
-          const option = document.createElement("option");
-          option.value = year;
-          option.textContent = year;
-          yearSelect.appendChild(option);
-        });
-      }
-    })
-    .catch((error) => console.error("Error fetching years:", error));
+// Validate HTTP Response
+function validateResponse(response) {
+  if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+  return response.json();
 }
 
-function setInitialMonthOptions() {
-  const year = document.getElementById("year-select").value;
-  fetch(`/api/months?year=${year}`)
-    .then((response) => response.json())
-    .then((data) => {
-      console.log("Months fetched from API:", data);
-      const monthSelect = document.getElementById("month-select");
-      if (monthSelect) {
-        monthSelect.innerHTML = ""; // Clear existing options
-        data.forEach((item) => {
-          const option = document.createElement("option");
-          option.value = item;
-          option.textContent = new Date(2024, item - 1).toLocaleString(
-            "default",
-            { month: "long" }
-          ); // Convert month number to month name
-          monthSelect.appendChild(option);
-        });
-      }
-    })
-    .catch((error) => console.error("Error fetching months:", error));
+// Update Budget Summary
+function updateBudgetSummary(data) {
+  const { availableBalance, totalRevenue, totalExpenses } = data;
+  updateElementText("available-balance", availableBalance);
+  updateElementText("total-revenue", totalRevenue);
+  updateElementText("total-expenses", totalExpenses);
 }
 
-// Add function to set initial category options
-function setInitialCategoryOptions() {
-  fetch("/api/categories")
-    .then((response) => response.json())
-    .then((data) => {
-      const categorySelect = document.getElementById("category-select");
-      if (categorySelect) {
-        categorySelect.innerHTML = ""; // Clear existing options
-        data.forEach((category) => {
-          const option = document.createElement("option");
-          option.value = category;
-          option.textContent = category;
-          categorySelect.appendChild(option);
-        });
-      }
-    })
-    .catch((error) => console.error("Error fetching categories:", error));
+// Update Text Content for Element
+function updateElementText(elementId, text) {
+  const element = document.getElementById(elementId);
+  if (element) element.textContent = text;
 }
 
-function populateUnitOptions() {
-  fetch("/api/units")
-    .then((response) => response.json())
-    .then((data) => {
-      const unitSelect = document.getElementById("unit-select");
-      if (unitSelect) {
-        unitSelect.innerHTML = ""; // Clear existing options
-        data.forEach((unit) => {
-          const option = document.createElement("option");
-          option.value = unit.unit_number;
-          option.textContent = unit.unit_number;
-          unitSelect.appendChild(option);
-        });
-      }
-    })
-    .catch((error) => console.error("Error fetching unit options:", error));
+// Check Authentication Status
+function checkAuth() {
+  fetch("/api/check-auth")
+    .then(response => validateResponse(response))
+    .then(data => toggleAuthLinks(data.isAuthenticated))
+    .catch(error => console.error("Error checking authentication:", error));
 }
-// Snippet 3: Fetch and Display Report Data
-// This snippet fetches report data based on selected filters and displays it in the table.
 
-function fetchReportData() {
-  const filter = document.querySelector('input[name="filter-option"]:checked').value;
-  const year = document.getElementById("year-select").value;
-  const month = document.getElementById("month-select").value;
-  let query = `/api/budget-details?filter=${filter}&year=${year}`;
-  if (filter === "month") query += `&month=${month}`;
-  fetch(query)
-    .then((response) => {
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-      return response.json();
-    })
-    .then((data) => {
-      const tbody = document.getElementById("budget-table-body");
-      if (tbody) {
-        tbody.innerHTML = `
-          <tr>
-            <td>${data.totalRevenue}</td>
-            <td>${data.totalExpenses}</td>
-            <td>${data.availableBalance}</td>
-          </tr>
-        `;
-      }
-      const reportInfo = document.getElementById("report-info");
-      const selectedFilters = document.getElementById("selected-filters");
-      if (reportInfo && selectedFilters) {
-        let filterText = filter === "year" ? year : `${month}/${year}`;
-        selectedFilters.textContent = filterText;
-        reportInfo.style.display = "inline";
-      }
-    })
-    .catch((error) => console.error("Error fetching report data:", error));
+// Toggle Authenticated Links
+function toggleAuthLinks(isAuthenticated) {
+  document.querySelectorAll(".auth-link").forEach(link => {
+    link.style.display = isAuthenticated ? "inline" : "none";
+  });
 }
-// Snippet 4: Set Language Preference and Apply to Document
-// This snippet sets the language preference and applies it to the document.
 
+// Set Language Preference
+function setLanguagePreference() {
+  const language = localStorage.getItem("language") || "en";
+  setLanguage(language);
+}
+
+// Set Language in HTML Document
 function setLanguage(language) {
   localStorage.setItem("language", language);
   document.documentElement.lang = language;
 }
 
-function setInitialLanguage() {
-  const language = localStorage.getItem("language") || "en";
-  setLanguage(language);
-}
-// Snippet 5: Load Header and Footer Templates
-// This snippet loads header and footer templates, and initializes the menu after loading the header.
-
-function loadHeaderFooter() {
-  fetch("/header.html")
-    .then((response) => response.text())
-    .then((html) => {
-      const headerPlaceholder = document.getElementById("header-placeholder");
-      if (headerPlaceholder) {
-        headerPlaceholder.innerHTML = html;
-        initializeMenu();
-      }
-    })
-    .catch((error) => console.error("Error loading header:", error));
-
-  fetch("/footer.html")
-    .then((response) => response.text())
-    .then((html) => {
-      const footerPlaceholder = document.getElementById("footer-placeholder");
-      if (footerPlaceholder) {
-        footerPlaceholder.innerHTML = html;
-      }
-    })
-    .catch((error) => console.error("Error loading footer:", error));
+// Initialize Options for Filters
+function initializeOptions() {
+  populateYearOptions();
+  populateMonthOptions();
+  populateCategoryOptions();
 }
 
-function initializeMenu() {
-  const dropdowns = document.querySelectorAll(".dropdown-trigger");
-  if (typeof M !== "undefined") {
-    M.Dropdown.init(dropdowns);
+// Populate Year Options
+function populateYearOptions() {
+  fetchOptions("/api/years", "year-select", year => year);
+}
+
+// Populate Month Options
+function populateMonthOptions() {
+  const year = document.getElementById("year-select")?.value || new Date().getFullYear();
+  fetchOptions(`/api/months?year=${year}`, "month-select", month =>
+    new Date(2024, month - 1).toLocaleString("default", { month: "long" })
+  );
+}
+
+// Populate Category Options
+function populateCategoryOptions() {
+  fetchOptions("/api/categories", "category-select", category => category);
+}
+
+// Populate Unit Options
+function populateUnitOptions() {
+  fetchOptions("/api/units", "unit-select", unit => unit.unit_number);
+}
+
+// Generic Function to Fetch and Populate Options
+function fetchOptions(apiUrl, selectId, mapFunction) {
+  fetch(apiUrl)
+    .then(response => validateResponse(response))
+    .then(data => populateSelect(selectId, data, mapFunction))
+    .catch(error => console.error(`Error fetching options from ${apiUrl}:`, error));
+}
+
+// Populate Select Element with Data
+function populateSelect(selectId, data, mapFunction) {
+  const selectElement = document.getElementById(selectId);
+  if (selectElement) {
+    selectElement.innerHTML = "";
+    data.forEach(item => {
+      const option = document.createElement("option");
+      option.value = mapFunction(item);
+      option.textContent = mapFunction(item);
+      selectElement.appendChild(option);
+    });
   }
 }
-// Snippet 6: Fetch Initial Budget Data
-// This snippet fetches initial budget data to populate the budget summary section.
 
-function fetchData() {
-  fetch("/api/data")
-    .then((response) => {
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-      return response.json();
-    })
-    .then((data) => {
-      const availableBalance = document.getElementById("available-balance");
-      const totalRevenue = document.getElementById("total-revenue");
-      const totalExpenses = document.getElementById("total-expenses");
-      if (availableBalance) {
-        availableBalance.textContent = data.availableBalance;
-      }
-      if (totalRevenue) {
-        totalRevenue.textContent = data.totalRevenue;
-      }
-      if (totalExpenses) {
-        totalExpenses.textContent = data.totalExpenses;
-      }
-    })
-    .catch((error) => console.error("Error fetching budget data:", error));
+// Setup Event Listeners
+function setupEventListeners() {
+  const runReportBtn = document.getElementById("run-report-btn");
+  const filterOptions = document.querySelectorAll('input[name="filter-option"]');
+
+  if (runReportBtn) runReportBtn.addEventListener("click", fetchReportData);
+  filterOptions.forEach(option => option.addEventListener("change", handleFilterChange));
 }
-// Snippet 7: Check Authentication Status
-// This snippet checks the authentication status and controls the visibility of authenticated links.
 
-function checkAuth() {
-  fetch("/api/check-auth")
-    .then((response) => {
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-      return response.json();
-    })
-    .then((data) => {
-      const authenticatedLinks = document.getElementById("authenticated-links");
-      const loginLink = document.getElementById("login-link");
-      const logoutLink = document.getElementById("logout-link");
-      if (data.authenticated) {
-        if (authenticatedLinks) authenticatedLinks.style.display = "block";
-        if (loginLink) loginLink.style.display = "none";
-        if (logoutLink) logoutLink.style.display = "block";
-      } else {
-        if (authenticatedLinks) authenticatedLinks.style.display = "none";
-        if (loginLink) loginLink.style.display = "block";
-        if (logoutLink) loginLink.style.display = "none";
-      }
-    })
-    .catch((error) => console.error("Error checking auth status:", error));
+// Handle Filter Change
+function handleFilterChange() {
+  const filter = document.querySelector('input[name="filter-option"]:checked').value;
+  toggleFilterContainers(filter);
+  if (filter === "unit") populateUnitOptions();
 }
-// Snippet 8: Populate Floor Options
-// This snippet populates floor options from the server.
 
-function populateFloorOptions() {
-  fetch("/api/floors")
-    .then((response) => response.json())
-    .then((data) => {
-      const floorSelect = document.getElementById("floor-select");
-      if (floorSelect) {
-        floorSelect.innerHTML = ""; // Clear existing options
-        data.forEach((floor) => {
-          const option = document.createElement("option");
-          option.value = floor;
-          option.textContent = floor;
-          floorSelect.appendChild(option);
-        });
-      }
-    })
-    .catch((error) => console.error("Error fetching floor options:", error));
+// Toggle Filter Containers Display
+function toggleFilterContainers(filter) {
+  toggleContainerDisplay("year-select-container", ["year", "month"].includes(filter));
+  toggleContainerDisplay("month-select-container", filter === "month");
+  toggleContainerDisplay("category-select-container", filter === "category");
+  toggleContainerDisplay("unit-select-container", filter === "unit");
 }
-// Snippet 9: Load Unit Data and Display Detailed Information
-// This snippet loads unit data and handles the display of detailed information.
 
-function loadUnitData() {
-  const unitNumberSelect = document.getElementById("unit-number");
-  const floorField = document.getElementById("floor");
-  const ownerNameField = document.getElementById("owner-name");
-  const tenantNameField = document.getElementById("tenant-name");
+// Show or Hide Container Based on Condition
+function toggleContainerDisplay(containerId, condition) {
+  const container = document.getElementById(containerId);
+  if (container) container.style.display = condition ? "block" : "none";
+}
 
-  fetch("/api/units")
-    .then((response) => {
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-      return response.json();
-    })
-    .then((data) => {
-      const unitData = data.reduce((acc, unit) => {
-        acc[unit.unit_number] = {
-          floor: unit.floor,
-          owner: unit.owner,
-          ownerPhone: unit.owner_phone,
-          tenant: unit.tenant,
-          tenantPhone: unit.tenant_phone,
-          lastPaymentMonth: unit.last_payment_month,
-          lastPaymentDate: unit.last_payment_date,
-        };
-        return acc;
-      }, {});
+// Fetch Report Data
+function fetchReportData() {
+  const filter = document.querySelector('input[name="filter-option"]:checked').value;
+  const year = document.getElementById("year-select").value;
+  const month = document.getElementById("month-select").value;
 
-      if (unitNumberSelect) {
-        unitNumberSelect.addEventListener("change", function () {
-          const selectedUnit = this.value;
-          if (unitData[selectedUnit]) {
-            floorField.textContent = unitData[selectedUnit].floor;
-            ownerNameField.textContent = unitData[selectedUnit].owner;
-            tenantNameField.textContent = unitData[selectedUnit].tenant || "";
-            document.getElementById("owner-phone").textContent =
-              unitData[selectedUnit].ownerPhone;
-            document.getElementById("tenant-phone").textContent =
-              unitData[selectedUnit].tenantPhone || "";
-            document.getElementById("last-payment-month").textContent =
-              unitData[selectedUnit].lastPaymentMonth;
-            document.getElementById("last-payment-date").textContent =
-              unitData[selectedUnit].lastPaymentDate;
-            document.getElementById("unit-details").style.display = "block";
-          } else {
-            document.getElementById("unit-details").style.display = "none";
-          }
-        });
-      }
-    })
-    .catch((error) => console.error("Error loading unit data:", error));
+  let query = `/api/budget-details?filter=${filter}&year=${year}`;
+  if (filter === "month") query += `&month=${month}`;
+
+  fetch(query)
+    .then(response => validateResponse(response))
+    .then(data => updateReportTable(data, filter, year, month))
+    .catch(error => console.error("Error fetching report data:", error));
+}
+
+// Update Report Table
+function updateReportTable(data, filter, year, month) {
+  const { totalRevenue, totalExpenses, availableBalance } = data;
+  updateReportRow(totalRevenue, totalExpenses, availableBalance);
+  displaySelectedFilters(filter, year, month);
+}
+
+// Update Report Row with Data
+function updateReportRow(totalRevenue, totalExpenses, availableBalance) {
+  const tbody = document.getElementById("budget-table-body");
+  if (tbody) {
+    tbody.innerHTML = `
+      <tr>
+        <td>${totalRevenue}</td>
+        <td>${totalExpenses}</td>
+        <td>${availableBalance}</td>
+      </tr>
+    `;
+  }
+}
+
+// Display Selected Filters
+function displaySelectedFilters(filter, year, month) {
+  const reportInfo = document.getElementById("report-info");
+  const selectedFilters = document.getElementById("selected-filters");
+
+  if (reportInfo && selectedFilters) {
+    const filterText = filter === "year" ? year : `${month}/${year}`;
+    selectedFilters.textContent = filterText;
+    reportInfo.style.display = "inline";
+  }
 }

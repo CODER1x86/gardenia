@@ -4,7 +4,7 @@
 const express = require("express");
 const path = require("path");
 const fs = require("fs");
-const { initializeDatabase, getDb, getRevenue, getExpensesSum, getInventory, addInventoryItem, getStartingBalance } = require("./sqlite.js");
+const { initializeDatabase, getDb, getRevenue, getExpensesSum, getInventory, addInventoryItem, getStartingBalance, db } = require("./sqlite.js");
 const { sendWhatsAppMessage } = require("./twilioIntegration");
 const session = require("express-session");
 const cookieParser = require("cookie-parser");
@@ -283,30 +283,36 @@ function sendResetEmail(email, token) {
 // Snippet 13: Fetch Initial Data Endpoint with Enhanced Logging
 // This snippet adds an endpoint to fetch initial data with enhanced logging.
 app.get("/api/data", async (req, res) => {
-  const year = req.query.year || new Date().getFullYear(); // Default to current year if not provided
   try {
-    console.log('DB in /api/data:', global.db);
-    console.log("Fetching starting balance...");
-    const startingBalance = await getStartingBalance(year);
-    console.log("Starting balance:", startingBalance);
+    const db = new sqlite3.Database("/app/.data/database.db");
 
-    console.log("Fetching revenue...");
-    const revenueResult = await getRevenue(year);
-    console.log("Revenue result:", revenueResult);
+    db.get("SELECT startingBalance FROM settings WHERE year = ?", [2024], (err, row) => {
+      if (err) return console.error("Error fetching starting balance:", err);
+      const startingBalance = row ? row.startingBalance : 0;
+      console.log("Starting balance:", startingBalance);
 
-    console.log("Fetching expenses...");
-    const expensesResult = await getExpensesSum(year);
-    console.log("Expenses result:", expensesResult);
+      db.get("SELECT SUM(amount) as totalRevenue FROM revenue WHERE year = ?", [2024], (err, row) => {
+        if (err) return console.error("Error fetching revenue:", err);
+        const totalRevenue = row.totalRevenue || 0;
+        console.log("Revenue result for year 2024:", row);
 
-    const availableBalance = startingBalance + revenueResult.totalRevenue - expensesResult.totalExpenses;
-    res.json({
-      totalRevenue: revenueResult.totalRevenue,
-      totalExpenses: expensesResult.totalExpenses,
-      availableBalance,
+        db.get("SELECT SUM(amount) as totalExpenses FROM expenses WHERE year = ?", [2024], (err, row) => {
+          if (err) return console.error("Error fetching expenses:", err);
+          const totalExpenses = row.totalExpenses || 0;
+          console.log("Expenses result for year 2024:", row);
+
+          res.json({
+            startingBalance,
+            totalRevenue,
+            totalExpenses,
+            availableBalance: startingBalance + totalRevenue - totalExpenses,
+          });
+        });
+      });
     });
-  } catch (err) {
-    console.error("Error fetching initial data:", err);
-    res.status(500).json({ success: false, error: err.message });
+  } catch (error) {
+    console.error("API error in /api/data:", error);
+    res.status(500).send("Internal server error.");
   }
 });
 // Snippet 14: Check Authentication Status Endpoint
