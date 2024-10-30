@@ -56,6 +56,36 @@ initializeDatabase().then((db) => {
     });
   });
 });
+app.get("/api/data", async (req, res) => {
+  try {
+    console.log("Starting /api/data request...");
+    const year = new Date().getFullYear();
+    
+    console.log("Fetching starting balance...");
+    const startingBalance = await getStartingBalance(year);
+    console.log("Starting balance:", startingBalance);
+    
+    console.log("Fetching revenue...");
+    const revenueResult = await getRevenue(year);
+    console.log("Revenue result:", revenueResult);
+    
+    console.log("Fetching expenses...");
+    const expensesResult = await getExpensesSum(year);
+    console.log("Expenses result:", expensesResult);
+
+    const availableBalance = startingBalance + revenueResult.totalRevenue - expensesResult.totalExpenses;
+    res.json({
+      totalRevenue: revenueResult.totalRevenue,
+      totalExpenses: expensesResult.totalExpenses,
+      availableBalance,
+    });
+  } catch (error) {
+    console.error("Error fetching data:", error);
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+
 // Snippet 3: Revenue Report Endpoint
 app.get("/api/revenue-report", async (req, res) => {
   const { filter, year, month, unit } = req.query;
@@ -210,6 +240,14 @@ app.get("/api/payment-methods", async (req, res) => {
     res.status(500).json({ error: error.message });
   }
 });
+app.get("/api/check-auth", (req, res) => {
+  if (req.session.userId) {
+    res.json({ isAuthenticated: true });
+  } else {
+    res.json({ isAuthenticated: false });
+  }
+});
+
 // Snippet 12: Login Endpoint
 app.post("/login", async (req, res) => {
   const { username, password } = req.body;

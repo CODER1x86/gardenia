@@ -4,15 +4,17 @@ document.addEventListener("DOMContentLoaded", function () {
   initializeApp();
 
   // Logout functionality
-  const logoutButton = document.getElementById('logout-button');
+  const logoutButton = document.getElementById("logout-button");
   if (logoutButton) {
-    logoutButton.addEventListener('click', () => {
-      document.getElementById('facility-management').style.display = 'none';
-      document.getElementById('site-settings').style.display = 'none';
-      document.getElementById('login-link').style.display = 'block';
-      document.getElementById('logout-link').style.display = 'none';
-      alert('Logged out successfully!');
+    logoutButton.addEventListener("click", () => {
+      document.getElementById("facility-management").style.display = "none";
+      document.getElementById("site-settings").style.display = "none";
+      document.getElementById("login-link").style.display = "block";
+      document.getElementById("logout-link").style.display = "none";
+      alert("Logged out successfully!");
     });
+  } else {
+    console.error("Logout button not found!");
   }
 });
 
@@ -43,16 +45,17 @@ function loadHeaderFooter() {
 // Generic Template Loader
 function loadTemplate(url, placeholderId, callback) {
   fetch(url)
-    .then(response => {
-      if (!response.ok) throw new Error(`Error loading template: ${response.status}`);
+    .then((response) => {
+      if (!response.ok)
+        throw new Error(`Error loading template: ${response.status}`);
       return response.text();
     })
-    .then(html => {
+    .then((html) => {
       const placeholder = document.getElementById(placeholderId);
       if (placeholder) placeholder.innerHTML = html;
       if (callback) callback();
     })
-    .catch(error => console.error(error));
+    .catch((error) => console.error(error));
 }
 
 // Initialize Menu Dropdown
@@ -64,12 +67,12 @@ function initializeMenu() {
 function fetchData() {
   showLoadingSpinner(); // Show loading spinner
   fetch("/api/data")
-    .then(response => validateResponse(response))
-    .then(data => {
+    .then((response) => validateResponse(response))
+    .then((data) => {
       updateBudgetSummary(data);
       hideLoadingSpinner(); // Hide loading spinner
     })
-    .catch(error => {
+    .catch((error) => {
       console.error("Error fetching budget data:", error);
       hideLoadingSpinner(); // Hide loading spinner on error
       showError("Failed to load budget data.");
@@ -98,9 +101,9 @@ function updateElementText(elementId, text) {
 // Check Authentication Status
 function checkAuth() {
   fetch("/api/check-auth")
-    .then(response => validateResponse(response))
-    .then(data => toggleAuthLinks(data.isAuthenticated))
-    .catch(error => {
+    .then((response) => validateResponse(response))
+    .then((data) => toggleAuthLinks(data.isAuthenticated))
+    .catch((error) => {
       console.error("Error checking authentication:", error);
       showError("Authentication check failed.");
     });
@@ -108,7 +111,7 @@ function checkAuth() {
 
 // Toggle Authenticated Links
 function toggleAuthLinks(isAuthenticated) {
-  document.querySelectorAll(".auth-link").forEach(link => {
+  document.querySelectorAll(".auth-link").forEach((link) => {
     link.style.display = isAuthenticated ? "inline" : "none";
   });
 }
@@ -118,22 +121,22 @@ function login(username, password) {
   // Here, you would normally verify the credentials with your server
   const authenticated = true; // Simulate successful authentication
   if (authenticated) {
-    document.getElementById('facility-management').style.display = 'block';
-    document.getElementById('site-settings').style.display = 'block';
-    document.getElementById('login-link').style.display = 'none';
-    document.getElementById('logout-link').style.display = 'block';
-    alert('Login successful!');
+    document.getElementById("facility-management").style.display = "block";
+    document.getElementById("site-settings").style.display = "block";
+    document.getElementById("login-link").style.display = "none";
+    document.getElementById("logout-link").style.display = "block";
+    alert("Login successful!");
   } else {
-    alert('Login failed. Please try again.');
+    alert("Login failed. Please try again.");
   }
 }
 // Logout functionality
-document.getElementById('logout-button').addEventListener('click', () => {
-  document.getElementById('facility-management').style.display = 'none';
-  document.getElementById('site-settings').style.display = 'none';
-  document.getElementById('login-link').style.display = 'block';
-  document.getElementById('logout-link').style.display = 'none';
-  alert('Logged out successfully!');
+document.getElementById("logout-button").addEventListener("click", () => {
+  document.getElementById("facility-management").style.display = "none";
+  document.getElementById("site-settings").style.display = "none";
+  document.getElementById("login-link").style.display = "block";
+  document.getElementById("logout-link").style.display = "none";
+  alert("Logged out successfully!");
 });
 
 // Set Language Preference
@@ -157,32 +160,33 @@ function initializeOptions() {
 
 // Populate Year Options
 function populateYearOptions() {
-  fetchOptions("/api/years", "year-select", year => year);
+  fetchOptions("/api/years", "year-select", (year) => year);
 }
 // Populate Month Options
 function populateMonthOptions() {
-  const year = document.getElementById("year-select")?.value || new Date().getFullYear();
-  fetchOptions(`/api/months?year=${year}`, "month-select", month =>
+  const year =
+    document.getElementById("year-select")?.value || new Date().getFullYear();
+  fetchOptions(`/api/months?year=${year}`, "month-select", (month) =>
     new Date(2024, month - 1).toLocaleString("default", { month: "long" })
   );
 }
 
 // Populate Category Options
 function populateCategoryOptions() {
-  fetchOptions("/api/categories", "category-select", category => category);
+  fetchOptions("/api/categories", "category-select", (category) => category);
 }
 
 // Populate Unit Options
 function populateUnitOptions() {
-  fetchOptions("/api/units", "unit-select", unit => unit.unit_number);
+  fetchOptions("/api/units", "unit-select", (unit) => unit.unit_number);
 }
 
 // Generic Function to Fetch and Populate Options
 function fetchOptions(apiUrl, selectId, mapFunction) {
   fetch(apiUrl)
-    .then(response => validateResponse(response))
-    .then(data => populateSelect(selectId, data, mapFunction))
-    .catch(error => {
+    .then((response) => validateResponse(response))
+    .then((data) => populateSelect(selectId, data, mapFunction))
+    .catch((error) => {
       console.error(`Error fetching options from ${apiUrl}:`, error);
       showError("Failed to load options.");
     });
@@ -193,7 +197,7 @@ function populateSelect(selectId, data, mapFunction) {
   const selectElement = document.getElementById(selectId);
   if (selectElement) {
     selectElement.innerHTML = "";
-    data.forEach(item => {
+    data.forEach((item) => {
       const option = document.createElement("option");
       option.value = mapFunction(item);
       option.textContent = mapFunction(item);
@@ -204,21 +208,30 @@ function populateSelect(selectId, data, mapFunction) {
 // Setup Event Listeners
 function setupEventListeners() {
   const runReportBtn = document.getElementById("run-report-btn");
-  const filterOptions = document.querySelectorAll('input[name="filter-option"]');
+  const filterOptions = document.querySelectorAll(
+    'input[name="filter-option"]'
+  );
   if (runReportBtn) runReportBtn.addEventListener("click", fetchReportData);
-  filterOptions.forEach(option => option.addEventListener("change", handleFilterChange));
+  filterOptions.forEach((option) =>
+    option.addEventListener("change", handleFilterChange)
+  );
 }
 
 // Handle Filter Change
 function handleFilterChange() {
-  const filter = document.querySelector('input[name="filter-option"]:checked').value;
+  const filter = document.querySelector(
+    'input[name="filter-option"]:checked'
+  ).value;
   toggleFilterContainers(filter);
   if (filter === "unit") populateUnitOptions();
 }
 
 // Toggle Filter Containers Display
 function toggleFilterContainers(filter) {
-  toggleContainerDisplay("year-select-container", ["year", "month"].includes(filter));
+  toggleContainerDisplay(
+    "year-select-container",
+    ["year", "month"].includes(filter)
+  );
   toggleContainerDisplay("month-select-container", filter === "month");
   toggleContainerDisplay("category-select-container", filter === "category");
   toggleContainerDisplay("unit-select-container", filter === "unit");
@@ -231,15 +244,17 @@ function toggleContainerDisplay(containerId, condition) {
 }
 // Fetch Report Data
 function fetchReportData() {
-  const filter = document.querySelector('input[name="filter-option"]:checked').value;
+  const filter = document.querySelector(
+    'input[name="filter-option"]:checked'
+  ).value;
   const year = document.getElementById("year-select").value;
   const month = document.getElementById("month-select").value;
   let query = `/api/budget-details?filter=${filter}&year=${year}`;
   if (filter === "month") query += `&month=${month}`;
   fetch(query)
-    .then(response => validateResponse(response))
-    .then(data => updateReportTable(data, filter, year, month))
-    .catch(error => {
+    .then((response) => validateResponse(response))
+    .then((data) => updateReportTable(data, filter, year, month))
+    .catch((error) => {
       console.error("Error fetching report data:", error);
       showError("Failed to load report data.");
     });
