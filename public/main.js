@@ -32,13 +32,16 @@ function loadHeaderFooter() {
 // Generic Template Loader
 function loadTemplate(url, placeholderId, callback) {
   fetch(url)
-    .then(response => response.text())
+    .then(response => {
+      if (!response.ok) throw new Error(`Error loading template: ${response.status}`);
+      return response.text();
+    })
     .then(html => {
       const placeholder = document.getElementById(placeholderId);
       if (placeholder) placeholder.innerHTML = html;
       if (callback) callback();
     })
-    .catch(error => console.error(`Error loading ${url}:`, error));
+    .catch(error => console.error(error));
 }
 
 // Initialize Menu Dropdown
@@ -49,10 +52,18 @@ function initializeMenu() {
 
 // Fetch Budget Summary Data
 function fetchData() {
+  showLoadingSpinner(); // Show loading spinner
   fetch("/api/data")
     .then(response => validateResponse(response))
-    .then(data => updateBudgetSummary(data))
-    .catch(error => console.error("Error fetching budget data:", error));
+    .then(data => {
+      updateBudgetSummary(data);
+      hideLoadingSpinner(); // Hide loading spinner
+    })
+    .catch(error => {
+      console.error("Error fetching budget data:", error);
+      hideLoadingSpinner(); // Hide loading spinner on error
+      showError("Failed to load budget data.");
+    });
 }
 
 // Validate HTTP Response
@@ -80,7 +91,10 @@ function checkAuth() {
   fetch("/api/check-auth")
     .then(response => validateResponse(response))
     .then(data => toggleAuthLinks(data.isAuthenticated))
-    .catch(error => console.error("Error checking authentication:", error));
+    .catch(error => {
+      console.error("Error checking authentication:", error);
+      showError("Authentication check failed.");
+    });
 }
 
 // Toggle Authenticated Links
@@ -137,7 +151,10 @@ function fetchOptions(apiUrl, selectId, mapFunction) {
   fetch(apiUrl)
     .then(response => validateResponse(response))
     .then(data => populateSelect(selectId, data, mapFunction))
-    .catch(error => console.error(`Error fetching options from ${apiUrl}:`, error));
+    .catch(error => {
+      console.error(`Error fetching options from ${apiUrl}:`, error);
+      showError("Failed to load options.");
+    });
 }
 
 // Populate Select Element with Data
@@ -196,7 +213,10 @@ function fetchReportData() {
   fetch(query)
     .then(response => validateResponse(response))
     .then(data => updateReportTable(data, filter, year, month))
-    .catch(error => console.error("Error fetching report data:", error));
+    .catch(error => {
+      console.error("Error fetching report data:", error);
+      showError("Failed to load report data.");
+    });
 }
 
 // Update Report Table
@@ -229,5 +249,29 @@ function displaySelectedFilters(filter, year, month) {
     const filterText = filter === "year" ? year : `${month}/${year}`;
     selectedFilters.textContent = filterText;
     reportInfo.style.display = "inline";
+  }
+}
+
+// Show loading spinner
+function showLoadingSpinner() {
+  const spinner = document.getElementById("loading-spinner");
+  if (spinner) spinner.style.display = "block";
+}
+
+// Hide loading spinner
+function hideLoadingSpinner() {
+  const spinner = document.getElementById("loading-spinner");
+  if (spinner) spinner.style.display = "none";
+}
+
+// Show error message
+function showError(message) {
+  const errorElement = document.getElementById("error-message");
+  if (errorElement) {
+    errorElement.textContent = message;
+    errorElement.style.display = "block";
+    setTimeout(() => {
+      errorElement.style.display = "none";
+    }, 5000); // Hide after 5 seconds
   }
 }

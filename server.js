@@ -60,8 +60,8 @@ initializeDatabase().then((db) => {
     });
   });
 });
+
 // Snippet 2: Revenue Report Endpoint
-// This snippet adds the revenue report endpoint to filter and fetch data based on the selected filter options.
 app.get("/api/revenue-report", async (req, res) => {
   const { filter, year, month, unit } = req.query;
   let query = `SELECT r.unit_id, r.amount, r.payment_date, pm.method_name,
@@ -88,8 +88,8 @@ app.get("/api/revenue-report", async (req, res) => {
     res.status(500).json({ error: error.message });
   }
 });
+
 // Snippet 3: Expense Report Endpoint
-// This snippet adds the expense report endpoint to filter and fetch data based on the selected filter options.
 app.get("/api/expense-report", async (req, res) => {
   const { filter, year, month, category } = req.query;
   let query = "SELECT unit_id, category, item, price, expense_date, last_updated FROM expenses WHERE strftime('%Y', expense_date) = ?";
@@ -109,12 +109,12 @@ app.get("/api/expense-report", async (req, res) => {
     res.status(500).json({ error: error.message });
   }
 });
+
 // Snippet 4: Budget Details Endpoint
-// This snippet adds the budget details endpoint to fetch data based on the selected year and month.
 app.get("/api/budget-details", async (req, res) => {
   const { filter, year, month } = req.query;
-  const revenueQuery = "SELECT SUM(amount) AS totalRevenue FROM revenue WHERE strftime('%Y', payment_date) = ?";
-  const expensesQuery = "SELECT SUM(price) AS totalExpenses FROM expenses WHERE strftime('%Y', expense_date) = ?";
+  let revenueQuery = "SELECT SUM(amount) AS totalRevenue FROM revenue WHERE strftime('%Y', payment_date) = ?";
+  let expensesQuery = "SELECT SUM(price) AS totalExpenses FROM expenses WHERE strftime('%Y', expense_date) = ?";
   const queryParams = [year];
   if (filter === "month") {
     revenueQuery += " AND strftime('%m', payment_date) = ?";
@@ -124,10 +124,10 @@ app.get("/api/budget-details", async (req, res) => {
   try {
     const revenueResult = await global.db.get(revenueQuery, queryParams);
     const expensesResult = await global.db.get(expensesQuery, queryParams);
-    const availableBalance = revenueResult.totalRevenue - expensesResult.totalExpenses;
+    const availableBalance = (revenueResult.totalRevenue || 0) - (expensesResult.totalExpenses || 0);
     res.json({
-      totalRevenue: revenueResult.totalRevenue,
-      totalExpenses: expensesResult.totalExpenses,
+      totalRevenue: revenueResult.totalRevenue || 0,
+      totalExpenses: expensesResult.totalExpenses || 0,
       availableBalance,
     });
   } catch (error) {
@@ -135,8 +135,8 @@ app.get("/api/budget-details", async (req, res) => {
     res.status(500).json({ error: error.message });
   }
 });
+
 // Snippet 5: Fetch Available Months Endpoint
-// This snippet adds the endpoint to fetch available months based on the selected year.
 app.get("/api/months", async (req, res) => {
   const year = req.query.year;
   try {
@@ -155,8 +155,8 @@ app.get("/api/months", async (req, res) => {
     res.status(500).json({ error: error.message });
   }
 });
+
 // Snippet 6: Fetch Available Years Endpoint
-// This snippet adds the endpoint to fetch available years from the database.
 app.get("/api/years", async (req, res) => {
   try {
     console.log('DB in /api/years:', global.db);
@@ -171,8 +171,8 @@ app.get("/api/years", async (req, res) => {
     res.status(500).json({ error: error.message });
   }
 });
+
 // Snippet 7: Expense Input Endpoint
-// This snippet adds the expense input endpoint to allow dynamic data input for expenses.
 app.post("/api/expense-input", async (req, res) => {
   const { unit_id, category, item, price, expense_date, receipt_photo } = req.body;
   try {
@@ -186,8 +186,8 @@ app.post("/api/expense-input", async (req, res) => {
     res.status(500).json({ success: false, error: error.message });
   }
 });
+
 // Snippet 8: Revenue Input Endpoint
-// This snippet adds the revenue input endpoint to allow dynamic data input for revenues.
 app.post("/api/revenue-input", async (req, res) => {
   const { unit_id, amount, payment_date, method_id } = req.body;
   try {
@@ -201,8 +201,8 @@ app.post("/api/revenue-input", async (req, res) => {
     res.status(500).json({ success: false, error: error.message });
   }
 });
+
 // Snippet 9: Fetch Categories Endpoint
-// This snippet adds an endpoint to fetch categories dynamically.
 app.get("/api/categories", async (req, res) => {
   try {
     const result = await global.db.all("SELECT DISTINCT category FROM expenses");
@@ -212,8 +212,8 @@ app.get("/api/categories", async (req, res) => {
     res.status(500).json({ error: error.message });
   }
 });
+
 // Snippet 10: Fetch Payment Methods Endpoint
-// This snippet adds an endpoint to fetch payment methods dynamically.
 app.get("/api/payment-methods", async (req, res) => {
   try {
     const result = await global.db.all("SELECT method_id, method_name FROM payment_methods");
@@ -223,140 +223,61 @@ app.get("/api/payment-methods", async (req, res) => {
     res.status(500).json({ error: error.message });
   }
 });
+
 // Snippet 11: Login Endpoint
-// This snippet handles login requests by verifying user credentials.
 app.post("/login", async (req, res) => {
   const { username, password } = req.body;
   try {
     const user = await global.db.get("SELECT * FROM users WHERE username = ?", [username]);
-    if (user && bcrypt.compareSync(password, user.password)) {
-      req.session.authenticated = true;
-      res.json({ success: true });
+    if (user && await bcrypt.compare(password, user.password)) {
+      req.session.userId = user.id; // Assign session variable
+      res.redirect("/"); // Redirect to the home page
     } else {
-      res.json({ success: false });
+      res.status(401).send("Invalid username or password");
     }
   } catch (error) {
-    console.error("Error logging in:", error);
-    res.json({ success: false });
+    console.error("Error during login:", error);
+    res.status(500).send("Server error");
   }
 });
-// Snippet 12: Password Reset Request Endpoint with Enhanced Logging
-// This snippet handles requests to send a password reset email.
-app.post("/request-password-reset", async (req, res) => {
+
+// Snippet 12: Password Reset Endpoint
+app.post("/forget-password", async (req, res) => {
   const { email } = req.body;
   try {
     const user = await global.db.get("SELECT * FROM users WHERE email = ?", [email]);
     if (user) {
-      const resetToken = generateResetToken();
-      await global.db.run("UPDATE users SET reset_token = ? WHERE email = ?", [
-        resetToken,
-        email,
-      ]);
-      sendResetEmail(email, resetToken); // Implement sendResetEmail function
-      res.json({ success: true, message: "Reset email sent" });
-    } else {
-      res.json({ success: false, message: "Email not found" });
-    }
-  } catch (error) {
-    console.error("Error requesting password reset:", error);
-    res.json({ success: false });
-  }
-});
+      // Generate a temporary reset token and set an expiration time
+      const resetToken = Math.random().toString(36).substring(2, 15);
+      const resetExpires = Date.now() + 3600000; // 1 hour
+      await global.db.run("UPDATE users SET reset_token = ?, reset_expires = ? WHERE email = ?", [resetToken, resetExpires, email]);
 
-function generateResetToken() {
-  return Math.random().toString(36).substr(2);
-}
+      const mailOptions = {
+        from: "your-email@gmail.com",
+        to: email,
+        subject: "Password Reset",
+        text: `Click the link to reset your password: http://localhost:3000/reset-password/${resetToken}`,
+      };
 
-function sendResetEmail(email, token) {
-  const mailOptions = {
-    from: "your-email@gmail.com",
-    to: email,
-    subject: "Password Reset",
-    text: `Please use the following token to reset your password: ${token}`,
-  };
-  transporter.sendMail(mailOptions, (error, info) => {
-    if (error) {
-      return console.error("Error sending reset email:", error);
-    }
-    console.log("Reset email sent: " + info.response);
-  });
-}
-// Snippet 13: Fetch Initial Data Endpoint with Enhanced Logging
-// This snippet adds an endpoint to fetch initial data with enhanced logging.
-app.get("/api/data", async (req, res) => {
-  try {
-    const db = new sqlite3.Database("/app/.data/database.db");
-
-    db.get("SELECT startingBalance FROM settings WHERE year = ?", [2024], (err, row) => {
-      if (err) return console.error("Error fetching starting balance:", err);
-      const startingBalance = row ? row.startingBalance : 0;
-      console.log("Starting balance:", startingBalance);
-
-      db.get("SELECT SUM(amount) as totalRevenue FROM revenue WHERE year = ?", [2024], (err, row) => {
-        if (err) return console.error("Error fetching revenue:", err);
-        const totalRevenue = row.totalRevenue || 0;
-        console.log("Revenue result for year 2024:", row);
-
-        db.get("SELECT SUM(amount) as totalExpenses FROM expenses WHERE year = ?", [2024], (err, row) => {
-          if (err) return console.error("Error fetching expenses:", err);
-          const totalExpenses = row.totalExpenses || 0;
-          console.log("Expenses result for year 2024:", row);
-
-          res.json({
-            startingBalance,
-            totalRevenue,
-            totalExpenses,
-            availableBalance: startingBalance + totalRevenue - totalExpenses,
-          });
-        });
+      transporter.sendMail(mailOptions, (error, info) => {
+        if (error) {
+          console.error("Error sending email:", error);
+          return res.status(500).send("Error sending email");
+        }
+        res.send("Password reset email sent");
       });
-    });
+    } else {
+      res.status(404).send("Email not found");
+    }
   } catch (error) {
-    console.error("API error in /api/data:", error);
-    res.status(500).send("Internal server error.");
+    console.error("Error during password reset:", error);
+    res.status(500).send("Server error");
   }
 });
-// Snippet 14: Check Authentication Status Endpoint
-// This snippet adds an endpoint to check the user's authentication status.
-app.get("/api/check-auth", (req, res) => {
-  if (req.session.authenticated) {
-    res.json({ authenticated: true });
-  } else {
-    res.json({ authenticated: false });
-  }
-});
-// Snippet 15: Server Wakeup Probe
-// This snippet adds a wakeup probe endpoint to wake the server up.
-app.get("/wakeup", (req, res) => {
-  console.log("I'm awake");
-  res.send("I'm awake");
-});
-// Snippet 16: Fetch Inventory Endpoint
-// This snippet adds an endpoint to fetch inventory data.
-app.get("/api/inventory", async (req, res) => {
-  try {
-    const result = await getInventory();
-    res.json(result);
-  } catch (error) {
-    console.error("Error fetching inventory:", error);
-    res.status(500).json({ error: error.message });
-  }
-});
-// Snippet 16: Add Inventory Item Endpoint
-// This snippet adds an endpoint to add a new inventory item.
-app.post("/api/inventory", async (req, res) => {
-  const { expense_id, location, usage_date, status } = req.body;
-  try {
-    await addInventoryItem(expense_id, location, usage_date, status);
-    res.json({ success: true });
-  } catch (error) {
-    console.error("Error adding inventory item:", error);
-    res.status(500).json({ success: false, error: error.message });
-  }
-});
-// Snippet 17: Start the Server
-// This snippet starts the server and listens on the specified port.
+
+// Snippet 13: Start the Server
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
-  console.log(`Server is running on port ${PORT}`);
+  console.log(`Server is running on http://localhost:${PORT}`);
 });
+
