@@ -8,16 +8,24 @@
       <li><a href="expense-report.html">Expense Report</a></li>
       <li><a href="revenue-report.html">Revenue Report</a></li>
       <!-- Authenticated Area -->
-      <li class="dropdown" id="facility-management" style="display: none;">
-        <a href="#" class="dropdown-toggle" data-toggle="dropdown">Facility Management <span class="caret"></span></a>
+      <li
+        class="dropdown auth-link"
+        id="facility-management"
+        style="display: none"
+      >
+        <a href="#" class="dropdown-toggle" data-toggle="dropdown"
+          >Facility Management <span class="caret"></span
+        ></a>
         <ul class="dropdown-menu">
           <li><a href="expense-input.html">Expenses Management</a></li>
           <li><a href="revenue-input.html">Revenue Management</a></li>
           <li><a href="inventory-management.html">Inventory Management</a></li>
         </ul>
       </li>
-      <li class="dropdown" id="site-settings" style="display: none;">
-        <a href="#" class="dropdown-toggle" data-toggle="dropdown">Site Settings <span class="caret"></span></a>
+      <li class="dropdown auth-link" id="site-settings" style="display: none">
+        <a href="#" class="dropdown-toggle" data-toggle="dropdown"
+          >Site Settings <span class="caret"></span
+        ></a>
         <ul class="dropdown-menu">
           <li><a href="style-modifier.html">Theme Management</a></li>
           <li><a href="footer-settings.html">Footer Settings</a></li>
@@ -25,14 +33,22 @@
       </li>
       <!-- Language Selection -->
       <li>
-        <a href="#" id="lang-en" onclick="setLanguage('en')"><img src="uk-flag.png" alt="English" /></a>
-        <a href="#" id="lang-ar" onclick="setLanguage('ar')"><img src="egypt-flag.png" alt="Arabic" /></a>
+        <a href="#" id="lang-en" onclick="setLanguage('en')"
+          ><img src="uk-flag.png" alt="English"
+        /></a>
+        <a href="#" id="lang-ar" onclick="setLanguage('ar')"
+          ><img src="egypt-flag.png" alt="Arabic"
+        /></a>
       </li>
       <li id="login-link">
-        <a href="#" id="login-button"><i class="material-icons left">login</i>Login</a>
+        <a href="#" id="login-button"
+          ><i class="material-icons left">login</i>Login</a
+        >
       </li>
-      <li id="logout-link" style="display: none;">
-        <a href="#" id="logout-button"><i class="material-icons left">logout</i>Logout</a>
+      <li id="logout-link" class="auth-link" style="display: none">
+        <a href="#" id="logout-button"
+          ><i class="material-icons left">logout</i>Logout</a
+        >
       </li>
     </ul>
   </div>

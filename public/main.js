@@ -2,23 +2,8 @@ console.log("main.js is loaded");
 
 document.addEventListener("DOMContentLoaded", function () {
   initializeApp();
-
-  // Logout functionality
-  const logoutButton = document.getElementById("logout-button");
-  if (logoutButton) {
-    logoutButton.addEventListener("click", () => {
-      document.getElementById("facility-management").style.display = "none";
-      document.getElementById("site-settings").style.display = "none";
-      document.getElementById("login-link").style.display = "block";
-      document.getElementById("logout-link").style.display = "none";
-      alert("Logged out successfully!");
-    });
-  } else {
-    console.error("Logout button not found!");
-  }
 });
 
-// Initialize Application Setup
 function initializeApp() {
   loadHeaderFooter();
   displayCurrentYear();
@@ -28,6 +13,46 @@ function initializeApp() {
   initializeOptions();
   setupEventListeners();
 }
+
+// Check Authentication Status
+function checkAuth() {
+  fetch("/api/check-auth")
+    .then(response => validateResponse(response))
+    .then(data => {
+      toggleAuthLinks(data.isAuthenticated);
+      if (data.isAuthenticated) {
+        setupLogoutButton();
+      }
+    })
+    .catch(error => {
+      console.error("Error checking authentication:", error);
+      showError("Authentication check failed.");
+    });
+}
+
+// Toggle Authenticated Links
+function toggleAuthLinks(isAuthenticated) {
+  document.querySelectorAll(".auth-link").forEach(link => {
+    link.style.display = isAuthenticated ? "inline" : "none";
+  });
+}
+
+// Setup Logout Button Functionality
+function setupLogoutButton() {
+  const logoutButton = document.getElementById('logout-button');
+  if (logoutButton) {
+    logoutButton.addEventListener('click', () => {
+      document.getElementById('facility-management').style.display = 'none';
+      document.getElementById('site-settings').style.display = 'none';
+      document.getElementById('login-link').style.display = 'block';
+      document.getElementById('logout-link').style.display = 'none';
+      alert('Logged out successfully!');
+    });
+  } else {
+    console.error("Logout button not found!");
+  }
+}
+
 
 // Display Current Year
 function displayCurrentYear() {
@@ -97,23 +122,6 @@ function updateBudgetSummary(data) {
 function updateElementText(elementId, text) {
   const element = document.getElementById(elementId);
   if (element) element.textContent = text;
-}
-// Check Authentication Status
-function checkAuth() {
-  fetch("/api/check-auth")
-    .then((response) => validateResponse(response))
-    .then((data) => toggleAuthLinks(data.isAuthenticated))
-    .catch((error) => {
-      console.error("Error checking authentication:", error);
-      showError("Authentication check failed.");
-    });
-}
-
-// Toggle Authenticated Links
-function toggleAuthLinks(isAuthenticated) {
-  document.querySelectorAll(".auth-link").forEach((link) => {
-    link.style.display = isAuthenticated ? "inline" : "none";
-  });
 }
 
 // Mock authentication function
