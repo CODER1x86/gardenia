@@ -1,5 +1,4 @@
 // Snippet 1: Import and Initialize Dependencies
-// Make sure the initial imports and middleware setup are correctly done
 const express = require("express");
 const path = require("path");
 const fs = require("fs");
@@ -20,7 +19,11 @@ const cookieParser = require("cookie-parser");
 const bcrypt = require("bcrypt");
 const nodemailer = require("nodemailer");
 const bodyParser = require("body-parser");
+
 const app = express();
+const errorMessage =
+  "Whoops! Error connecting to the database–please try again!";
+
 // Middleware setup
 app.use(cookieParser());
 app.use(
@@ -44,55 +47,43 @@ const transporter = nodemailer.createTransport({
   },
 });
 
-const errorMessage =
-  "Whoops! Error connecting to the database–please try again!";
+// Snippet 2: Database Initialization
 initializeDatabase().then((db) => {
-  global.db = getDb(); // Ensure db is globally accessible
-  // Confirm db initialization
+  global.db = getDb();
   console.log("DB Initialized:", global.db);
-  // Root Route: Serve index.html
-  app.get("/", (req, res) => {
-    res.sendFile(path.join(__dirname, "public", "index.html"));
-  });
+});
 
-  // Serve Static and Dynamic Routes Pages
-  const pages = [
-    "index.html",
-    "budget-summary.html",
-    "budget-details.html",
-    "expense-report.html",
-    "revenue-report.html",
-    "expense-management.html",
-    "revenue-management.html",
-    "login.html",
-    "forget-password.html",
-    "header.html",
-    "footer.html",
-    "footer-settings.html",
-    "style-modifier.html",
-    "inventory-management.html",
-  ];
-  pages.forEach((page) => {
-    app.get(`/${page}`, (req, res) => {
-      res.sendFile(path.join(__dirname, "public", page));
-    });
+// Snippet 3: Serve Static Files and Routes
+const pages = [
+  "index.html",
+  "budget-summary.html",
+  "budget-details.html",
+  "expense-report.html",
+  "revenue-report.html",
+  "expense-management.html",
+  "revenue-management.html",
+  "login.html",
+  "forget-password.html",
+  "header.html",
+  "footer.html",
+  "footer-settings.html",
+  "style-modifier.html",
+  "inventory-management.html",
+];
+pages.forEach((page) => {
+  app.get(`/${page}`, (req, res) => {
+    res.sendFile(path.join(__dirname, "public", page));
   });
 });
 
-app.get("/api/data", async (req, res) => {
-  try {
-    // Fetch and return budget summary data
-    const data = await getBudgetSummaryData(); // Define this function to fetch your summary data
-    res.json(data);
-  } catch (error) {
-    console.error("Error fetching data:", error);
-    res.status(500).json({ error: error.message });
-  }
+app.get("/", (req, res) => {
+  res.sendFile(path.join(__dirname, "public", "index.html"));
 });
 
+// Snippet 4: Authentication and Session Check
 app.get("/api/check-auth", async (req, res) => {
   try {
-    const isAuthenticated = !!req.session.userId; // Adjust this as per your auth logic
+    const isAuthenticated = !!req.session.userId;
     res.json({ isAuthenticated });
   } catch (error) {
     console.error("Error checking authentication:", error);
@@ -100,18 +91,48 @@ app.get("/api/check-auth", async (req, res) => {
   }
 });
 
-// Snippet 2: Revenue Report Endpoint
+// Snippet 5: Fetch Budget Summary Data
+app.get("/api/data", async (req, res) => {
+  try {
+    const revenueResult = await getRevenue();
+    const expensesResult = await getExpensesSum();
+    const balanceResult = await getStartingBalance();
+
+    if (!balanceResult || !revenueResult || !expensesResult) {
+      throw new Error(
+        "Failed to fetch one or more components of initial data."
+      );
+    }
+
+    const availableBalance =
+      balanceResult.starting_balance +
+      revenueResult.totalRevenue -
+      expensesResult.totalExpenses;
+    res.json({
+      totalRevenue: revenueResult.totalRevenue || 0,
+      totalExpenses: expensesResult.totalExpenses || 0,
+      availableBalance,
+    });
+  } catch (error) {
+    console.error("Error fetching data:", error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Snippet 6: Revenue Report Endpoint
 app.get("/api/revenue-report", async (req, res) => {
   const { filter, year, month, unit } = req.query;
-  let query = `SELECT r.unit_id, r.amount, r.payment_date, pm.method_name,
-                 u.unit_number, u.floor, o.owner_name, t.tenant_name
-                FROM revenue r
-                JOIN payment_methods pm ON r.method_id = pm.method_id
-                JOIN units u ON r.unit_id = u.unit_id
-                JOIN owners o ON u.owner_id = o.owner_id
-                LEFT JOIN tenants t ON u.tenant_id = t.tenant_id
-                WHERE strftime('%Y', r.payment_date) = ?`;
+  let query = `
+    SELECT r.unit_id, r.amount, r.payment_date, pm.method_name, u.unit_number, u.floor, 
+           o.owner_name, t.tenant_name
+    FROM revenue r
+    JOIN payment_methods pm ON r.method_id = pm.method_id
+    JOIN units u ON r.unit_id = u.unit_id
+    JOIN owners o ON u.owner_id = o.owner_id
+    LEFT JOIN tenants t ON u.tenant_id = t.tenant_id
+    WHERE strftime('%Y', r.payment_date) = ?`;
   const queryParams = [year];
+
   if (filter === "month") {
     query += " AND strftime('%m', r.payment_date) = ?";
     queryParams.push(month);
@@ -119,6 +140,7 @@ app.get("/api/revenue-report", async (req, res) => {
     query += " AND r.unit_id = ?";
     queryParams.push(unit);
   }
+
   try {
     const result = await global.db.all(query, queryParams);
     res.json(result);
@@ -127,12 +149,16 @@ app.get("/api/revenue-report", async (req, res) => {
     res.status(500).json({ error: error.message });
   }
 });
-// Snippet 3: Expense Report Endpoint
+
+// Snippet 7: Expense Report Endpoint
 app.get("/api/expense-report", async (req, res) => {
   const { filter, year, month, category } = req.query;
-  let query =
-    "SELECT unit_id, category, item, price, expense_date, last_updated FROM expenses WHERE strftime('%Y', expense_date) = ?";
+  let query = `
+    SELECT unit_id, category, item, price, expense_date, last_updated 
+    FROM expenses 
+    WHERE strftime('%Y', expense_date) = ?`;
   const queryParams = [year];
+
   if (filter === "month") {
     query += " AND strftime('%m', expense_date) = ?";
     queryParams.push(month);
@@ -140,6 +166,7 @@ app.get("/api/expense-report", async (req, res) => {
     query += " AND category = ?";
     queryParams.push(category);
   }
+
   try {
     const result = await global.db.all(query, queryParams);
     res.json(result);
@@ -148,7 +175,8 @@ app.get("/api/expense-report", async (req, res) => {
     res.status(500).json({ error: error.message });
   }
 });
-// Snippet 4: Budget Details Endpoint
+
+// Snippet 8: Budget Details Endpoint
 app.get("/api/budget-details", async (req, res) => {
   const { filter, year, month } = req.query;
   let revenueQuery =
@@ -156,11 +184,13 @@ app.get("/api/budget-details", async (req, res) => {
   let expensesQuery =
     "SELECT SUM(price) AS totalExpenses FROM expenses WHERE strftime('%Y', expense_date) = ?";
   const queryParams = [year];
+
   if (filter === "month") {
     revenueQuery += " AND strftime('%m', payment_date) = ?";
     expensesQuery += " AND strftime('%m', expense_date) = ?";
     queryParams.push(month);
   }
+
   try {
     const revenueResult = await global.db.get(revenueQuery, queryParams);
     const expensesResult = await global.db.get(expensesQuery, queryParams);
@@ -176,44 +206,8 @@ app.get("/api/budget-details", async (req, res) => {
     res.status(500).json({ error: error.message });
   }
 });
-// Snippet 5: Fetch Available Months Endpoint
-app.get("/api/months", async (req, res) => {
-  const year = req.query.year;
-  try {
-    const result = await global.db.all(
-      `
-      SELECT DISTINCT strftime('%m', expense_date) AS month 
-      FROM expenses 
-      WHERE strftime('%Y', expense_date) = ?
-      UNION
-      SELECT DISTINCT strftime('%m', payment_date) AS month 
-      FROM revenue 
-      WHERE strftime('%Y', payment_date) = ?
-    `,
-      [year, year]
-    );
-    res.json(result.map((row) => row.month));
-  } catch (error) {
-    console.error("Error fetching months:", error);
-    res.status(500).json({ error: error.message });
-  }
-});
-// Snippet 6: Fetch Available Years Endpoint
-app.get("/api/years", async (req, res) => {
-  try {
-    console.log("DB in /api/years:", global.db);
-    const result = await global.db.all(`
-      SELECT DISTINCT strftime('%Y', expense_date) AS year FROM expenses
-      UNION
-      SELECT DISTINCT strftime('%Y', payment_date) AS year FROM revenue
-    `);
-    res.json(result.map((row) => row.year));
-  } catch (error) {
-    console.error("Error fetching years:", error);
-    res.status(500).json({ error: error.message });
-  }
-});
-// Snippet 7: Expense Input Endpoint
+
+// Snippet 9: Expense and Revenue Input Endpoints
 app.post("/api/expense-input", async (req, res) => {
   const { unit_id, category, item, price, expense_date, receipt_photo } =
     req.body;
@@ -236,7 +230,7 @@ app.post("/api/expense-input", async (req, res) => {
     res.status(500).json({ success: false, error: error.message });
   }
 });
-// Snippet 8: Revenue Input Endpoint
+
 app.post("/api/revenue-input", async (req, res) => {
   const { unit_id, amount, payment_date, method_id } = req.body;
   try {
@@ -250,7 +244,8 @@ app.post("/api/revenue-input", async (req, res) => {
     res.status(500).json({ success: false, error: error.message });
   }
 });
-// Snippet 9: Fetch Categories Endpoint
+
+// Snippet 10: Auxiliary Data Endpoints
 app.get("/api/categories", async (req, res) => {
   try {
     const result = await global.db.all(
@@ -262,7 +257,7 @@ app.get("/api/categories", async (req, res) => {
     res.status(500).json({ error: error.message });
   }
 });
-// Snippet 10: Fetch Payment Methods Endpoint
+
 app.get("/api/payment-methods", async (req, res) => {
   try {
     const result = await global.db.all(
@@ -274,7 +269,40 @@ app.get("/api/payment-methods", async (req, res) => {
     res.status(500).json({ error: error.message });
   }
 });
-// Snippet 11: Login Endpoint
+
+app.get("/api/months", async (req, res) => {
+  const year = req.query.year;
+  try {
+    const result = await global.db.all(
+      `
+      SELECT DISTINCT strftime('%m', expense_date) AS month FROM expenses WHERE strftime('%Y', expense_date) = ?
+      UNION
+      SELECT DISTINCT strftime('%m', payment_date) AS month FROM revenue WHERE strftime('%Y', payment_date) = ?
+    `,
+      [year, year]
+    );
+    res.json(result.map((row) => row.month));
+  } catch (error) {
+    console.error("Error fetching months:", error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+app.get("/api/years", async (req, res) => {
+  try {
+    const result = await global.db.all(`
+      SELECT DISTINCT strftime('%Y', expense_date) AS year FROM expenses
+      UNION
+      SELECT DISTINCT strftime('%Y', payment_date) AS year FROM revenue
+    `);
+    res.json(result.map((row) => row.year));
+  } catch (error) {
+    console.error("Error fetching years:", error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Snippet 11: Authentication Routes
 app.post("/login", async (req, res) => {
   const { username, password } = req.body;
   try {
@@ -282,8 +310,8 @@ app.post("/login", async (req, res) => {
       username,
     ]);
     if (user && (await bcrypt.compare(password, user.password))) {
-      req.session.userId = user.id; // Assign session variable
-      res.redirect("/"); // Redirect to the home page
+      req.session.userId = user.id;
+      res.redirect("/");
     } else {
       res.status(401).send("Invalid username or password");
     }
@@ -292,7 +320,7 @@ app.post("/login", async (req, res) => {
     res.status(500).send("Server error");
   }
 });
-// Snippet 12: Password Reset Endpoint
+
 app.post("/forget-password", async (req, res) => {
   const { email } = req.body;
   try {
@@ -300,7 +328,6 @@ app.post("/forget-password", async (req, res) => {
       email,
     ]);
     if (user) {
-      // Generate a temporary reset token and set an expiration time
       const resetToken = Math.random().toString(36).substring(2, 15);
       const resetExpires = Date.now() + 3600000; // 1 hour
       await global.db.run(
@@ -328,7 +355,8 @@ app.post("/forget-password", async (req, res) => {
     res.status(500).send("Server error");
   }
 });
-// Snippet 13: Start the Server
+
+// Snippet 12: Start the Server
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
   console.log(`Server is running on http://localhost:${PORT}`);
