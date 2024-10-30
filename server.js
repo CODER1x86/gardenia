@@ -4,7 +4,7 @@
 const express = require("express");
 const path = require("path");
 const fs = require("fs");
-const { initializeDatabase, getDb, getRevenue, getExpensesSum, getInventory, addInventoryItem } = require("./sqlite.js");
+const { initializeDatabase, getDb, getRevenue, getExpensesSum, getInventory, addInventoryItem, getStartingBalance } = require("./sqlite.js");
 const { sendWhatsAppMessage } = require("./twilioIntegration");
 const session = require("express-session");
 const cookieParser = require("cookie-parser");
@@ -283,16 +283,22 @@ function sendResetEmail(email, token) {
 // Snippet 13: Fetch Initial Data Endpoint with Enhanced Logging
 // This snippet adds an endpoint to fetch initial data with enhanced logging.
 app.get("/api/data", async (req, res) => {
+  const year = req.query.year || new Date().getFullYear(); // Default to current year if not provided
   try {
     console.log('DB in /api/data:', global.db);
+    console.log("Fetching starting balance...");
+    const startingBalance = await getStartingBalance(year);
+    console.log("Starting balance:", startingBalance);
+
     console.log("Fetching revenue...");
-    const revenueResult = await getRevenue();
+    const revenueResult = await getRevenue(year);
     console.log("Revenue result:", revenueResult);
+
     console.log("Fetching expenses...");
-    const expensesResult = await getExpensesSum();
+    const expensesResult = await getExpensesSum(year);
     console.log("Expenses result:", expensesResult);
 
-    const availableBalance = revenueResult.totalRevenue - expensesResult.totalExpenses;
+    const availableBalance = startingBalance + revenueResult.totalRevenue - expensesResult.totalExpenses;
     res.json({
       totalRevenue: revenueResult.totalRevenue,
       totalExpenses: expensesResult.totalExpenses,

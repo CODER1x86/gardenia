@@ -137,6 +137,26 @@ const addInventoryItem = async (expense_id, location, usage_date, status) => {
   }
 };
 
+const getStartingBalance = async (year) => {
+  try {
+    if (year === 2024) {
+      return 12362; // Manually set for the initial year
+    }
+    const previousYear = year - 1;
+    const result = await db.get(`
+      SELECT
+        (SELECT SUM(amount) FROM revenue WHERE strftime('%Y', payment_date) = ?) -
+        (SELECT SUM(price) FROM expenses WHERE strftime('%Y', expense_date) = ?) AS availableBalance
+      FROM revenue
+      LIMIT 1
+    `, [previousYear, previousYear]);
+    return result.availableBalance;
+  } catch (error) {
+    console.error("Error fetching starting balance:", error);
+    throw error;
+  }
+};
+
 // Module Exports
 module.exports = {
   initializeDatabase,
@@ -145,5 +165,6 @@ module.exports = {
   getRevenue,
   getExpensesSum,
   getInventory,
-  addInventoryItem
+  addInventoryItem,
+  getStartingBalance // Add this to exports
 };
