@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Expense Input</title>
+    <title>Revenue Management</title>
     <link
       href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;600&display=swap"
       rel="stylesheet"
@@ -23,22 +23,14 @@
     <!-- Placeholder for the header -->
 
     <div class="container">
-      <h4>Enter Expense</h4>
-      <form id="expense-input-form">
+      <h4>Enter Revenue</h4>
+      <form id="revenue-input-form">
         <div class="input-field">
-          <label for="category">Category</label>
-          <select id="category" class="browser-default" required>
-            <option value="" disabled selected>Choose a category</option>
-            <!-- Categories will be populated dynamically -->
+          <label for="unit-number">Unit Number</label>
+          <select id="unit-number" class="browser-default" required>
+            <option value="" disabled selected>Choose a unit number</option>
+            <!-- Unit options will be populated dynamically -->
           </select>
-        </div>
-        <div class="input-field">
-          <label for="new-category">Or define new category:</label>
-          <input type="text" id="new-category" placeholder="New Category" />
-        </div>
-        <div class="input-field">
-          <label for="item">Item</label>
-          <input type="text" id="item" required />
         </div>
         <div class="input-field">
           <label for="amount">Amount</label>
@@ -47,6 +39,13 @@
         <div class="input-field">
           <label for="payment-date">Payment Date</label>
           <input type="date" id="payment-date" required />
+        </div>
+        <div class="input-field">
+          <label for="payment-method">Method of Payment</label>
+          <select id="payment-method" class="browser-default" required>
+            <option value="" disabled selected>Choose a payment method</option>
+            <!-- Payment methods will be populated dynamically -->
+          </select>
         </div>
         <div class="action-buttons">
           <button type="submit" class="btn waves-effect waves-light">
