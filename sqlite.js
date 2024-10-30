@@ -65,6 +65,15 @@ const initializeDatabase = async () => {
       receipt_photo BLOB
     )`);
 
+    await db.run(`CREATE TABLE IF NOT EXISTS inventory (
+      inventory_id INTEGER PRIMARY KEY,
+      expense_id INTEGER REFERENCES expenses(expense_id),
+      location TEXT,
+      usage_date TEXT,
+      last_updated TEXT,
+      status TEXT
+    )`);
+
     await db.run(`CREATE TABLE IF NOT EXISTS users (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       username TEXT UNIQUE,
@@ -107,11 +116,34 @@ const getExpensesSum = async (year) => {
   }
 };
 
+const getInventory = async () => {
+  try {
+    return await db.all("SELECT * FROM inventory");
+  } catch (error) {
+    console.error("Error fetching inventory:", error);
+    throw error;
+  }
+};
+
+const addInventoryItem = async (expense_id, location, usage_date, status) => {
+  try {
+    await db.run(
+      "INSERT INTO inventory (expense_id, location, usage_date, last_updated, status) VALUES (?, ?, ?, ?, ?)",
+      [expense_id, location, usage_date, new Date().toISOString(), status]
+    );
+  } catch (error) {
+    console.error("Error adding inventory item:", error);
+    throw error;
+  }
+};
+
 // Module Exports
 module.exports = {
   initializeDatabase,
   getDb,
   getExpenses,
   getRevenue,
-  getExpensesSum
+  getExpensesSum,
+  getInventory,
+  addInventoryItem
 };
