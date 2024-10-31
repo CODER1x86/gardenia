@@ -297,10 +297,7 @@ app.post("/register", async (req, res) => {
   const { username, password } = req.body;
   try {
     // Check if the username already exists
-    const userExists = await global.db.get(
-      "SELECT * FROM users WHERE username = ?",
-      [username]
-    );
+    const userExists = await global.db.get("SELECT * FROM users WHERE username = ?", [username]);
     if (userExists) {
       return res.status(409).json({ error: "Username already taken" });
     }
@@ -309,10 +306,9 @@ app.post("/register", async (req, res) => {
     const hashedPassword = await bcrypt.hash(password, 10);
 
     // Store user in database
-    await global.db.run(
-      "INSERT INTO users (username, password) VALUES (?, ?)",
-      [username, hashedPassword]
-    );
+    await global.db.run("INSERT INTO users (username, password) VALUES (?, ?)", [username, hashedPassword]);
+
+    req.session.userId = userExists.id; // Assign session variable
 
     res.json({ success: true });
   } catch (error) {

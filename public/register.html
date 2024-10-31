@@ -48,84 +48,70 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/js/materialize.min.js"></script>
     <script src="./main.js"></script>
     <script>
-      document
-        .getElementById("password")
-        .addEventListener("input", updatePasswordStrength);
-      document
-        .getElementById("register-form")
-        .addEventListener("submit", (event) => {
-          event.preventDefault();
-          const password = document.getElementById("password").value;
-          const confirmPassword =
-            document.getElementById("confirm-password").value;
+  document.getElementById("password").addEventListener("input", updatePasswordStrength);
+  document.getElementById("register-form").addEventListener("submit", (event) => {
+    event.preventDefault();
+    const password = document.getElementById("password").value;
+    const confirmPassword = document.getElementById("confirm-password").value;
 
-          if (password !== confirmPassword) {
-            alert("Passwords do not match");
-            return;
-          }
+    if (password !== confirmPassword) {
+      alert("Passwords do not match");
+      return;
+    }
 
-          const username = document.getElementById("username").value;
-          fetch("/register", {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-            },
-            body: JSON.stringify({ username, password }),
-          })
-            .then((response) => {
-              if (!response.ok) {
-                if (response.status === 409)
-                  throw new Error("Username already taken");
-                throw new Error("Error registering user");
-              }
-              return response.json();
-            })
-            .then((data) => {
-              alert("Registration successful");
-              window.location.href = "login.html"; // Redirect to login page
-            })
-            .catch((error) => {
-              console.error("Error:", error);
-              alert(error.message);
-            });
-        });
-
-      function updatePasswordStrength() {
-        const password = document.getElementById("password").value;
-        const meter = document.getElementById("password-strength-meter");
-        const text = document.getElementById("password-strength-text");
-        const strength = calculatePasswordStrength(password);
-
-        meter.value = strength.score;
-        text.textContent = `Strength: ${strength.text}`;
+    const username = document.getElementById("username").value;
+    fetch("/register", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({ username, password })
+    })
+    .then(response => {
+      if (!response.ok) {
+        if (response.status === 409) throw new Error("Username already taken");
+        throw new Error("Error registering user");
       }
+      return response.json();
+    })
+    .then(data => {
+      alert("Registration successful");
+      window.location.href = "index.html"; // Redirect to users area
+    })
+    .catch(error => {
+      console.error("Error:", error);
+      alert(error.message);
+    });
+  });
 
-      function calculatePasswordStrength(password) {
-        let score = 0;
-        let text = "Very Weak";
+  function updatePasswordStrength() {
+    const password = document.getElementById("password").value;
+    const meter = document.getElementById("password-strength-meter");
+    const text = document.getElementById("password-strength-text");
+    const strength = calculatePasswordStrength(password);
 
-        if (password.length >= 8) score++;
-        if (/[A-Z]/.test(password)) score++;
-        if (/[0-9]/.test(password)) score++;
-        if (/[^A-Za-z0-9]/.test(password)) score++;
+    meter.value = strength.score;
+    text.textContent = `Strength: ${strength.text}`;
+  }
 
-        switch (score) {
-          case 1:
-            text = "Weak";
-            break;
-          case 2:
-            text = "Fair";
-            break;
-          case 3:
-            text = "Good";
-            break;
-          case 4:
-            text = "Strong";
-            break;
-        }
+  function calculatePasswordStrength(password) {
+    let score = 0;
+    let text = "Very Weak";
 
-        return { score, text };
-      }
-    </script>
+    if (password.length >= 8) score++;
+    if (/[A-Z]/.test(password)) score++;
+    if (/[0-9]/.test(password)) score++;
+    if (/[^A-Za-z0-9]/.test(password)) score++;
+
+    switch (score) {
+      case 1: text = "Weak"; break;
+      case 2: text = "Fair"; break;
+      case 3: text = "Good"; break;
+      case 4: text = "Strong"; break;
+    }
+
+    return { score, text };
+  }
+</script>
   </body>
 </html>
