@@ -1,5 +1,43 @@
 document.addEventListener("DOMContentLoaded", function () {
   initializeApp();
+
+  const registerForm = document.getElementById("register-form");
+  if (registerForm) {
+    registerForm.addEventListener("submit", (event) => {
+      event.preventDefault();
+      const username = document.getElementById("username").value;
+      const password = document.getElementById("password").value;
+      fetch("/register", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ username, password }),
+      })
+        .then((response) => {
+          if (!response.ok) throw new Error("Error registering user");
+          return response.json();
+        })
+        .then((data) => {
+          alert("Registration successful");
+          window.location.href = "login.html"; // Redirect to login page
+        })
+        .catch((error) => {
+          console.error("Error:", error);
+          alert("Registration failed. Please try again.");
+        });
+    });
+  } else {
+    console.log("Register form not found!");
+  }
+
+  const loginLink = document.getElementById("login-link");
+  const logoutLink = document.getElementById("logout-link");
+  if (loginLink) {
+    toggleAuthLinks(false); // Assuming user is not authenticated initially
+  } else {
+    console.log("Login/Logout links not found!");
+  }
 });
 
 function initializeApp() {
@@ -64,37 +102,6 @@ function setupLogoutButton() {
   }
 }
 
-// Registration Form Event Listener
-const registerForm = document.getElementById("register-form");
-if (registerForm) {
-  registerForm.addEventListener("submit", (event) => {
-    event.preventDefault();
-    const username = document.getElementById("username").value;
-    const password = document.getElementById("password").value;
-    fetch("/register", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify({ username, password })
-    })
-    .then(response => {
-      if (!response.ok) throw new Error("Error registering user");
-      return response.json();
-    })
-    .then(data => {
-      alert("Registration successful");
-      window.location.href = "login.html"; // Redirect to login page
-    })
-    .catch(error => {
-      console.error("Error:", error);
-      alert("Registration failed. Please try again.");
-    });
-  });
-} else {
-  console.error("Register form not found!");
-}
-
 function validateResponse(response) {
   if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
   return response.json();
@@ -131,8 +138,6 @@ function initializeMenu() {
   const dropdowns = document.querySelectorAll(".dropdown-trigger");
   if (typeof M !== "undefined") M.Dropdown.init(dropdowns);
 }
-
-
 
 function fetchData() {
   showLoadingSpinner(); // Show loading spinner

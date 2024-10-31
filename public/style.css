@@ -99,6 +99,14 @@ footer .container p {
   width: auto;
 }
 
+#password-strength-meter {
+  width: 100%;
+}
+
+#password-strength-text {
+  font-weight: bold;
+}
+
 @media (max-width: 600px) {
   .container {
     margin-top: 20px;
