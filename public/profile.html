@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Manage Profile</title>
+  <link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;600&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/css/materialize.min.css" />
+  <link rel="stylesheet" href="./style.css" />
+</head>
+<body>
+  <div id="header-placeholder"></div>
+  <div class="container">
+    <h4>Manage Your Profile</h4>
+    <form id="profile-form">
+      <div class="input-field">
+        <label for="first_name">First Name</label>
+        <input type="text" id="first_name" required />
+      </div>
+      <div class="input-field">
+        <label for="last_name">Last Name</label>
+        <input type="text" id="last_name" required />
+      </div>
+      <div class="input-field">
+        <label for="birthdate">Birthdate</label>
+        <input type="date" id="birthdate" required />
+      </div>
+      <div class="input-field">
+        <label for="email">Email</label>
+        <input type="email" id="email" required />
+      </div>
+      <div class="action-buttons">
+        <button type="submit" class="btn waves-effect waves-light">Update Profile</button>
+      </div>
+    </form>
+  </div>
+  <div id="footer-placeholder"></div>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/js/materialize.min.js"></script>
+  <script src="./main.js"></script>
+  <script>
+    document.addEventListener("DOMContentLoaded", function () {
+      // Fetch user data and populate form
+      fetch('/api/profile')
+        .then(response => response.json())
+        .then(data => {
+          document.getElementById('first_name').value = data.first_name;
+          document.getElementById('last_name').value = data.last_name;
+          document.getElementById('birthdate').value = data.birthdate;
+          document.getElementById('email').value = data.email;
+        })
+        .catch(error => console.error("Error loading profile data:", error));
+
+      // Handle form submission
+      document.getElementById('profile-form').addEventListener('submit', (event) => {
+        event.preventDefault();
+        const first_name = document.getElementById('first_name').value;
+        const last_name = document.getElementById('last_name').value;
+        const birthdate = document.getElementById('birthdate').value;
+        const email = document.getElementById('email').value;
+
+        fetch('/api/profile', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ first_name, last_name, birthdate, email }),
+        })
+        .then(response => {
+          if (!response.ok) throw new Error('Error updating profile');
+          return response.json();
+        })
+        .then(data => {
+          alert('Profile updated successfully');
+        })
+        .catch(error => {
+          console.error('Error:', error);
+          alert('Failed to update profile. Please try again.');
+        });
+      });
+    });
+  </script>
+</body>
+</html>

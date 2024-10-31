@@ -287,7 +287,10 @@ app.get("/api/payment-methods", async (req, res) => {
 });
 app.get("/api/check-auth", async (req, res) => {
   if (req.session.userId) {
-    const user = await global.db.get("SELECT first_name FROM users WHERE id = ?", [req.session.userId]);
+    const user = await global.db.get(
+      "SELECT first_name FROM users WHERE id = ?",
+      [req.session.userId]
+    );
     return res.json({ isAuthenticated: true, user });
   }
   res.json({ isAuthenticated: false });
@@ -295,12 +298,16 @@ app.get("/api/check-auth", async (req, res) => {
 
 // User Registration Endpoint
 app.post("/register", async (req, res) => {
-  const { username, password, first_name, last_name, birthdate, email } = req.body;
+  const { username, password, first_name, last_name, birthdate, email } =
+    req.body;
   try {
     console.log("Received registration request with data:", req.body); // Log incoming data
 
     // Check if the username or email already exists
-    const userExists = await global.db.get("SELECT * FROM users WHERE username = ? OR email = ?", [username, email]);
+    const userExists = await global.db.get(
+      "SELECT * FROM users WHERE username = ? OR email = ?",
+      [username, email]
+    );
     if (userExists) {
       console.log("Username or email already taken:", userExists);
       return res.status(409).json({ error: "Username or email already taken" });
@@ -311,11 +318,22 @@ app.post("/register", async (req, res) => {
     console.log("Password hashed successfully");
 
     // Generate verification token
-    const verificationToken = crypto.randomBytes(32).toString('hex');
+    const verificationToken = crypto.randomBytes(32).toString("hex");
     console.log("Verification token generated:", verificationToken);
 
     // Store user in database
-    await global.db.run("INSERT INTO users (username, password, first_name, last_name, birthdate, email, verification_token) VALUES (?, ?, ?, ?, ?, ?, ?)", [username, hashedPassword, first_name, last_name, birthdate, email, verificationToken]);
+    await global.db.run(
+      "INSERT INTO users (username, password, first_name, last_name, birthdate, email, verification_token) VALUES (?, ?, ?, ?, ?, ?, ?)",
+      [
+        username,
+        hashedPassword,
+        first_name,
+        last_name,
+        birthdate,
+        email,
+        verificationToken,
+      ]
+    );
     console.log("User saved to database");
 
     // Send verification email
@@ -323,8 +341,8 @@ app.post("/register", async (req, res) => {
     await transporter.sendMail({
       from: process.env.EMAIL_USER,
       to: email,
-      subject: 'Email Verification',
-      text: `Please verify your email by clicking the following link: ${verificationLink}`
+      subject: "Email Verification",
+      text: `Please verify your email by clicking the following link: ${verificationLink}`,
     });
     console.log("Verification email sent to:", email);
 
@@ -398,6 +416,35 @@ app.post("/forget-password", async (req, res) => {
     res.status(500).send("Server error");
   }
 });
+// Fetch user profile
+app.get("/api/profile", async (req, res) => {
+  if (!req.session.userId) {
+    return res.status(401).json({ error: "Unauthorized" });
+  }
+  const user = await global.db.get(
+    "SELECT first_name, last_name, birthdate, email FROM users WHERE id = ?",
+    [req.session.userId]
+  );
+  res.json(user);
+});
+
+// Update user profile
+app.post("/api/profile", async (req, res) => {
+  if (!req.session.userId) {
+    return res.status(401).json({ error: "Unauthorized" });
+  }
+  const { first_name, last_name, birthdate, email } = req.body;
+  await global.db.run(
+    "UPDATE users SET first_name = ?, last_name = ?, birthdate = ?, email = ? WHERE id = ?",
+    [first_name, last_name, birthdate, email, req.session.userId]
+  );
+
+  // (Optional) Send email verification if email is updated
+  // ...
+
+  res.json({ success: true });
+});
+
 // Snippet 14: Start the Server
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {

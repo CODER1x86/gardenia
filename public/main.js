@@ -43,14 +43,15 @@ function toggleAuthLinks(isAuthenticated, user) {
   });
   const loginLink = document.getElementById('login-link');
   const userGreeting = document.getElementById('user-greeting');
+  const userNameElement = document.getElementById('user-name');
   const logoutLink = document.getElementById('logout-link');
 
   if (loginLink) loginLink.style.display = isAuthenticated ? 'none' : 'inline';
   if (userGreeting) userGreeting.style.display = isAuthenticated ? 'inline' : 'none';
   if (logoutLink) logoutLink.style.display = isAuthenticated ? 'inline' : 'none';
 
-  if (userGreeting && user) {
-    userGreeting.innerHTML = `Hello ${user.first_name}`;
+  if (userGreeting && user && userNameElement) {
+    userNameElement.textContent = user.first_name;
   }
 }
 
@@ -75,6 +76,18 @@ function setupLogoutButton() {
     console.error("Logout button not found!");
   }
 }
+function validateResponse(response) {
+  if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+  return response.json();
+}
+
+function displayCurrentYear() {
+  const currentYearElement = document.getElementById("currentyear");
+  if (currentYearElement) {
+    currentYearElement.textContent = new Date().getFullYear();
+  }
+}
+
 function loadHeaderFooter() {
   loadTemplate("/header.html", "header-placeholder", initializeMenu);
   loadTemplate("/footer.html", "footer-placeholder");
@@ -98,7 +111,6 @@ function initializeMenu() {
   const dropdowns = document.querySelectorAll(".dropdown-trigger");
   if (typeof M !== "undefined") M.Dropdown.init(dropdowns);
 }
-
 function fetchData() {
   showLoadingSpinner(); // Show loading spinner
   fetch("/api/data")
@@ -114,15 +126,143 @@ function fetchData() {
     });
 }
 
-function displayCurrentYear() {
-  const currentYearElement = document.getElementById("currentyear");
-  if (currentYearElement) {
-    currentYearElement.textContent = new Date().getFullYear();
-  }
+function updateBudgetSummary(data) {
+  const { availableBalance, totalRevenue, totalExpenses } = data;
+  updateElementText("available-balance", availableBalance);
+  updateElementText("total-revenue", totalRevenue);
+  updateElementText("total-expenses", totalExpenses);
 }
+
 function updateElementText(elementId, text) {
   const element = document.getElementById(elementId);
   if (element) element.textContent = text;
+}
+
+function setLanguagePreference() {
+  const language = localStorage.getItem("language") || "en";
+  setLanguage(language);
+}
+
+function setLanguage(language) {
+  localStorage.setItem("language", language);
+  document.documentElement.lang = language;
+}
+
+function initializeOptions() {
+  populateYearOptions();
+  populateMonthOptions();
+  populateCategoryOptions();
+}
+function populateYearOptions() {
+  fetchOptions("/api/years", "year-select", year => year);
+}
+
+function populateMonthOptions() {
+  const year = document.getElementById("year-select")?.value || new Date().getFullYear();
+  fetchOptions(`/api/months?year=${year}`, "month-select", month =>
+    new Date(2024, month - 1).toLocaleString("default", { month: "long" })
+  );
+}
+
+function populateCategoryOptions() {
+  fetchOptions("/api/categories", "category-select", category => category);
+}
+
+function populateUnitOptions() {
+  fetchOptions("/api/units", "unit-select", unit => unit.unit_number);
+}
+
+function fetchOptions(apiUrl, selectId, mapFunction) {
+  fetch(apiUrl)
+    .then(response => validateResponse(response))
+    .then(data => populateSelect(selectId, data, mapFunction))
+    .catch(error => {
+      console.error(`Error fetching options from ${apiUrl}:`, error);
+      showError("Failed to load options.");
+    });
+}
+
+function populateSelect(selectId, data, mapFunction) {
+  const selectElement = document.getElementById(selectId);
+  if (selectElement) {
+    selectElement.innerHTML = "";
+    data.forEach(item => {
+      const option = document.createElement("option");
+      option.value = mapFunction(item);
+      option.textContent = mapFunction(item);
+      selectElement.appendChild(option);
+    });
+  }
+}
+
+function setupEventListeners() {
+  const runReportBtn = document.getElementById("run-report-btn");
+  const filterOptions = document.querySelectorAll('input[name="filter-option"]');
+  if (runReportBtn) runReportBtn.addEventListener("click", fetchReportData);
+  filterOptions.forEach(option =>
+    option.addEventListener("change", handleFilterChange)
+  );
+}
+
+function handleFilterChange() {
+  const filter = document.querySelector('input[name="filter-option"]:checked').value;
+  toggleFilterContainers(filter);
+  if (filter === "unit") populateUnitOptions();
+}
+
+function toggleFilterContainers(filter) {
+  toggleContainerDisplay("year-select-container", ["year", "month"].includes(filter));
+  toggleContainerDisplay("month-select-container", filter === "month");
+  toggleContainerDisplay("category-select-container", filter === "category");
+  toggleContainerDisplay("unit-select-container", filter === "unit");
+}
+
+function toggleContainerDisplay(containerId, condition) {
+  const container = document.getElementById(containerId);
+  if (container) container.style.display = condition ? "block" : "none";
+}
+function fetchReportData() {
+  const filter = document.querySelector('input[name="filter-option"]:checked').value;
+  const year = document.getElementById("year-select").value;
+  const month = document.getElementById("month-select").value;
+  let query = `/api/budget-details?filter=${filter}&year=${year}`;
+  if (filter === "month") query += `&month=${month}`;
+  fetch(query)
+    .then(response => validateResponse(response))
+    .then(data => updateReportTable(data, filter, year, month))
+    .catch(error => {
+      console.error("Error fetching report data:", error);
+      showError("Failed to load report data.");
+    });
+}
+
+function updateReportTable(data, filter, year, month) {
+  const { totalRevenue, totalExpenses, availableBalance } = data;
+  updateReportRow(totalRevenue, totalExpenses, availableBalance);
+  displaySelectedFilters(filter, year, month);
+}
+
+function updateReportRow(totalRevenue, totalExpenses, availableBalance) {
+  const tbody = document.getElementById("budget-table-body");
+  if (tbody) {
+    tbody.innerHTML = `
+      <tr>
+        <td>${totalRevenue}</td>
+        <td>${totalExpenses}</td>
+        <td>${availableBalance}</td>
+      </tr>
+    `;
+  }
+}
+
+function displaySelectedFilters(filter, year, month) {
+  const reportInfo = document.getElementById("report-info");
+  const selectedFilters = document.getElementById("selected-filters");
+  if (reportInfo && selectedFilters) {
+    const filterText = filter === "year" ? year : `${month}/${year}`;
+    selectedFilters.textContent = filterText;
+    reportInfo.style.display = "inline";
+  }
 }
 
 function showLoadingSpinner() {
@@ -144,119 +284,4 @@ function showError(message) {
       errorElement.style.display = "none";
     }, 5000); // Hide after 5 seconds
   }
-}
-
-function validateResponse(response) {
-  if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
-  return response.json();
-}
-
-function setupRegisterForm() {
-  document.getElementById("register-form").addEventListener("submit", (event) => {
-    event.preventDefault();
-    const first_name = document.getElementById("first_name").value;
-    const last_name = document.getElementById("last_name").value;
-    const birthdate = document.getElementById("birthdate").value;
-    const email = document.getElementById("email").value;
-    const username = document.getElementById("username").value;
-    const password = document.getElementById("password").value;
-    const confirmPassword = document.getElementById("confirm-password").value;
-
-    if (password !== confirmPassword) {
-      alert("Passwords do not match");
-      return;
-    }
-
-    fetch("/register", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify({ first_name, last_name, birthdate, email, username, password })
-    })
-    .then(response => {
-      if (!response.ok) {
-        if (response.status === 409) {
-          throw new Error("Username or email already taken. Please log in or reset your password.");
-        }
-        throw new Error("Error registering user");
-      }
-      return response.json();
-    })
-    .then(data => {
-      alert("Registration successful");
-      window.location.href = "index.html"; // Redirect to login page
-    })
-    .catch(error => {
-      console.error("Error:", error);
-      if (error.message.includes("Username or email already taken")) {
-        if (confirm("Username or email already taken. Do you want to log in or reset your password?")) {
-          window.location.href = "login.html"; // Redirect to login page
-        }
-      } else {
-        alert(error.message);
-      }
-    });
-  });
-
-  document.getElementById("password").addEventListener("input", updatePasswordStrength);
-}
-
-function updatePasswordStrength() {
-  const password = document.getElementById("password").value;
-  const meter = document.getElementById("password-strength-meter");
-  const text = document.getElementById("password-strength-text");
-  const strength = calculatePasswordStrength(password);
-
-  meter.value = strength.score;
-  text.textContent = `Strength: ${strength.text}`;
-}
-
-function calculatePasswordStrength(password) {
-  let score = 0;
-  let text = "Very Weak";
-
-  if (password.length >= 8) score++;
-  if (/[A-Z]/.test(password)) score++;
-  if (/[0-9]/.test(password)) score++;
-  if (/[^A-Za-z0-9]/.test(password)) score++;
-
-  switch (score) {
-    case 1: text = "Weak"; break;
-    case 2: text = "Fair"; break;
-    case 3: text = "Good"; break;
-    case 4: text = "Strong"; break;
-  }
-
-  return { score, text };
-}
-
-function setupLoginForm() {
-  document.getElementById("login-form").addEventListener("submit", (event) => {
-    event.preventDefault();
-    const username = document.getElementById("username").value;
-    const password = document.getElementById("password").value;
-
-    fetch("/login", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({ username, password }),
-    })
-    .then((response) => {
-      if (!response.ok) {
-        throw new Error("Invalid username or password");
-      }
-      return response.json();
-    })
-    .then((data) => {
-      alert("Login successful");
-      window.location.href = "index.html"; // Redirect to users area
-    })
-    .catch((error) => {
-      console.error("Error:", error);
-      alert(error.message);
-    });
-  });
 }
