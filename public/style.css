@@ -6,7 +6,7 @@ body {
 }
 
 .nav-wrapper {
-  background-color: #1a73e8;
+  background-color: var(--primary-color, #1a73e8);
 }
 
 .brand-logo {
@@ -19,9 +19,7 @@ body {
   padding: 20px;
 }
 
-h1,
-h4,
-h2 {
+h1, h4, h2 {
   font-weight: 600;
   margin-bottom: 20px;
 }
@@ -33,11 +31,11 @@ h2 {
 
 .card-title {
   font-size: 24px;
-  color: #1a73e8;
+  color: var(--primary-color, #1a73e8);
 }
 
 .btn {
-  background-color: #1a73e8;
+  background-color: var(--primary-color, #1a73e8);
   color: #ffffff;
   border-radius: 30px;
 }
@@ -47,7 +45,7 @@ h2 {
 }
 
 footer.page-footer {
-  background-color: #1a73e8;
+  background-color: var(--primary-color, #1a73e8);
   color: #ffffff;
   padding-top: 10px;
   position: fixed;
@@ -121,9 +119,11 @@ footer .container p {
   body {
     padding: 10px;
   }
+
   .container {
     margin: 10px 0;
   }
+
   input,
   button {
     width: 100%;
