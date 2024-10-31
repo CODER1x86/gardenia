@@ -15,7 +15,8 @@ const {
 const session = require("express-session");
 const cookieParser = require("cookie-parser");
 const bcrypt = require("bcrypt");
-const crypto = require('crypto');
+const crypto = require("crypto");
+require("dotenv").config();
 const nodemailer = require("nodemailer");
 const bodyParser = require("body-parser");
 const app = express();
@@ -36,13 +37,12 @@ app.use(express.static(path.join(__dirname, "public")));
 
 // Setup email transport
 const transporter = nodemailer.createTransport({
-  service: "gmail",
+  service: "Gmail",
   auth: {
-    user: "your-email@gmail.com",
-    pass: "your-email-password",
+    user: process.env.EMAIL_USER,
+    pass: process.env.EMAIL_PASS,
   },
 });
-
 const errorMessage =
   "Whoops! Error connecting to the database–please try again!";
 initializeDatabase().then((db) => {
@@ -313,9 +313,9 @@ app.post("/register", async (req, res) => {
     await global.db.run("INSERT INTO users (username, password, first_name, last_name, birthdate, email, verification_token) VALUES (?, ?, ?, ?, ?, ?, ?)", [username, hashedPassword, first_name, last_name, birthdate, email, verificationToken]);
 
     // Send verification email
-    const verificationLink = `https://your-site.com/verify-email?token=${verificationToken}`;
+    const verificationLink = `https://gardenia-budget-management.glitch.me/verify-email?token=${verificationToken}`;
     await transporter.sendMail({
-      from: 'your-email@example.com',
+      from: process.env.EMAIL_USER,
       to: email,
       subject: 'Email Verification',
       text: `Please verify your email by clicking the following link: ${verificationLink}`
@@ -333,7 +333,9 @@ app.post("/login", async (req, res) => {
   const { username, password } = req.body;
   try {
     // Fetch user from database
-    const user = await global.db.get("SELECT * FROM users WHERE username = ?", [username]);
+    const user = await global.db.get("SELECT * FROM users WHERE username = ?", [
+      username,
+    ]);
     if (!user) {
       return res.status(401).json({ error: "Invalid username or password" });
     }
@@ -368,7 +370,7 @@ app.post("/forget-password", async (req, res) => {
         [resetToken, resetExpires, email]
       );
       const mailOptions = {
-        from: "your-email@gmail.com",
+        from: process.env.EMAIL_USER,
         to: email,
         subject: "Password Reset",
         text: `Click the link to reset your password: http://localhost:3000/reset-password/${resetToken}`,
