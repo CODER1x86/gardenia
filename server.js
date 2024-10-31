@@ -318,21 +318,28 @@ app.post("/register", async (req, res) => {
 });
 
 // Snippet 12: Login Endpoint
+// User Login Endpoint
 app.post("/login", async (req, res) => {
   const { username, password } = req.body;
   try {
-    const user = await global.db.get("SELECT * FROM users WHERE username = ?", [
-      username,
-    ]);
-    if (user && (await bcrypt.compare(password, user.password))) {
-      req.session.userId = user.id; // Assign session variable
-      res.redirect("/"); // Redirect to the home page
-    } else {
-      res.status(401).send("Invalid username or password");
+    // Fetch user from database
+    const user = await global.db.get("SELECT * FROM users WHERE username = ?", [username]);
+    if (!user) {
+      return res.status(401).json({ error: "Invalid username or password" });
     }
+
+    // Check password
+    const match = await bcrypt.compare(password, user.password);
+    if (!match) {
+      return res.status(401).json({ error: "Invalid username or password" });
+    }
+
+    req.session.userId = user.id; // Assign session variable
+
+    res.json({ success: true });
   } catch (error) {
     console.error("Error during login:", error);
-    res.status(500).send("Server error");
+    res.status(500).json({ error: error.message });
   }
 });
 // Snippet 13: Password Reset Endpoint
