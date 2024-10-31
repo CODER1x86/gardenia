@@ -73,7 +73,11 @@
             body: JSON.stringify({ username, password }),
           })
             .then((response) => {
-              if (!response.ok) throw new Error("Error registering user");
+              if (!response.ok) {
+                if (response.status === 409)
+                  throw new Error("Username already taken");
+                throw new Error("Error registering user");
+              }
               return response.json();
             })
             .then((data) => {
@@ -82,7 +86,7 @@
             })
             .catch((error) => {
               console.error("Error:", error);
-              alert("Registration failed. Please try again.");
+              alert(error.message);
             });
         });
 
