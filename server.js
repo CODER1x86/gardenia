@@ -1,5 +1,4 @@
-// Snippet 1: Import and Initialize Dependencies
-// Make sure the initial imports and middleware setup are correctly done
+// 1. Import and Initialize Dependencies
 const express = require("express");
 const path = require("path");
 const {
@@ -21,21 +20,52 @@ const nodemailer = require("nodemailer");
 const bodyParser = require("body-parser");
 const app = express();
 
-// Middleware setup
+// 2. Middleware Setup
 app.use(cookieParser());
 app.use(
   session({
     secret: "a super secret key that should be stored securely",
     resave: false,
     saveUninitialized: true,
-    cookie: {  maxAge: 4 * 60 * 60 * 1000 // Session duration of 4 hours},
-  }
-  }));
+    cookie: {
+      maxAge: 4 * 60 * 60 * 1000, // Session duration of 4 hours},
+    },
+  })
+);
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json());
 app.use(express.static(path.join(__dirname, "public")));
 
-// Setup email transport
+// 3. Protect Specific Routes (requires authentication)
+function ensureAuthenticated(req, res, next) {
+  if (req.session.userId) {
+    return next();
+  } else {
+    res.redirect("/login.html");
+  }
+}
+
+app.get("/dashboard.html", ensureAuthenticated, (req, res) => {
+  res.sendFile(path.join(__dirname, "public", "dashboard.html"));
+});
+
+app.get("/profile.html", ensureAuthenticated, (req, res) => {
+  res.sendFile(path.join(__dirname, "public", "profile.html"));
+});
+
+app.get("/expense-management.html", ensureAuthenticated, (req, res) => {
+  res.sendFile(path.join(__dirname, "public", "expense-management.html"));
+});
+
+app.get("/revenue-management.html", ensureAuthenticated, (req, res) => {
+  res.sendFile(path.join(__dirname, "public", "revenue-management.html"));
+});
+
+app.get("/inventory-management.html", ensureAuthenticated, (req, res) => {
+  res.sendFile(path.join(__dirname, "public", "inventory-management.html"));
+});
+
+// 4. Setup Email Transport
 const transporter = nodemailer.createTransport({
   service: "Gmail",
   auth: {
@@ -45,6 +75,8 @@ const transporter = nodemailer.createTransport({
 });
 const errorMessage =
   "Whoops! Error connecting to the database–please try again!";
+
+// 5. Database Initialization and Root Route
 initializeDatabase().then((db) => {
   global.db = getDb(); // Ensure db is globally accessible
 
@@ -79,128 +111,21 @@ initializeDatabase().then((db) => {
     });
   });
 });
-app.get("/api/data", async (req, res) => {
-  try {
-    console.log("Starting /api/data request...");
-    const year = new Date().getFullYear();
 
-    console.log("Fetching starting balance...");
-    const startingBalance = await getStartingBalance(year);
-    console.log("Starting balance:", startingBalance);
-
-    console.log("Fetching revenue...");
-    const revenueResult = await getRevenue(year);
-    console.log("Revenue result:", revenueResult);
-
-    console.log("Fetching expenses...");
-    const expensesResult = await getExpensesSum(year);
-    console.log("Expenses result:", expensesResult);
-
-    const availableBalance =
-      startingBalance +
-      revenueResult.totalRevenue -
-      expensesResult.totalExpenses;
-    res.json({
-      totalRevenue: revenueResult.totalRevenue,
-      totalExpenses: expensesResult.totalExpenses,
-      availableBalance,
-    });
-  } catch (error) {
-    console.error("Error fetching data:", error);
-    res.status(500).json({ success: false, error: error.message });
-  }
-});
-
-// Snippet 3: Revenue Report Endpoint
-app.get("/api/revenue-report", async (req, res) => {
-  const { filter, year, month, unit } = req.query;
-  let query = `SELECT r.unit_id, r.amount, r.payment_date, pm.method_name,
-                 u.unit_number, u.floor, o.owner_name, t.tenant_name
-                FROM revenue r
-                JOIN payment_methods pm ON r.method_id = pm.method_id
-                JOIN units u ON r.unit_id = u.unit_id
-                JOIN owners o ON u.owner_id = o.owner_id
-                LEFT JOIN tenants t ON u.tenant_id = t.tenant_id
-                WHERE strftime('%Y', r.payment_date) = ?`;
-  const queryParams = [year];
-  if (filter === "month") {
-    query += " AND strftime('%m', r.payment_date) = ?";
-    queryParams.push(month);
-  } else if (filter === "unit") {
-    query += " AND r.unit_id = ?";
-    queryParams.push(unit);
-  }
-  try {
-    const result = await global.db.all(query, queryParams);
-    res.json(result);
-  } catch (error) {
-    console.error("Error fetching revenue report:", error);
-    res.status(500).json({ error: error.message });
-  }
-});
-// Snippet 4: Expense Report Endpoint
-app.get("/api/expense-report", async (req, res) => {
-  const { filter, year, month, category } = req.query;
-  let query =
-    "SELECT unit_id, category, item, price, expense_date, last_updated FROM expenses WHERE strftime('%Y', expense_date) = ?";
-  const queryParams = [year];
-  if (filter === "month") {
-    query += " AND strftime('%m', expense_date) = ?";
-    queryParams.push(month);
-  } else if (filter === "category") {
-    query += " AND category = ?";
-    queryParams.push(category);
-  }
-  try {
-    const result = await global.db.all(query, queryParams);
-    res.json(result);
-  } catch (error) {
-    console.error("Error fetching expense report:", error);
-    res.status(500).json({ error: error.message });
-  }
-});
-// Snippet 5: Budget Details Endpoint
-app.get("/api/budget-details", async (req, res) => {
-  const { filter, year, month } = req.query;
-  let revenueQuery =
-    "SELECT SUM(amount) AS totalRevenue FROM revenue WHERE strftime('%Y', payment_date) = ?";
-  let expensesQuery =
-    "SELECT SUM(price) AS totalExpenses FROM expenses WHERE strftime('%Y', expense_date) = ?";
-  const queryParams = [year];
-  if (filter === "month") {
-    revenueQuery += " AND strftime('%m', payment_date) = ?";
-    expensesQuery += " AND strftime('%m', expense_date) = ?";
-    queryParams.push(month);
-  }
-  try {
-    const revenueResult = await global.db.get(revenueQuery, queryParams);
-    const expensesResult = await global.db.get(expensesQuery, queryParams);
-    const availableBalance =
-      (revenueResult.totalRevenue || 0) - (expensesResult.totalExpenses || 0);
-    res.json({
-      totalRevenue: revenueResult.totalRevenue || 0,
-      totalExpenses: expensesResult.totalExpenses || 0,
-      availableBalance,
-    });
-  } catch (error) {
-    console.error("Error fetching budget details:", error);
-    res.status(500).json({ error: error.message });
-  }
-});
-// Snippet 6: Fetch Available Months Endpoint
+// 6. API Endpoints for Data Retrieval and Calculations
 app.get("/api/months", async (req, res) => {
   const year = req.query.year;
   try {
     const result = await global.db.all(
       `
-      SELECT DISTINCT strftime('%m', expense_date) AS month 
-      FROM expenses 
+      SELECT DISTINCT strftime('%m', expense_date) AS month
+      FROM expenses
       WHERE strftime('%Y', expense_date) = ?
       UNION
-      SELECT DISTINCT strftime('%m', payment_date) AS month 
-      FROM revenue 
+      SELECT DISTINCT strftime('%m', payment_date) AS month
+      FROM revenue
       WHERE strftime('%Y', payment_date) = ?
-    `,
+      `,
       [year, year]
     );
     res.json(result.map((row) => row.month));
@@ -209,6 +134,7 @@ app.get("/api/months", async (req, res) => {
     res.status(500).json({ error: error.message });
   }
 });
+
 // Snippet 7: Fetch Available Years Endpoint
 app.get("/api/years", async (req, res) => {
   try {
@@ -217,13 +143,14 @@ app.get("/api/years", async (req, res) => {
       SELECT DISTINCT strftime('%Y', expense_date) AS year FROM expenses
       UNION
       SELECT DISTINCT strftime('%Y', payment_date) AS year FROM revenue
-    `);
+      `);
     res.json(result.map((row) => row.year));
   } catch (error) {
     console.error("Error fetching years:", error);
     res.status(500).json({ error: error.message });
   }
 });
+
 // Snippet 8: Expense Input Endpoint
 app.post("/api/expense-input", async (req, res) => {
   const { unit_id, category, item, price, expense_date, receipt_photo } =
@@ -247,6 +174,7 @@ app.post("/api/expense-input", async (req, res) => {
     res.status(500).json({ success: false, error: error.message });
   }
 });
+
 // Snippet 9: Revenue Input Endpoint
 app.post("/api/revenue-input", async (req, res) => {
   const { unit_id, amount, payment_date, method_id } = req.body;
@@ -261,6 +189,7 @@ app.post("/api/revenue-input", async (req, res) => {
     res.status(500).json({ success: false, error: error.message });
   }
 });
+
 // Snippet 10: Fetch Categories Endpoint
 app.get("/api/categories", async (req, res) => {
   try {
@@ -273,6 +202,7 @@ app.get("/api/categories", async (req, res) => {
     res.status(500).json({ error: error.message });
   }
 });
+
 // Snippet 11: Fetch Payment Methods Endpoint
 app.get("/api/payment-methods", async (req, res) => {
   try {
@@ -285,6 +215,8 @@ app.get("/api/payment-methods", async (req, res) => {
     res.status(500).json({ error: error.message });
   }
 });
+
+// Snippet 12: User Authentication Endpoint
 app.get("/api/check-auth", async (req, res) => {
   if (req.session.userId) {
     const user = await global.db.get(
@@ -296,7 +228,7 @@ app.get("/api/check-auth", async (req, res) => {
   res.json({ isAuthenticated: false });
 });
 
-// User Registration Endpoint
+// Snippet 13: User Registration Endpoint
 app.post("/register", async (req, res) => {
   const { username, password, first_name, last_name, birthdate, email } =
     req.body;
@@ -353,13 +285,14 @@ app.post("/register", async (req, res) => {
   }
 });
 
-// Snippet 12: Login Endpoint
-// User Login Endpoint
+// Snippet 14: User Login Endpoint
 app.post("/login", async (req, res) => {
   const { username, password, rememberMe } = req.body;
   try {
     // Fetch user from database
-    const user = await global.db.get("SELECT * FROM users WHERE username = ?", [username]);
+    const user = await global.db.get("SELECT * FROM users WHERE username = ?", [
+      username,
+    ]);
     if (!user) {
       return res.status(401).json({ error: "Invalid username or password" });
     }
@@ -383,7 +316,8 @@ app.post("/login", async (req, res) => {
     res.status(500).json({ error: error.message });
   }
 });
-// Snippet 13: Password Reset Endpoint
+
+// Snippet 15: Password Reset Endpoint
 app.post("/forget-password", async (req, res) => {
   const { email } = req.body;
   try {
@@ -419,7 +353,8 @@ app.post("/forget-password", async (req, res) => {
     res.status(500).send("Server error");
   }
 });
-// Fetch user profile
+
+// Snippet 16: Fetch User Profile
 app.get("/api/profile", async (req, res) => {
   if (!req.session.userId) {
     return res.status(401).json({ error: "Unauthorized" });
@@ -431,7 +366,7 @@ app.get("/api/profile", async (req, res) => {
   res.json(user);
 });
 
-// Update user profile
+// Snippet 17: Update User Profile
 app.post("/api/profile", async (req, res) => {
   if (!req.session.userId) {
     return res.status(401).json({ error: "Unauthorized" });
@@ -464,7 +399,7 @@ app.post("/api/profile", async (req, res) => {
   res.json({ success: true });
 });
 
-// Verify email
+// Snippet 18: Verify Email
 app.get("/verify-email", async (req, res) => {
   const { token } = req.query;
   const user = await global.db.get(
@@ -482,7 +417,7 @@ app.get("/verify-email", async (req, res) => {
   }
 });
 
-// Snippet 14: Start the Server
+// Snippet 19: Start the Server
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
   console.log(`Server is running on http://localhost:${PORT}`);
