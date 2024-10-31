@@ -3,79 +3,76 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Inventory Management</title>
-  <link
-    href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;600&display=swap"
-    rel="stylesheet"
-  />
-  <link
-    href="https://fonts.googleapis.com/icon?family=Material+Icons"
-    rel="stylesheet"
-  />
-  <link
-    rel="stylesheet"
-    href="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/css/materialize.min.css"
-  />
-  <link rel="stylesheet" href="/public/style.css" />
+  <title>Expense Management</title>
+  <link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;600&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/css/materialize.min.css" />
+  <link rel="stylesheet" href="style.css" />
+  <style>
+    .new-category {
+      display: none;
+    }
+    .action-buttons {
+      text-align: center;
+      margin-top: 20px;
+    }
+  </style>
 </head>
 <body>
-  <div id="header-placeholder"></div> <!-- Placeholder for the header -->
+  <div id="header-placeholder"></div>
+  <!-- Placeholder for the header -->
   <div class="container">
-    <h4>Manage Inventory</h4>
-    <form id="inventory-management-form">
-      <div class="input-field">
-        <label for="item">Item</label>
-        <input type="text" id="item" required />
-      </div>
+    <h4>Enter Expense</h4>
+    <form id="input-form">
       <div class="input-field">
         <label for="category">Category</label>
         <select id="category" class="browser-default" required>
-          <option value="" disabled selected>Choose a category</option>
           <!-- Categories will be populated dynamically -->
+          <option value="" disabled selected>Choose a category</option>
+          <option value="not-listed">Not listed</option>
+        </select>
+      </div>
+      <div class="input-field new-category">
+        <input id="new-category" type="text" />
+        <label for="new-category">New Category</label>
+      </div>
+      <div class="input-field">
+        <label for="item">Item</label>
+        <input id="item" type="text" required />
+      </div>
+      <div class="input-field">
+        <label for="amount">Amount</label>
+        <input id="amount" type="number" required />
+      </div>
+      <div class="input-field">
+        <label for="year">Year</label>
+        <select id="year" class="browser-default" required>
+          <!-- Year options will be populated dynamically -->
         </select>
       </div>
       <div class="input-field">
-        <label for="location">Location</label>
-        <input type="text" id="location" required />
-      </div>
-      <div class="input-field">
-        <label for="usage-date">Usage Date</label>
-        <input type="date" id="usage-date" />
-      </div>
-      <div class="input-field">
-        <label for="status">Status</label>
-        <select id="status" class="browser-default" required>
-          <option value="" disabled selected>Choose a status</option>
-          <option value="unconsumed">Unconsumed</option>
-          <option value="consumed">Consumed</option>
-        </select>
+        <label for="payment-day">Payment Day</label>
+        <input type="date" id="payment-day" required />
       </div>
       <div class="action-buttons">
         <button type="submit" class="btn waves-effect waves-light">
           Submit
         </button>
-        <button type="reset" class="btn">Clear</button>
+        <button type="button" class="btn" id="clear-form">Clear</button>
+        <button
+          type="button"
+          class="btn"
+          id="add-new-expense"
+          style="display: none"
+        >
+          Add New Expense
+        </button>
       </div>
     </form>
-    <h4>Current Inventory</h4>
-    <table id="inventory-table" class="highlight">
-      <thead>
-        <tr>
-          <th>Item</th>
-          <th>Category</th>
-          <th>Location</th>
-          <th>Usage Date</th>
-          <th>Last Updated</th>
-          <th>Status</th>
-        </tr>
-      </thead>
-      <tbody>
-        <!-- Inventory items will be populated here -->
-      </tbody>
-    </table>
   </div>
-  <div id="footer-placeholder"></div> <!-- Placeholder for the footer -->
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/js/materialize.min.js"></script>
-  <script src="/public/main.js"></script>
+  <div id="footer-placeholder"></div>
+  <!-- Placeholder for the footer -->
+  <script src="https://apis.google.com/js/api.js"></script>
+  <script src="main.js"></script>
 </body>
 </html>
