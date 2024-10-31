@@ -248,6 +248,21 @@ app.get("/api/check-auth", (req, res) => {
   }
 });
 
+// User Registration Endpoint
+app.post("/register", async (req, res) => {
+  const { username, password } = req.body;
+  try {
+    // Hash the password
+    const hashedPassword = await bcrypt.hash(password, 10);
+    // Store user in database
+    await global.db.run("INSERT INTO users (username, password) VALUES (?, ?)", [username, hashedPassword]);
+    res.json({ success: true });
+  } catch (error) {
+    console.error("Error registering user:", error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
 // Snippet 12: Login Endpoint
 app.post("/login", async (req, res) => {
   const { username, password } = req.body;

@@ -14,46 +14,47 @@ function initializeApp() {
 
 function checkAuth() {
   fetch("/api/check-auth")
-    .then(response => response.json())
-    .then(data => {
+    .then((response) => response.json())
+    .then((data) => {
       toggleAuthLinks(data.isAuthenticated);
       if (data.isAuthenticated) {
         setupLogoutButton();
       }
     })
-    .catch(error => {
+    .catch((error) => {
       console.error("Error checking authentication:", error);
       showError("Authentication check failed.");
     });
 }
 
 function toggleAuthLinks(isAuthenticated) {
-  console.log('toggleAuthLinks: isAuthenticated:', isAuthenticated);
-  document.querySelectorAll(".auth-link").forEach(link => {
-    console.log('toggleAuthLinks: link:', link);
+  console.log("toggleAuthLinks: isAuthenticated:", isAuthenticated);
+  document.querySelectorAll(".auth-link").forEach((link) => {
+    console.log("toggleAuthLinks: link:", link);
     link.style.display = isAuthenticated ? "inline" : "none";
   });
-  const loginLink = document.getElementById('login-link');
-  const logoutLink = document.getElementById('logout-link');
-  console.log('toggleAuthLinks: loginLink:', loginLink);
-  console.log('toggleAuthLinks: logoutLink:', logoutLink);
-  if (loginLink) loginLink.style.display = isAuthenticated ? 'none' : 'inline';
-  if (logoutLink) logoutLink.style.display = isAuthenticated ? 'inline' : 'none';
+  const loginLink = document.getElementById("login-link");
+  const logoutLink = document.getElementById("logout-link");
+  console.log("toggleAuthLinks: loginLink:", loginLink);
+  console.log("toggleAuthLinks: logoutLink:", logoutLink);
+  if (loginLink) loginLink.style.display = isAuthenticated ? "none" : "inline";
+  if (logoutLink)
+    logoutLink.style.display = isAuthenticated ? "inline" : "none";
 }
 
 function setupLogoutButton() {
   const logoutButton = document.getElementById("logout-button");
   if (logoutButton) {
-    logoutButton.addEventListener('click', () => {
+    logoutButton.addEventListener("click", () => {
       fetch("/api/logout", { method: "POST" })
-        .then(response => {
+        .then((response) => {
           if (!response.ok) throw new Error("Logout failed");
           return response.json();
         })
         .then(() => {
-          window.location.href = 'index.html'; // Redirect to homepage
+          window.location.href = "index.html"; // Redirect to homepage
         })
-        .catch(error => {
+        .catch((error) => {
           console.error("Error:", error);
           alert("Failed to log out. Please try again.");
         });
@@ -61,6 +62,37 @@ function setupLogoutButton() {
   } else {
     console.error("Logout button not found!");
   }
+}
+
+// Registration Form Event Listener
+const registerForm = document.getElementById("register-form");
+if (registerForm) {
+  registerForm.addEventListener("submit", (event) => {
+    event.preventDefault();
+    const username = document.getElementById("username").value;
+    const password = document.getElementById("password").value;
+    fetch("/register", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({ username, password })
+    })
+    .then(response => {
+      if (!response.ok) throw new Error("Error registering user");
+      return response.json();
+    })
+    .then(data => {
+      alert("Registration successful");
+      window.location.href = "login.html"; // Redirect to login page
+    })
+    .catch(error => {
+      console.error("Error:", error);
+      alert("Registration failed. Please try again.");
+    });
+  });
+} else {
+  console.error("Register form not found!");
 }
 
 function validateResponse(response) {
@@ -82,16 +114,17 @@ function loadHeaderFooter() {
 
 function loadTemplate(url, placeholderId, callback) {
   fetch(url)
-    .then(response => {
-      if (!response.ok) throw new Error(`Error loading template: ${response.status}`);
+    .then((response) => {
+      if (!response.ok)
+        throw new Error(`Error loading template: ${response.status}`);
       return response.text();
     })
-    .then(html => {
+    .then((html) => {
       const placeholder = document.getElementById(placeholderId);
       if (placeholder) placeholder.innerHTML = html;
       if (callback) callback();
     })
-    .catch(error => console.error(error));
+    .catch((error) => console.error(error));
 }
 
 function initializeMenu() {
@@ -99,15 +132,17 @@ function initializeMenu() {
   if (typeof M !== "undefined") M.Dropdown.init(dropdowns);
 }
 
+
+
 function fetchData() {
   showLoadingSpinner(); // Show loading spinner
   fetch("/api/data")
-    .then(response => validateResponse(response))
-    .then(data => {
+    .then((response) => validateResponse(response))
+    .then((data) => {
       updateBudgetSummary(data);
       hideLoadingSpinner(); // Hide loading spinner
     })
-    .catch(error => {
+    .catch((error) => {
       console.error("Error fetching budget data:", error);
       hideLoadingSpinner(); // Hide loading spinner on error
       showError("Failed to load budget data.");
@@ -143,29 +178,30 @@ function initializeOptions() {
 }
 
 function populateYearOptions() {
-  fetchOptions("/api/years", "year-select", year => year);
+  fetchOptions("/api/years", "year-select", (year) => year);
 }
 
 function populateMonthOptions() {
-  const year = document.getElementById("year-select")?.value || new Date().getFullYear();
-  fetchOptions(`/api/months?year=${year}`, "month-select", month =>
+  const year =
+    document.getElementById("year-select")?.value || new Date().getFullYear();
+  fetchOptions(`/api/months?year=${year}`, "month-select", (month) =>
     new Date(2024, month - 1).toLocaleString("default", { month: "long" })
   );
 }
 
 function populateCategoryOptions() {
-  fetchOptions("/api/categories", "category-select", category => category);
+  fetchOptions("/api/categories", "category-select", (category) => category);
 }
 
 function populateUnitOptions() {
-  fetchOptions("/api/units", "unit-select", unit => unit.unit_number);
+  fetchOptions("/api/units", "unit-select", (unit) => unit.unit_number);
 }
 
 function fetchOptions(apiUrl, selectId, mapFunction) {
   fetch(apiUrl)
-    .then(response => validateResponse(response))
-    .then(data => populateSelect(selectId, data, mapFunction))
-    .catch(error => {
+    .then((response) => validateResponse(response))
+    .then((data) => populateSelect(selectId, data, mapFunction))
+    .catch((error) => {
       console.error(`Error fetching options from ${apiUrl}:`, error);
       showError("Failed to load options.");
     });
@@ -175,7 +211,7 @@ function populateSelect(selectId, data, mapFunction) {
   const selectElement = document.getElementById(selectId);
   if (selectElement) {
     selectElement.innerHTML = "";
-    data.forEach(item => {
+    data.forEach((item) => {
       const option = document.createElement("option");
       option.value = mapFunction(item);
       option.textContent = mapFunction(item);
@@ -186,21 +222,28 @@ function populateSelect(selectId, data, mapFunction) {
 
 function setupEventListeners() {
   const runReportBtn = document.getElementById("run-report-btn");
-  const filterOptions = document.querySelectorAll('input[name="filter-option"]');
+  const filterOptions = document.querySelectorAll(
+    'input[name="filter-option"]'
+  );
   if (runReportBtn) runReportBtn.addEventListener("click", fetchReportData);
-  filterOptions.forEach(option =>
+  filterOptions.forEach((option) =>
     option.addEventListener("change", handleFilterChange)
   );
 }
 
 function handleFilterChange() {
-  const filter = document.querySelector('input[name="filter-option"]:checked').value;
+  const filter = document.querySelector(
+    'input[name="filter-option"]:checked'
+  ).value;
   toggleFilterContainers(filter);
   if (filter === "unit") populateUnitOptions();
 }
 
 function toggleFilterContainers(filter) {
-  toggleContainerDisplay("year-select-container", ["year", "month"].includes(filter));
+  toggleContainerDisplay(
+    "year-select-container",
+    ["year", "month"].includes(filter)
+  );
   toggleContainerDisplay("month-select-container", filter === "month");
   toggleContainerDisplay("category-select-container", filter === "category");
   toggleContainerDisplay("unit-select-container", filter === "unit");
@@ -212,15 +255,17 @@ function toggleContainerDisplay(containerId, condition) {
 }
 
 function fetchReportData() {
-  const filter = document.querySelector('input[name="filter-option"]:checked').value;
+  const filter = document.querySelector(
+    'input[name="filter-option"]:checked'
+  ).value;
   const year = document.getElementById("year-select").value;
   const month = document.getElementById("month-select").value;
   let query = `/api/budget-details?filter=${filter}&year=${year}`;
   if (filter === "month") query += `&month=${month}`;
   fetch(query)
-    .then(response => validateResponse(response))
-    .then(data => updateReportTable(data, filter, year, month))
-    .catch(error => {
+    .then((response) => validateResponse(response))
+    .then((data) => updateReportTable(data, filter, year, month))
+    .catch((error) => {
       console.error("Error fetching report data:", error);
       showError("Failed to load report data.");
     });
