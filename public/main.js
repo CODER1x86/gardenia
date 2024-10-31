@@ -75,6 +75,22 @@ function setupLogoutButton() {
   } else {
     console.error("Logout button not found!");
   }
+  
+  function setupLoginForm() {
+  document.getElementById("login-form").addEventListener("submit", (event) => {
+    event.preventDefault();
+    const username = document.getElementById("username").value;
+    const password = document.getElementById("password").value;
+    const rememberMe = document.getElementById("remember-me").checked;
+
+    fetch("/login", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({ username, password, rememberMe })
+    })
+
 }
 function validateResponse(response) {
   if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);

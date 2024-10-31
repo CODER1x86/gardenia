@@ -27,10 +27,10 @@ app.use(
   session({
     secret: "a super secret key that should be stored securely",
     resave: false,
-    saveUninitialized: false,
-    cookie: { secure: false },
-  })
-);
+    saveUninitialized: true,
+    cookie: {  maxAge: 4 * 60 * 60 * 1000 // Session duration of 4 hours},
+  }
+  }));
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json());
 app.use(express.static(path.join(__dirname, "public")));
@@ -356,12 +356,10 @@ app.post("/register", async (req, res) => {
 // Snippet 12: Login Endpoint
 // User Login Endpoint
 app.post("/login", async (req, res) => {
-  const { username, password } = req.body;
+  const { username, password, rememberMe } = req.body;
   try {
     // Fetch user from database
-    const user = await global.db.get("SELECT * FROM users WHERE username = ?", [
-      username,
-    ]);
+    const user = await global.db.get("SELECT * FROM users WHERE username = ?", [username]);
     if (!user) {
       return res.status(401).json({ error: "Invalid username or password" });
     }
@@ -372,7 +370,12 @@ app.post("/login", async (req, res) => {
       return res.status(401).json({ error: "Invalid username or password" });
     }
 
-    req.session.userId = user.id; // Assign session variable
+    req.session.userId = user.id;
+
+    // Set session cookie maxAge if "Remember Me" is checked
+    if (rememberMe) {
+      req.session.cookie.maxAge = 30 * 24 * 60 * 60 * 1000; // 30 days
+    }
 
     res.json({ success: true });
   } catch (error) {
@@ -434,15 +437,49 @@ app.post("/api/profile", async (req, res) => {
     return res.status(401).json({ error: "Unauthorized" });
   }
   const { first_name, last_name, birthdate, email } = req.body;
+  const userId = req.session.userId;
+
+  // Update user data
   await global.db.run(
     "UPDATE users SET first_name = ?, last_name = ?, birthdate = ?, email = ? WHERE id = ?",
-    [first_name, last_name, birthdate, email, req.session.userId]
+    [first_name, last_name, birthdate, email, userId]
   );
 
-  // (Optional) Send email verification if email is updated
-  // ...
+  // Generate a new verification token if the email is updated
+  const verificationToken = crypto.randomBytes(32).toString("hex");
+  await global.db.run("UPDATE users SET verification_token = ? WHERE id = ?", [
+    verificationToken,
+    userId,
+  ]);
+
+  // Send verification email
+  const verificationLink = `https://your-site.com/verify-email?token=${verificationToken}`;
+  await transporter.sendMail({
+    from: process.env.EMAIL_USER,
+    to: email,
+    subject: "Email Verification",
+    text: `Please verify your email by clicking the following link: ${verificationLink}`,
+  });
 
   res.json({ success: true });
+});
+
+// Verify email
+app.get("/verify-email", async (req, res) => {
+  const { token } = req.query;
+  const user = await global.db.get(
+    "SELECT id FROM users WHERE verification_token = ?",
+    [token]
+  );
+  if (user) {
+    await global.db.run(
+      "UPDATE users SET verification_token = NULL WHERE id = ?",
+      [user.id]
+    );
+    res.send("Email verified successfully.");
+  } else {
+    res.status(400).send("Invalid verification token.");
+  }
 });
 
 // Snippet 14: Start the Server
