@@ -297,36 +297,44 @@ app.get("/api/check-auth", (req, res) => {
 app.post("/register", async (req, res) => {
   const { username, password, first_name, last_name, birthdate, email } = req.body;
   try {
+    console.log("Received registration request with data:", req.body); // Log incoming data
+
     // Check if the username or email already exists
     const userExists = await global.db.get("SELECT * FROM users WHERE username = ? OR email = ?", [username, email]);
     if (userExists) {
+      console.log("Username or email already taken:", userExists);
       return res.status(409).json({ error: "Username or email already taken" });
     }
 
     // Hash the password
     const hashedPassword = await bcrypt.hash(password, 10);
+    console.log("Password hashed successfully");
 
     // Generate verification token
     const verificationToken = crypto.randomBytes(32).toString('hex');
+    console.log("Verification token generated:", verificationToken);
 
     // Store user in database
     await global.db.run("INSERT INTO users (username, password, first_name, last_name, birthdate, email, verification_token) VALUES (?, ?, ?, ?, ?, ?, ?)", [username, hashedPassword, first_name, last_name, birthdate, email, verificationToken]);
+    console.log("User saved to database");
 
     // Send verification email
-    const verificationLink = `https://gardenia-budget-management.glitch.me/verify-email?token=${verificationToken}`;
+    const verificationLink = `https://your-site.com/verify-email?token=${verificationToken}`;
     await transporter.sendMail({
       from: process.env.EMAIL_USER,
       to: email,
       subject: 'Email Verification',
       text: `Please verify your email by clicking the following link: ${verificationLink}`
     });
+    console.log("Verification email sent to:", email);
 
     res.json({ success: true });
   } catch (error) {
-    console.error("Error registering user:", error);
+    console.error("Error registering user:", error); // Detailed logging
     res.status(500).json({ error: error.message });
   }
 });
+
 // Snippet 12: Login Endpoint
 // User Login Endpoint
 app.post("/login", async (req, res) => {

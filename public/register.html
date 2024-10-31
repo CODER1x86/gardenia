@@ -78,7 +78,9 @@
       })
       .then(response => {
         if (!response.ok) {
-          if (response.status === 409) throw new Error("Username or email already taken");
+          if (response.status === 409) {
+            throw new Error("Username or email already taken. Please log in or reset your password.");
+          }
           throw new Error("Error registering user");
         }
         return response.json();
@@ -89,7 +91,13 @@
       })
       .catch(error => {
         console.error("Error:", error);
-        alert(error.message);
+        if (error.message.includes("Username or email already taken")) {
+          if (confirm("Username or email already taken. Do you want to log in or reset your password?")) {
+            window.location.href = "login.html"; // Redirect to login page
+          }
+        } else {
+          alert(error.message);
+        }
       });
     });
 
