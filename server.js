@@ -285,12 +285,12 @@ app.get("/api/payment-methods", async (req, res) => {
     res.status(500).json({ error: error.message });
   }
 });
-app.get("/api/check-auth", (req, res) => {
+app.get("/api/check-auth", async (req, res) => {
   if (req.session.userId) {
-    res.json({ isAuthenticated: true });
-  } else {
-    res.json({ isAuthenticated: false });
+    const user = await global.db.get("SELECT first_name FROM users WHERE id = ?", [req.session.userId]);
+    return res.json({ isAuthenticated: true, user });
   }
+  res.json({ isAuthenticated: false });
 });
 
 // User Registration Endpoint
