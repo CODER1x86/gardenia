@@ -15,6 +15,7 @@ const {
 const session = require("express-session");
 const cookieParser = require("cookie-parser");
 const bcrypt = require("bcrypt");
+const crypto = require('crypto');
 const nodemailer = require("nodemailer");
 const bodyParser = require("body-parser");
 const app = express();
@@ -294,21 +295,31 @@ app.get("/api/check-auth", (req, res) => {
 
 // User Registration Endpoint
 app.post("/register", async (req, res) => {
-  const { username, password } = req.body;
+  const { username, password, first_name, last_name, birthdate, email } = req.body;
   try {
-    // Check if the username already exists
-    const userExists = await global.db.get("SELECT * FROM users WHERE username = ?", [username]);
+    // Check if the username or email already exists
+    const userExists = await global.db.get("SELECT * FROM users WHERE username = ? OR email = ?", [username, email]);
     if (userExists) {
-      return res.status(409).json({ error: "Username already taken" });
+      return res.status(409).json({ error: "Username or email already taken" });
     }
 
     // Hash the password
     const hashedPassword = await bcrypt.hash(password, 10);
 
-    // Store user in database
-    await global.db.run("INSERT INTO users (username, password) VALUES (?, ?)", [username, hashedPassword]);
+    // Generate verification token
+    const verificationToken = crypto.randomBytes(32).toString('hex');
 
-    req.session.userId = userExists.id; // Assign session variable
+    // Store user in database
+    await global.db.run("INSERT INTO users (username, password, first_name, last_name, birthdate, email, verification_token) VALUES (?, ?, ?, ?, ?, ?, ?)", [username, hashedPassword, first_name, last_name, birthdate, email, verificationToken]);
+
+    // Send verification email
+    const verificationLink = `https://your-site.com/verify-email?token=${verificationToken}`;
+    await transporter.sendMail({
+      from: 'your-email@example.com',
+      to: email,
+      subject: 'Email Verification',
+      text: `Please verify your email by clicking the following link: ${verificationLink}`
+    });
 
     res.json({ success: true });
   } catch (error) {
@@ -316,7 +327,6 @@ app.post("/register", async (req, res) => {
     res.status(500).json({ error: error.message });
   }
 });
-
 // Snippet 12: Login Endpoint
 // User Login Endpoint
 app.post("/login", async (req, res) => {
