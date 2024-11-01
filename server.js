@@ -113,6 +113,24 @@ initializeDatabase().then((db) => {
 });
 
 // 6. API Endpoints for Data Retrieval and Calculations
+app.get("/api/data", ensureAuthenticated, async (req, res) => {
+  try {
+    const availableBalance = 1000; // Placeholder value, replace with actual calculation
+    const totalRevenue = 5000; // Placeholder value, replace with actual calculation
+    const totalExpenses = 4000; // Placeholder value, replace with actual calculation
+
+    const budgetData = {
+      availableBalance,
+      totalRevenue,
+      totalExpenses,
+    };
+    res.json(budgetData);
+  } catch (error) {
+    console.error("Error fetching budget data:", error);
+    res.status(500).json({ error: "Failed to fetch budget data" });
+  }
+});
+
 app.get("/api/months", async (req, res) => {
   const year = req.query.year;
   try {
