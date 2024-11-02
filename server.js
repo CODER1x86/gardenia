@@ -47,22 +47,19 @@ function ensureAuthenticated(req, res, next) {
   }
 }
 
+// Protected Routes
 app.get("/dashboard.html", ensureAuthenticated, (req, res) => {
   res.sendFile(path.join(__dirname, "public", "dashboard.html"));
 });
-
 app.get("/profile.html", ensureAuthenticated, (req, res) => {
   res.sendFile(path.join(__dirname, "public", "profile.html"));
 });
-
 app.get("/expense-management.html", ensureAuthenticated, (req, res) => {
   res.sendFile(path.join(__dirname, "public", "expense-management.html"));
 });
-
 app.get("/revenue-management.html", ensureAuthenticated, (req, res) => {
   res.sendFile(path.join(__dirname, "public", "revenue-management.html"));
 });
-
 app.get("/inventory-management.html", ensureAuthenticated, (req, res) => {
   res.sendFile(path.join(__dirname, "public", "inventory-management.html"));
 });
@@ -115,33 +112,34 @@ initializeDatabase().then((db) => {
 });
 
 // 6. API Endpoints for Data Retrieval and Calculations
-app.get('/api/data', ensureAuthenticated, async (req, res) => {
+app.get("/api/data", ensureAuthenticated, async (req, res) => {
   try {
-    console.log('Fetching budget data');
+    console.log("Fetching budget data");
     const year = new Date().getFullYear();
-    
-    console.log('Getting total revenue');
+
+    console.log("Getting total revenue");
     const totalRevenue = (await getRevenue(year)).totalRevenue || 0;
-    
-    console.log('Getting total expenses');
+
+    console.log("Getting total expenses");
     const totalExpenses = (await getExpensesSum(year)).totalExpenses || 0;
-    
-    console.log('Calculating available balance');
+
+    console.log("Calculating available balance");
     const availableBalance = await calculateAndInsertBalance(year);
 
     const budgetData = {
       availableBalance,
       totalRevenue,
-      totalExpenses
+      totalExpenses,
     };
-    console.log('Budget Data:', budgetData);
+    console.log("Budget Data:", budgetData);
     res.json(budgetData);
   } catch (error) {
-    console.error('Error fetching budget data:', error);
-    res.status(500).json({ error: 'Failed to fetch budget data' });
+    console.error("Error fetching budget data:", error);
+    res.status(500).json({ error: "Failed to fetch budget data" });
   }
 });
 
+// Fetch Months Endpoint
 app.get("/api/months", async (req, res) => {
   const year = req.query.year;
   try {
@@ -166,7 +164,7 @@ app.get("/api/months", async (req, res) => {
   }
 });
 
-// Snippet 7: Fetch Available Years Endpoint
+// Fetch Available Years Endpoint
 app.get("/api/years", async (req, res) => {
   try {
     console.log("Fetching available years");
@@ -183,9 +181,10 @@ app.get("/api/years", async (req, res) => {
   }
 });
 
-// Snippet 8: Expense Input Endpoint
+// Expense Input Endpoint
 app.post("/api/expense-input", async (req, res) => {
-  const { unit_id, category, item, price, expense_date, receipt_photo } = req.body;
+  const { unit_id, category, item, price, expense_date, receipt_photo } =
+    req.body;
   try {
     console.log("Adding expense:", req.body);
     await global.db.run(
@@ -208,7 +207,7 @@ app.post("/api/expense-input", async (req, res) => {
   }
 });
 
-// Snippet 9: Revenue Input Endpoint
+// Revenue Input Endpoint
 app.post("/api/revenue-input", async (req, res) => {
   const { unit_id, amount, payment_date, method_id } = req.body;
   try {
@@ -225,7 +224,7 @@ app.post("/api/revenue-input", async (req, res) => {
   }
 });
 
-// Snippet 10: Fetch Categories Endpoint
+// Fetch Categories Endpoint
 app.get("/api/categories", async (req, res) => {
   try {
     console.log("Fetching categories");
@@ -240,7 +239,7 @@ app.get("/api/categories", async (req, res) => {
   }
 });
 
-// Snippet 11: Fetch Payment Methods Endpoint
+// Fetch Payment Methods Endpoint
 app.get("/api/payment-methods", async (req, res) => {
   try {
     console.log("Fetching payment methods");
@@ -255,7 +254,7 @@ app.get("/api/payment-methods", async (req, res) => {
   }
 });
 
-// Snippet 12: User Authentication Endpoint
+// User Authentication Check Endpoint
 app.get("/api/check-auth", async (req, res) => {
   console.log("Checking authentication status");
   if (req.session.userId) {
@@ -270,194 +269,77 @@ app.get("/api/check-auth", async (req, res) => {
   res.json({ isAuthenticated: false });
 });
 
-// Snippet 13: User Registration Endpoint
+// User Registration Endpoint
 app.post("/register", async (req, res) => {
-  const { username, password, first_name, last_name, birthdate, email } = req.body;
+  const { username, password, first_name, last_name, birthdate, email } =
+    req.body;
   try {
     console.log("Received registration request with data:", req.body);
 
-    // Check if
-	    // Check if the username or email already exists
-    const userExists = await global.db.get(
-      "SELECT * FROM users WHERE username = ? OR email = ?",
-      [username, email]
+    // Check if username already exists
+    const existingUser = await global.db.get(
+      "SELECT * FROM users WHERE username = ?",
+      [username]
     );
-    if (userExists) {
-      console.log("Username or email already taken:", userExists);
-      return res.status(409).json({ error: "Username or email already taken" });
+    if (existingUser) {
+      return res.status(409).json({ message: "Username already exists" });
     }
 
     // Hash the password
     const hashedPassword = await bcrypt.hash(password, 10);
-    console.log("Password hashed successfully");
-
-    // Generate verification token
-    const verificationToken = crypto.randomBytes(32).toString("hex");
-    console.log("Verification token generated:", verificationToken);
-
-    // Store user in database
     await global.db.run(
-      "INSERT INTO users (username, password, first_name, last_name, birthdate, email, verification_token) VALUES (?, ?, ?, ?, ?, ?, ?)",
-      [
-        username,
-        hashedPassword,
-        first_name,
-        last_name,
-        birthdate,
-        email,
-        verificationToken,
-      ]
+      "INSERT INTO users (username, password, first_name, last_name, birthdate, email) VALUES (?, ?, ?, ?, ?, ?)",
+      [username, hashedPassword, first_name, last_name, birthdate, email]
     );
-    console.log("User saved to database");
 
-    // Send verification email
-    const verificationLink = `https://your-site.com/verify-email?token=${verificationToken}`;
-    await transporter.sendMail({
-      from: process.env.EMAIL_USER,
-      to: email,
-      subject: "Email Verification",
-      text: `Please verify your email by clicking the following link: ${verificationLink}`,
-    });
-    console.log("Verification email sent to:", email);
-
-    res.json({ success: true });
+    console.log("User registered successfully");
+    res.status(201).json({ message: "User registered successfully" });
   } catch (error) {
-    console.error("Error registering user:", error);
-    res.status(500).json({ error: error.message });
+    console.error("Registration error:", error);
+    res.status(500).json({ message: "Failed to register user" });
   }
 });
 
-// Snippet 14: User Login Endpoint
+// User Login Endpoint
 app.post("/login", async (req, res) => {
-  const { username, password, rememberMe } = req.body;
+  const { username, password } = req.body;
   try {
-    // Fetch user from database
-    const user = await global.db.get("SELECT * FROM users WHERE username = ?", [username]);
-    if (!user) {
-      return res.status(401).json({ error: "Invalid username or password" });
-    }
+    console.log("Received login request:", req.body);
+    const user = await global.db.get("SELECT * FROM users WHERE username = ?", [
+      username,
+    ]);
 
-    // Check password
-    const match = await bcrypt.compare(password, user.password);
-    if (!match) {
-      return res.status(401).json({ error: "Invalid username or password" });
-    }
-
-    console.log("User authenticated:", user.id);
-    req.session.userId = user.id;
-
-    // Set session cookie maxAge if "Remember Me" is checked
-    if (rememberMe) {
-      req.session.cookie.maxAge = 30 * 24 * 60 * 60 * 1000; // 30 days
-    }
-
-    res.json({ success: true });
-  } catch (error) {
-    console.error("Error during login:", error);
-    res.status(500).json({ error: error.message });
-  }
-});
-
-// Snippet 15: Password Reset Endpoint
-app.post("/forget-password", async (req, res) => {
-  const { email } = req.body;
-  try {
-    const user = await global.db.get("SELECT * FROM users WHERE email = ?", [email]);
-    if (user) {
-      // Generate a temporary reset token and set an expiration time
-      const resetToken = Math.random().toString(36).substring(2, 15);
-      const resetExpires = Date.now() + 3600000; // 1 hour
-      await global.db.run(
-        "UPDATE users SET reset_token = ?, reset_expires = ? WHERE email = ?",
-        [resetToken, resetExpires, email]
-      );
-      const mailOptions = {
-        from: process.env.EMAIL_USER,
-        to: email,
-        subject: "Password Reset",
-        text: `Click the link to reset your password: http://localhost:3000/reset-password/${resetToken}`,
-      };
-      transporter.sendMail(mailOptions, (error, info) => {
-        if (error) {
-          console.error("Error sending email:", error);
-          return res.status(500).send("Error sending email");
-        }
-        res.send("Password reset email sent");
-      });
+    if (user && (await bcrypt.compare(password, user.password))) {
+      req.session.userId = user.id;
+      console.log("User logged in:", user);
+      res.json({ success: true, user });
     } else {
-      res.status(404).send("Email not found");
+      console.log("Login failed: Invalid username or password");
+      res
+        .status(401)
+        .json({ success: false, message: "Invalid username or password" });
     }
   } catch (error) {
-    console.error("Error during password reset:", error);
-    res.status(500).send("Server error");
+    console.error("Login error:", error);
+    res.status(500).json({ message: "Failed to login" });
   }
 });
 
-// Snippet 16: Fetch User Profile
-app.get("/api/profile", async (req, res) => {
-  if (!req.session.userId) {
-    return res.status(401).json({ error: "Unauthorized" });
-  }
-  const user = await global.db.get(
-    "SELECT first_name, last_name, birthdate, email FROM users WHERE id = ?",
-    [req.session.userId]
-  );
-  res.json(user);
-});
-
-// Snippet 17: Update User Profile
-app.post("/api/profile", async (req, res) => {
-  if (!req.session.userId) {
-    return res.status(401).json({ error: "Unauthorized" });
-  }
-  const { first_name, last_name, birthdate, email } = req.body;
-  const userId = req.session.userId;
-
-  // Update user data
-  await global.db.run(
-    "UPDATE users SET first_name = ?, last_name = ?, birthdate = ?, email = ? WHERE id = ?",
-    [first_name, last_name, birthdate, email, userId]
-  );
-
-  // Generate a new verification token if the email is updated
-  const verificationToken = crypto.randomBytes(32).toString("hex");
-  await global.db.run("UPDATE users SET verification_token = ? WHERE id = ?", [
-    verificationToken,
-    userId,
-  ]);
-
-  // Send verification email
-  const verificationLink = `https://your-site.com/verify-email?token=${verificationToken}`;
-  await transporter.sendMail({
-    from: process.env.EMAIL_USER,
-    to: email,
-    subject: "Email Verification",
-    text: `Please verify your email by clicking the following link: ${verificationLink}`,
+// Logout Endpoint
+app.get("/logout", (req, res) => {
+  console.log("User logged out");
+  req.session.destroy((err) => {
+    if (err) {
+      return res
+        .status(500)
+        .json({ success: false, message: "Failed to logout" });
+    }
+    res.redirect("/login.html");
   });
-
-  res.json({ success: true });
 });
 
-app.get("/verify-email", async (req, res) => {
-  const { token } = req.query;
-  console.log("Verifying email with token:", token);
-  const user = await global.db.get(
-    "SELECT id FROM users WHERE verification_token = ?",
-    [token]
-  );
-  if (user) {
-    await global.db.run(
-      "UPDATE users SET verification_token = NULL WHERE id = ?",
-      [user.id]
-    );
-    console.log("Email verified successfully for user:", user.id);
-    res.send("Email verified successfully.");
-  } else {
-    console.log("Invalid verification token");
-    res.status(400).send("Invalid verification token.");
-  }
-});
+// Start the server
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
-  console.log(`Server is running on http://localhost:${PORT}`);
+  console.log(`Server running on http://localhost:${PORT}`);
 });
