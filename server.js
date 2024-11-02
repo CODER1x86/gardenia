@@ -12,13 +12,12 @@ const {
   addInventoryItem,
   getStartingBalance,
   calculateAndInsertBalance,
+  getExpenses // Added to fetch all expenses
 } = require("./sqlite.js");
 const session = require("express-session");
 const cookieParser = require("cookie-parser");
-const bcrypt = require("bcrypt");
-const crypto = require("crypto");
-require("dotenv").config();
 const nodemailer = require("nodemailer");
+require("dotenv").config();
 const bodyParser = require("body-parser");
 const app = express();
 
@@ -50,18 +49,6 @@ function ensureAuthenticated(req, res, next) {
 // Protected Routes
 app.get("/dashboard.html", ensureAuthenticated, (req, res) => {
   res.sendFile(path.join(__dirname, "public", "dashboard.html"));
-});
-app.get("/profile.html", ensureAuthenticated, (req, res) => {
-  res.sendFile(path.join(__dirname, "public", "profile.html"));
-});
-app.get("/expense-management.html", ensureAuthenticated, (req, res) => {
-  res.sendFile(path.join(__dirname, "public", "expense-management.html"));
-});
-app.get("/revenue-management.html", ensureAuthenticated, (req, res) => {
-  res.sendFile(path.join(__dirname, "public", "revenue-management.html"));
-});
-app.get("/inventory-management.html", ensureAuthenticated, (req, res) => {
-  res.sendFile(path.join(__dirname, "public", "inventory-management.html"));
 });
 
 // 4. Setup Email Transport
@@ -133,9 +120,9 @@ app.get("/api/inventory", ensureAuthenticated, async (req, res) => {
 
 // Add Item to Inventory
 app.post("/api/inventory", ensureAuthenticated, async (req, res) => {
-  const { itemName, quantity, unitPrice } = req.body;
+  const { expense_id, location, usage_date, status } = req.body; // Updated to match sqlite.js
   try {
-    await addInventoryItem(itemName, quantity, unitPrice);
+    await addInventoryItem(expense_id, location, usage_date, status);
     res.json({ success: true, message: "Item added to inventory" });
   } catch (error) {
     res.status(500).json({ error: "Failed to add item to inventory" });
@@ -145,7 +132,8 @@ app.post("/api/inventory", ensureAuthenticated, async (req, res) => {
 // Retrieve Starting Balance
 app.get("/api/starting-balance", ensureAuthenticated, async (req, res) => {
   try {
-    const balance = await getStartingBalance();
+    const year = new Date().getFullYear(); // Get current year
+    const balance = await getStartingBalance(year); // Pass year as parameter
     res.json({ balance });
   } catch (error) {
     res.status(500).json({ error: "Failed to fetch starting balance" });
