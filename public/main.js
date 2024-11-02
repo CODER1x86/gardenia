@@ -97,6 +97,20 @@ function setupLogoutButton() {
   }
 }
 
+function loadHeaderFooter() {
+  fetch("/header.html")
+    .then((response) => response.text())
+    .then((data) => {
+      document.getElementById("header-placeholder").innerHTML = data;
+      checkAuth(); // Ensure authentication check is done after loading header
+    });
+  fetch("/footer.html")
+    .then((response) => response.text())
+    .then((data) => {
+      document.getElementById("footer-placeholder").innerHTML = data;
+    });
+}
+
 function setupLoginForm() {
   document.getElementById("login-form").addEventListener("submit", (event) => {
     event.preventDefault();
@@ -139,11 +153,6 @@ function displayCurrentYear() {
   if (currentYearElement) {
     currentYearElement.textContent = new Date().getFullYear();
   }
-}
-
-function loadHeaderFooter() {
-  loadTemplate("/header.html", "header-placeholder", initializeMenu);
-  loadTemplate("/footer.html", "footer-placeholder");
 }
 
 function loadTemplate(url, placeholderId, callback) {

@@ -147,7 +147,7 @@ footer .container p {
   }
 }
 
-/* Add styles for the dropdown menu */
+/* Dropdown Menu Styles */
 .nav-wrapper .dropdown-content {
   display: none;
   background-color: #fff;
@@ -174,10 +174,12 @@ footer .container p {
   background-color: #ddd;
 }
 
+/* Show dropdown content on hover */
 .nav-wrapper .dropdown:hover .dropdown-content {
   display: block;
 }
 
+/* Authenticated user styles */
 .auth-link a {
   display: flex;
   align-items: center;
@@ -185,4 +187,8 @@ footer .container p {
 
 .auth-link a .material-icons {
   margin-right: 8px;
+}
+
+.nav-wrapper .dropdown {
+  display: block;
 }
