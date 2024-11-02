@@ -18,21 +18,59 @@
   </style>
 </head>
 <body>
-  <div id="header-placeholder"></div>
+  <div id="header-placeholder">
+    <nav>
+      <div class="nav-wrapper">
+        <a href="#" class="brand-logo">Budget Dashboard</a>
+        <ul id="nav-mobile" class="right hide-on-med-and-down">
+          <li><a href="index.html">Home</a></li>
+          <li><a href="budget-summary.html">Budget Summary</a></li>
+          <li><a href="budget-details.html">Budget Details</a></li>
+          <li><a href="expense-report.html">Expense Report</a></li>
+          <li><a href="revenue-report.html">Revenue Report</a></li>
+          <li class="dropdown auth-link" id="facility-management" style="display: none">
+            <a href="#" class="dropdown-toggle" data-toggle="dropdown">Facility Management <span class="caret"></span></a>
+            <ul class="dropdown-menu">
+              <li><a href="expense-management.html">Expenses Management</a></li>
+              <li><a href="revenue-management.html">Revenue Management</a></li>
+              <li><a href="inventory-management.html">Inventory Management</a></li>
+            </ul>
+          </li>
+          <li class="dropdown auth-link" id="site-settings" style="display: none">
+            <a href="#" class="dropdown-toggle" data-toggle="dropdown">Site Settings <span class="caret"></span></a>
+            <ul class="dropdown-menu">
+              <li><a href="style-modifier.html">Theme Management</a></li>
+              <li><a href="footer-settings.html">Footer Settings</a></li>
+            </ul>
+          </li>
+          <li id="login-link">
+            <a href="login.html" id="login-button"><i class="material-icons left">login</i>Login</a>
+          </li>
+          <li id="user-greeting" style="display: none">
+            <a href="#" class="dropdown-toggle" data-toggle="dropdown">Hello, <span id="user-name"></span> <span class="caret"></span></a>
+            <ul class="dropdown-menu">
+              <li><a href="profile.html">Manage your profile</a></li>
+              <li class="auth-link"><a href="style-modifier.html">Site management</a></li>
+              <li id="logout-link">
+                <a href="#" id="logout-button"><i class="material-icons left">logout</i>Logout</a>
+              </li>
+            </ul>
+          </li>
+        </ul>
+      </div>
+    </nav>
+  </div>
   <!-- Placeholder for the header -->
+
   <div class="container">
     <h1>Welcome to Budget Management Dashboard</h1>
-    <p>
-      Your one-stop solution to manage budgets, expenses, and revenues seamlessly.
-    </p>
+    <p>Your one-stop solution to manage budgets, expenses, and revenues seamlessly.</p>
     <div class="row">
       <div class="col s12 m6">
         <div class="card">
           <div class="card-content">
             <span class="card-title">Budget Summary</span>
-            <p>
-              Get a quick overview of your available balance, total revenue, and total expenses.
-            </p>
+            <p>Get a quick overview of your available balance, total revenue, and total expenses.</p>
           </div>
           <div class="card-action">
             <a href="budget-summary.html" class="btn waves-effect waves-light">View Summary</a>
@@ -43,9 +81,7 @@
         <div class="card">
           <div class="card-content">
             <span class="card-title">Budget Details</span>
-            <p>
-              Explore detailed budget reports and filter data by year or month.
-            </p>
+            <p>Explore detailed budget reports and filter data by year or month.</p>
           </div>
           <div class="card-action">
             <a href="budget-details.html" class="btn waves-effect waves-light">View Details</a>
@@ -58,9 +94,7 @@
         <div class="card">
           <div class="card-content">
             <span class="card-title">Expense Report</span>
-            <p>
-              Analyze expenses with detailed reports categorized by various filters.
-            </p>
+            <p>Analyze expenses with detailed reports categorized by various filters.</p>
           </div>
           <div class="card-action">
             <a href="expense-report.html" class="btn waves-effect waves-light">View Report</a>
@@ -71,9 +105,7 @@
         <div class="card">
           <div class="card-content">
             <span class="card-title">Revenue Report</span>
-            <p>
-              Monitor revenue with comprehensive reports categorized by various filters.
-            </p>
+            <p>Monitor revenue with comprehensive reports categorized by various filters.</p>
           </div>
           <div class="card-action">
             <a href="revenue-report.html" class="btn waves-effect waves-light">View Report</a>
@@ -82,8 +114,10 @@
       </div>
     </div>
   </div>
+
   <div id="footer-placeholder"></div>
   <!-- Placeholder for the footer -->
+
   <script src="/main.js"></script>
 </body>
 </html>
