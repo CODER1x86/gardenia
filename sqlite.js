@@ -102,21 +102,33 @@ const initializeDatabase = async () => {
   }
 };
 
-const getDb = () => db;
+const getDb = () => {
+  console.log("Fetching database instance");
+  return db;
+};
 
 // Helper function to run database queries with parameterized statements
 const dbQuery = async (query, params = []) => {
+  console.log(`Running query: ${query} with params: ${params}`);
   return new Promise((resolve, reject) => {
     db.all(query, params, (error, rows) => {
-      if (error) reject(error);
-      else resolve(rows);
+      if (error) {
+        console.error("Error running query:", error);
+        reject(error);
+      } else {
+        console.log("Query result:", rows);
+        resolve(rows);
+      }
     });
   });
 };
 
 const getExpenses = async () => {
   try {
-    return await dbQuery("SELECT * FROM expenses");
+    console.log("Fetching expenses");
+    const expenses = await dbQuery("SELECT * FROM expenses");
+    console.log("Expenses fetched:", expenses);
+    return expenses;
   } catch (error) {
     console.error("Error fetching expenses:", error);
     throw error;
@@ -125,6 +137,7 @@ const getExpenses = async () => {
 
 const getRevenue = async (year) => {
   try {
+    console.log(`Fetching total revenue for year ${year}`);
     const result = await dbQuery("SELECT SUM(amount) AS totalRevenue FROM revenue WHERE strftime('%Y', payment_date) = ?", [year]);
     console.log(`Revenue result for year ${year}:`, result);
     return result[0]; // Assuming we get a single row
@@ -136,6 +149,7 @@ const getRevenue = async (year) => {
 
 const getExpensesSum = async (year) => {
   try {
+    console.log(`Fetching total expenses for year ${year}`);
     const result = await dbQuery("SELECT SUM(price) AS totalExpenses FROM expenses WHERE strftime('%Y', expense_date) = ?", [year]);
     console.log(`Expenses result for year ${year}:`, result);
     return result[0]; // Assuming we get a single row
@@ -147,7 +161,10 @@ const getExpensesSum = async (year) => {
 
 const getInventory = async () => {
   try {
-    return await dbQuery("SELECT * FROM inventory");
+    console.log("Fetching inventory");
+    const inventory = await dbQuery("SELECT * FROM inventory");
+    console.log("Inventory fetched:", inventory);
+    return inventory;
   } catch (error) {
     console.error("Error fetching inventory:", error);
     throw error;
@@ -156,10 +173,12 @@ const getInventory = async () => {
 
 const addInventoryItem = async (expense_id, location, usage_date, status) => {
   try {
+    console.log(`Adding inventory item with expense_id: ${expense_id}, location: ${location}, usage_date: ${usage_date}, status: ${status}`);
     await db.run(
       "INSERT INTO inventory (expense_id, location, usage_date, last_updated, status) VALUES (?, ?, ?, ?, ?)",
       [expense_id, location, usage_date, new Date().toISOString(), status]
     );
+    console.log("Inventory item added");
   } catch (error) {
     console.error("Error adding inventory item:", error);
     throw error;
@@ -168,6 +187,7 @@ const addInventoryItem = async (expense_id, location, usage_date, status) => {
 
 const getStartingBalance = async (year) => {
   try {
+    console.log(`Fetching starting balance for year ${year}`);
     if (year === 2024) {
       return 12362; // Manually set for the initial year
     }
@@ -177,6 +197,7 @@ const getStartingBalance = async (year) => {
         (SELECT SUM(amount) FROM revenue WHERE strftime('%Y', payment_date) = ?) -
         (SELECT SUM(price) FROM expenses WHERE strftime('%Y', expense_date) = ?) AS availableBalance
     `, [previousYear, previousYear]);
+    console.log(`Starting balance result for year ${year}:`, result);
     return result[0].availableBalance;
   } catch (error) {
     console.error("Error fetching starting balance:", error);
@@ -184,15 +205,17 @@ const getStartingBalance = async (year) => {
   }
 };
 
-// Add a function to calculate and insert balance data
 const calculateAndInsertBalance = async (year) => {
   try {
+    console.log(`Calculating and inserting balance for year ${year}`);
     const startingBalance = await getStartingBalance(year);
     const totalRevenue = (await getRevenue(year)).totalRevenue || 0;
     const totalExpenses = (await getExpensesSum(year)).totalExpenses || 0;
     const availableBalance = startingBalance + totalRevenue - totalExpenses;
     await db.run(`INSERT INTO balance (year, starting_balance, total_revenue, total_expenses, available_balance) VALUES (?, ?, ?, ?, ?)`, 
        [year, startingBalance, totalRevenue, totalExpenses, availableBalance]);
+    console.log(`Inserted balance for year ${year}`);
+    return availableBalance;
   } catch (error) {
     console.error("Error calculating and inserting balance:", error);
     throw error;

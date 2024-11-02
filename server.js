@@ -117,8 +117,14 @@ app.get('/api/data', ensureAuthenticated, async (req, res) => {
   try {
     console.log('Fetching budget data');
     const year = new Date().getFullYear();
+    
+    console.log('Getting total revenue');
     const totalRevenue = (await getRevenue(year)).totalRevenue || 0;
+    
+    console.log('Getting total expenses');
     const totalExpenses = (await getExpensesSum(year)).totalExpenses || 0;
+    
+    console.log('Calculating available balance');
     const availableBalance = await calculateAndInsertBalance(year);
 
     const budgetData = {
@@ -311,9 +317,7 @@ app.post("/login", async (req, res) => {
   const { username, password, rememberMe } = req.body;
   try {
     // Fetch user from database
-    const user = await global.db.get("SELECT * FROM users WHERE username = ?", [
-      username,
-    ]);
+    const user = await global.db.get("SELECT * FROM users WHERE username = ?", [username]);
     if (!user) {
       return res.status(401).json({ error: "Invalid username or password" });
     }
@@ -324,6 +328,7 @@ app.post("/login", async (req, res) => {
       return res.status(401).json({ error: "Invalid username or password" });
     }
 
+    console.log("User authenticated:", user.id);
     req.session.userId = user.id;
 
     // Set session cookie maxAge if "Remember Me" is checked
