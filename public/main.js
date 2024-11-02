@@ -7,6 +7,8 @@ document.addEventListener("DOMContentLoaded", function () {
   if (document.getElementById("login-form")) {
     setupLoginForm();
   }
+  checkAuth(); // Always check authentication to update UI
+
   if (
     document.getElementById("login-link") ||
     document.getElementById("logout-link")
@@ -49,6 +51,12 @@ function toggleAuthLinks(isAuthenticated, user) {
   const userGreeting = document.getElementById("user-greeting");
   const userNameElement = document.getElementById("user-name");
   const logoutLink = document.getElementById("logout-link");
+  const facilityManagementDropdown = document.getElementById(
+    "facility-management-dropdown"
+  );
+  const siteSettingsDropdown = document.getElementById(
+    "site-settings-dropdown"
+  );
 
   if (loginLink) loginLink.style.display = isAuthenticated ? "none" : "inline";
   if (userGreeting)
@@ -59,6 +67,12 @@ function toggleAuthLinks(isAuthenticated, user) {
   if (userGreeting && user && userNameElement) {
     userNameElement.textContent = user.first_name;
   }
+  if (facilityManagementDropdown)
+    facilityManagementDropdown.style.display = isAuthenticated
+      ? "block"
+      : "none";
+  if (siteSettingsDropdown)
+    siteSettingsDropdown.style.display = isAuthenticated ? "block" : "none";
 }
 
 function setupLogoutButton() {
@@ -281,7 +295,7 @@ function fetchReportData() {
   let query = `/api/budget-details?filter=${filter}&year=${year}`;
   if (filter === "month") query += `&month=${month}`;
   fetch(query)
-       .then((response) => validateResponse(response))
+    .then((response) => validateResponse(response))
     .then((data) => updateReportTable(data, filter, year, month))
     .catch((error) => {
       console.error("Error fetching report data:", error);
