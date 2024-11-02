@@ -153,16 +153,21 @@ function initializeMenu() {
 }
 
 function fetchData() {
-  showLoadingSpinner(); // Show loading spinner
+  showLoadingSpinner();
   fetch("/api/data")
-    .then((response) => validateResponse(response))
+    .then((response) => {
+      if (!response.ok) {
+        throw new Error('Network response was not ok');
+      }
+      return response.json();
+    })
     .then((data) => {
       updateBudgetSummary(data);
-      hideLoadingSpinner(); // Hide loading spinner
+      hideLoadingSpinner();
     })
     .catch((error) => {
       console.error("Error fetching budget data:", error);
-      hideLoadingSpinner(); // Hide loading spinner on error
+      hideLoadingSpinner();
       showError("Failed to load budget data.");
     });
 }
