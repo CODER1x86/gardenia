@@ -115,6 +115,7 @@ initializeDatabase().then((db) => {
 // 6. API Endpoints for Data Retrieval and Calculations
 app.get('/api/data', ensureAuthenticated, async (req, res) => {
   try {
+    console.log('Fetching budget data');
     const year = new Date().getFullYear();
     const totalRevenue = (await getRevenue(year)).totalRevenue || 0;
     const totalExpenses = (await getExpensesSum(year)).totalExpenses || 0;
@@ -125,6 +126,7 @@ app.get('/api/data', ensureAuthenticated, async (req, res) => {
       totalRevenue,
       totalExpenses
     };
+    console.log('Budget Data:', budgetData);
     res.json(budgetData);
   } catch (error) {
     console.error('Error fetching budget data:', error);
