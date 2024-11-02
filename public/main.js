@@ -7,12 +7,9 @@ document.addEventListener("DOMContentLoaded", function () {
   if (document.getElementById("login-form")) {
     setupLoginForm();
   }
-  checkAuth(); // Always check authentication to update UI
+  checkAuth();  // Always check authentication to update UI
 
-  if (
-    document.getElementById("login-link") ||
-    document.getElementById("logout-link")
-  ) {
+  if (document.getElementById("login-link") || document.getElementById("logout-link")) {
     checkAuth();
   } else {
     console.log("Login/Logout links not found!");
@@ -51,32 +48,22 @@ function toggleAuthLinks(isAuthenticated, user) {
   const userGreeting = document.getElementById("user-greeting");
   const userNameElement = document.getElementById("user-name");
   const logoutLink = document.getElementById("logout-link");
-  const facilityManagementDropdown = document.getElementById(
-    "facility-management-dropdown"
-  );
-  const siteSettingsDropdown = document.getElementById(
-    "site-settings-dropdown"
-  );
+  const facilityManagementDropdown = document.getElementById("facility-management-dropdown");
+  const siteSettingsDropdown = document.getElementById("site-settings-dropdown");
 
   if (loginLink) loginLink.style.display = isAuthenticated ? "none" : "inline";
-  if (userGreeting)
-    userGreeting.style.display = isAuthenticated ? "inline" : "none";
-  if (logoutLink)
-    logoutLink.style.display = isAuthenticated ? "inline" : "none";
+  if (userGreeting) userGreeting.style.display = isAuthenticated ? "inline" : "none";
+  if (logoutLink) logoutLink.style.display = isAuthenticated ? "inline" : "none";
 
   if (userGreeting && user && userNameElement) {
     userNameElement.textContent = user.first_name;
   }
-  if (facilityManagementDropdown)
-    facilityManagementDropdown.style.display = isAuthenticated
-      ? "block"
-      : "none";
-  if (siteSettingsDropdown)
-    siteSettingsDropdown.style.display = isAuthenticated ? "block" : "none";
-
+  if (facilityManagementDropdown) facilityManagementDropdown.style.display = isAuthenticated ? "block" : "none";
+  if (siteSettingsDropdown) siteSettingsDropdown.style.display = isAuthenticated ? "block" : "none";
+  
   // Initialize Materialize Dropdowns
-  const dropdownElems = document.querySelectorAll(".dropdown-trigger");
-  M.Dropdown.init(dropdownElems, { hover: true });
+  const dropdownElems = document.querySelectorAll('.dropdown-trigger');
+  M.Dropdown.init(dropdownElems, { coverTrigger: false, hover: true, constrainWidth: false });
 }
 
 function setupLogoutButton() {
@@ -103,17 +90,18 @@ function setupLogoutButton() {
 
 function loadHeaderFooter() {
   fetch("/header.html")
-    .then((response) => response.text())
-    .then((data) => {
+    .then(response => response.text())
+    .then(data => {
       document.getElementById("header-placeholder").innerHTML = data;
       checkAuth(); // Ensure authentication check is done after loading header
     });
   fetch("/footer.html")
-    .then((response) => response.text())
-    .then((data) => {
+    .then(response => response.text())
+    .then(data => {
       document.getElementById("footer-placeholder").innerHTML = data;
     });
 }
+
 
 function setupRegisterForm() {
   document
