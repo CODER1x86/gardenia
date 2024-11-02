@@ -28,7 +28,7 @@ app.use(
     resave: false,
     saveUninitialized: true,
     cookie: {
-      maxAge: 4 * 60 * 60 * 1000, // Session duration of 4 hours},
+      maxAge: 4 * 60 * 60 * 1000, // Session duration of 4 hours
     },
   })
 );
@@ -38,9 +38,11 @@ app.use(express.static(path.join(__dirname, "public")));
 
 // 3. Protect Specific Routes (requires authentication)
 function ensureAuthenticated(req, res, next) {
+  console.log("Checking authentication:", req.session.userId);
   if (req.session.userId) {
     return next();
   } else {
+    console.log("User not authenticated, redirecting to login");
     res.redirect("/login.html");
   }
 }
@@ -143,6 +145,7 @@ app.get('/api/data', ensureAuthenticated, async (req, res) => {
 app.get("/api/months", async (req, res) => {
   const year = req.query.year;
   try {
+    console.log("Fetching months for year:", year);
     const result = await global.db.all(
       `
       SELECT DISTINCT strftime('%m', expense_date) AS month
@@ -155,6 +158,7 @@ app.get("/api/months", async (req, res) => {
       `,
       [year, year]
     );
+    console.log("Months fetched:", result);
     res.json(result.map((row) => row.month));
   } catch (error) {
     console.error("Error fetching months:", error);
@@ -165,12 +169,13 @@ app.get("/api/months", async (req, res) => {
 // Snippet 7: Fetch Available Years Endpoint
 app.get("/api/years", async (req, res) => {
   try {
-    console.log("DB in /api/years:", global.db);
+    console.log("Fetching available years");
     const result = await global.db.all(`
       SELECT DISTINCT strftime('%Y', expense_date) AS year FROM expenses
       UNION
       SELECT DISTINCT strftime('%Y', payment_date) AS year FROM revenue
       `);
+    console.log("Years fetched:", result);
     res.json(result.map((row) => row.year));
   } catch (error) {
     console.error("Error fetching years:", error);
@@ -180,9 +185,9 @@ app.get("/api/years", async (req, res) => {
 
 // Snippet 8: Expense Input Endpoint
 app.post("/api/expense-input", async (req, res) => {
-  const { unit_id, category, item, price, expense_date, receipt_photo } =
-    req.body;
+  const { unit_id, category, item, price, expense_date, receipt_photo } = req.body;
   try {
+    console.log("Adding expense:", req.body);
     await global.db.run(
       "INSERT INTO expenses (unit_id, category, item, price, expense_date, last_updated, receipt_photo) VALUES (?, ?, ?, ?, ?, ?, ?)",
       [
@@ -195,6 +200,7 @@ app.post("/api/expense-input", async (req, res) => {
         receipt_photo,
       ]
     );
+    console.log("Expense added successfully");
     res.json({ success: true });
   } catch (error) {
     console.error("Error adding expense:", error);
@@ -206,10 +212,12 @@ app.post("/api/expense-input", async (req, res) => {
 app.post("/api/revenue-input", async (req, res) => {
   const { unit_id, amount, payment_date, method_id } = req.body;
   try {
+    console.log("Adding revenue:", req.body);
     await global.db.run(
       "INSERT INTO revenue (unit_id, amount, payment_date, method_id) VALUES (?, ?, ?, ?)",
       [unit_id, amount, payment_date, method_id]
     );
+    console.log("Revenue added successfully");
     res.json({ success: true });
   } catch (error) {
     console.error("Error adding revenue:", error);
@@ -220,9 +228,11 @@ app.post("/api/revenue-input", async (req, res) => {
 // Snippet 10: Fetch Categories Endpoint
 app.get("/api/categories", async (req, res) => {
   try {
+    console.log("Fetching categories");
     const result = await global.db.all(
       "SELECT DISTINCT category FROM expenses"
     );
+    console.log("Categories fetched:", result);
     res.json(result.map((row) => row.category));
   } catch (error) {
     console.error("Error fetching categories:", error);
@@ -233,9 +243,11 @@ app.get("/api/categories", async (req, res) => {
 // Snippet 11: Fetch Payment Methods Endpoint
 app.get("/api/payment-methods", async (req, res) => {
   try {
+    console.log("Fetching payment methods");
     const result = await global.db.all(
       "SELECT method_id, method_name FROM payment_methods"
     );
+    console.log("Payment methods fetched:", result);
     res.json(result);
   } catch (error) {
     console.error("Error fetching payment methods:", error);
@@ -245,24 +257,27 @@ app.get("/api/payment-methods", async (req, res) => {
 
 // Snippet 12: User Authentication Endpoint
 app.get("/api/check-auth", async (req, res) => {
+  console.log("Checking authentication status");
   if (req.session.userId) {
     const user = await global.db.get(
       "SELECT first_name FROM users WHERE id = ?",
       [req.session.userId]
     );
+    console.log("User authenticated:", user);
     return res.json({ isAuthenticated: true, user });
   }
+  console.log("User not authenticated");
   res.json({ isAuthenticated: false });
 });
 
 // Snippet 13: User Registration Endpoint
 app.post("/register", async (req, res) => {
-  const { username, password, first_name, last_name, birthdate, email } =
-    req.body;
+  const { username, password, first_name, last_name, birthdate, email } = req.body;
   try {
-    console.log("Received registration request with data:", req.body); // Log incoming data
+    console.log("Received registration request with data:", req.body);
 
-    // Check if the username or email already exists
+    // Check if
+	    // Check if the username or email already exists
     const userExists = await global.db.get(
       "SELECT * FROM users WHERE username = ? OR email = ?",
       [username, email]
@@ -307,7 +322,7 @@ app.post("/register", async (req, res) => {
 
     res.json({ success: true });
   } catch (error) {
-    console.error("Error registering user:", error); // Detailed logging
+    console.error("Error registering user:", error);
     res.status(500).json({ error: error.message });
   }
 });
@@ -347,9 +362,7 @@ app.post("/login", async (req, res) => {
 app.post("/forget-password", async (req, res) => {
   const { email } = req.body;
   try {
-    const user = await global.db.get("SELECT * FROM users WHERE email = ?", [
-      email,
-    ]);
+    const user = await global.db.get("SELECT * FROM users WHERE email = ?", [email]);
     if (user) {
       // Generate a temporary reset token and set an expiration time
       const resetToken = Math.random().toString(36).substring(2, 15);
@@ -425,9 +438,9 @@ app.post("/api/profile", async (req, res) => {
   res.json({ success: true });
 });
 
-// Snippet 18: Verify Email
 app.get("/verify-email", async (req, res) => {
   const { token } = req.query;
+  console.log("Verifying email with token:", token);
   const user = await global.db.get(
     "SELECT id FROM users WHERE verification_token = ?",
     [token]
@@ -437,13 +450,13 @@ app.get("/verify-email", async (req, res) => {
       "UPDATE users SET verification_token = NULL WHERE id = ?",
       [user.id]
     );
+    console.log("Email verified successfully for user:", user.id);
     res.send("Email verified successfully.");
   } else {
+    console.log("Invalid verification token");
     res.status(400).send("Invalid verification token.");
   }
 });
-
-// Snippet 19: Start the Server
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
   console.log(`Server is running on http://localhost:${PORT}`);
