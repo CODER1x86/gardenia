@@ -104,8 +104,8 @@ function setupLoginForm() {
         return response.json();
       })
       .then((data) => {
-        // Handle successful login, e.g., redirect to dashboard
-        window.location.href = "dashboard.html";
+        checkAuth(); // Verify authentication and update UI
+        window.location.href = "dashboard.html"; // Redirect to dashboard
       })
       .catch((error) => {
         console.error("Login error:", error);
@@ -153,21 +153,16 @@ function initializeMenu() {
 }
 
 function fetchData() {
-  showLoadingSpinner();
+  showLoadingSpinner(); // Show loading spinner
   fetch("/api/data")
-    .then((response) => {
-      if (!response.ok) {
-        throw new Error('Network response was not ok');
-      }
-      return response.json();
-    })
+    .then((response) => validateResponse(response))
     .then((data) => {
       updateBudgetSummary(data);
-      hideLoadingSpinner();
+      hideLoadingSpinner(); // Hide loading spinner
     })
     .catch((error) => {
       console.error("Error fetching budget data:", error);
-      hideLoadingSpinner();
+      hideLoadingSpinner(); // Hide loading spinner on error
       showError("Failed to load budget data.");
     });
 }
@@ -286,7 +281,7 @@ function fetchReportData() {
   let query = `/api/budget-details?filter=${filter}&year=${year}`;
   if (filter === "month") query += `&month=${month}`;
   fetch(query)
-    .then((response) => validateResponse(response))
+       .then((response) => validateResponse(response))
     .then((data) => updateReportTable(data, filter, year, month))
     .catch((error) => {
       console.error("Error fetching report data:", error);
