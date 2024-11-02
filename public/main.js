@@ -73,6 +73,10 @@ function toggleAuthLinks(isAuthenticated, user) {
       : "none";
   if (siteSettingsDropdown)
     siteSettingsDropdown.style.display = isAuthenticated ? "block" : "none";
+
+  // Initialize Materialize Dropdowns
+  const dropdownElems = document.querySelectorAll(".dropdown-trigger");
+  M.Dropdown.init(dropdownElems, { hover: true });
 }
 
 function setupLogoutButton() {
@@ -108,6 +112,51 @@ function loadHeaderFooter() {
     .then((response) => response.text())
     .then((data) => {
       document.getElementById("footer-placeholder").innerHTML = data;
+    });
+}
+
+function setupRegisterForm() {
+  document
+    .getElementById("register-form")
+    .addEventListener("submit", (event) => {
+      event.preventDefault();
+      const username = document.getElementById("username").value;
+      const password = document.getElementById("password").value;
+      const firstName = document.getElementById("first_name").value;
+      const lastName = document.getElementById("last_name").value;
+      const birthdate = document.getElementById("birthdate").value;
+      const email = document.getElementById("email").value;
+
+      fetch("/register", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          username,
+          password,
+          first_name: firstName,
+          last_name: lastName,
+          birthdate,
+          email,
+        }),
+      })
+        .then((response) => {
+          if (!response.ok) {
+            throw new Error("Registration failed");
+          }
+          return response.json();
+        })
+        .then((data) => {
+          // Handle successful registration, e.g., redirect to login page
+          alert("Registration successful. Please log in.");
+          window.location.href = "login.html";
+        })
+        .catch((error) => {
+          console.error("Registration error:", error);
+          // Display error message to the user
+          alert("Registration failed. Please try again.");
+        });
     });
 }
 
