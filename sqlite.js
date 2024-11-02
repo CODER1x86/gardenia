@@ -17,14 +17,14 @@ const initializeDatabase = async () => {
       owner_id INTEGER PRIMARY KEY,
       owner_name TEXT NOT NULL,
       owner_phone TEXT NOT NULL,
-      created_at TEXT
+      created_at TEXT DEFAULT CURRENT_TIMESTAMP
     )`);
 
     await db.run(`CREATE TABLE IF NOT EXISTS tenants (
       tenant_id INTEGER PRIMARY KEY,
       tenant_name TEXT,
       tenant_phone TEXT,
-      created_at TEXT
+      created_at TEXT DEFAULT CURRENT_TIMESTAMP
     )`);
 
     await db.run(`CREATE TABLE IF NOT EXISTS units (
@@ -34,7 +34,7 @@ const initializeDatabase = async () => {
       owner_id INTEGER,
       is_rented BOOLEAN,
       tenant_id INTEGER,
-      last_updated TEXT,
+      last_updated TEXT DEFAULT CURRENT_TIMESTAMP,
       FOREIGN KEY (owner_id) REFERENCES owners(owner_id),
       FOREIGN KEY (tenant_id) REFERENCES tenants(tenant_id)
     )`);
@@ -47,8 +47,8 @@ const initializeDatabase = async () => {
     await db.run(`CREATE TABLE IF NOT EXISTS revenue (
       revenue_id INTEGER PRIMARY KEY,
       unit_id INTEGER,
-      amount INT,
-      payment_date TEXT,
+      amount INT NOT NULL,
+      payment_date TEXT NOT NULL,
       method_id INTEGER,
       FOREIGN KEY (unit_id) REFERENCES units(unit_id),
       FOREIGN KEY (method_id) REFERENCES payment_methods(method_id)
@@ -58,20 +58,21 @@ const initializeDatabase = async () => {
       expense_id INTEGER PRIMARY KEY,
       category TEXT,
       item TEXT,
-      price INT,
-      expense_date TEXT,
-      last_updated TEXT,
-      unit_id INTEGER REFERENCES units(unit_id),
+      price INT NOT NULL,
+      expense_date TEXT NOT NULL,
+      last_updated TEXT DEFAULT CURRENT_TIMESTAMP,
+      unit_id INTEGER,
       receipt_photo BLOB
     )`);
 
     await db.run(`CREATE TABLE IF NOT EXISTS inventory (
       inventory_id INTEGER PRIMARY KEY,
-      expense_id INTEGER REFERENCES expenses(expense_id),
+      expense_id INTEGER,
       location TEXT,
       usage_date TEXT,
-      last_updated TEXT,
-      status TEXT
+      last_updated TEXT DEFAULT CURRENT_TIMESTAMP,
+      status TEXT,
+      FOREIGN KEY (expense_id) REFERENCES expenses(expense_id)
     )`);
 
     await db.run(`CREATE TABLE IF NOT EXISTS users (
@@ -80,7 +81,7 @@ const initializeDatabase = async () => {
       password TEXT,
       email TEXT,
       reset_token TEXT,
-      created_at TEXT
+      created_at TEXT DEFAULT CURRENT_TIMESTAMP
     )`);
 
     await db.run(`CREATE TABLE IF NOT EXISTS balance (
@@ -123,10 +124,11 @@ const dbQuery = async (query, params = []) => {
   });
 };
 
+// Fetch all expenses
 const getExpenses = async () => {
   try {
     console.log("Fetching expenses");
-    const expenses = await dbQuery("SELECT * FROM expenses");
+    const expenses = await dbQuery("SELECT expense_id, category, item, price, expense_date FROM expenses");
     console.log("Expenses fetched:", expenses);
     return expenses;
   } catch (error) {
@@ -135,34 +137,43 @@ const getExpenses = async () => {
   }
 };
 
+// Fetch total revenue for a given year
 const getRevenue = async (year) => {
   try {
     console.log(`Fetching total revenue for year ${year}`);
-    const result = await dbQuery("SELECT SUM(amount) AS totalRevenue FROM revenue WHERE strftime('%Y', payment_date) = ?", [year]);
+    const result = await dbQuery(`
+      SELECT COALESCE(SUM(amount), 0) AS totalRevenue 
+      FROM revenue 
+      WHERE strftime('%Y', payment_date) = ?`, [year]);
     console.log(`Revenue result for year ${year}:`, result);
-    return result[0]; // Assuming we get a single row
+    return result[0];
   } catch (error) {
     console.error("Error fetching revenue:", error);
     throw error;
   }
 };
 
+// Fetch total expenses for a given year
 const getExpensesSum = async (year) => {
   try {
     console.log(`Fetching total expenses for year ${year}`);
-    const result = await dbQuery("SELECT SUM(price) AS totalExpenses FROM expenses WHERE strftime('%Y', expense_date) = ?", [year]);
+    const result = await dbQuery(`
+      SELECT COALESCE(SUM(price), 0) AS totalExpenses 
+      FROM expenses 
+      WHERE strftime('%Y', expense_date) = ?`, [year]);
     console.log(`Expenses result for year ${year}:`, result);
-    return result[0]; // Assuming we get a single row
+    return result[0];
   } catch (error) {
     console.error("Error fetching total expenses:", error);
     throw error;
   }
 };
 
+// Fetch all inventory items
 const getInventory = async () => {
   try {
     console.log("Fetching inventory");
-    const inventory = await dbQuery("SELECT * FROM inventory");
+    const inventory = await dbQuery("SELECT inventory_id, expense_id, location, usage_date, status FROM inventory");
     console.log("Inventory fetched:", inventory);
     return inventory;
   } catch (error) {
@@ -171,6 +182,7 @@ const getInventory = async () => {
   }
 };
 
+// Add an inventory item
 const addInventoryItem = async (expense_id, location, usage_date, status) => {
   try {
     console.log(`Adding inventory item with expense_id: ${expense_id}, location: ${location}, usage_date: ${usage_date}, status: ${status}`);
@@ -185,6 +197,7 @@ const addInventoryItem = async (expense_id, location, usage_date, status) => {
   }
 };
 
+// Get the starting balance for a given year
 const getStartingBalance = async (year) => {
   try {
     console.log(`Fetching starting balance for year ${year}`);
@@ -193,9 +206,19 @@ const getStartingBalance = async (year) => {
     }
     const previousYear = year - 1;
     const result = await dbQuery(`
-      SELECT
-        (SELECT SUM(amount) FROM revenue WHERE strftime('%Y', payment_date) = ?) -
-        (SELECT SUM(price) FROM expenses WHERE strftime('%Y', expense_date) = ?) AS availableBalance
+      WITH revenue_total AS (
+          SELECT COALESCE(SUM(amount), 0) AS total_revenue 
+          FROM revenue 
+          WHERE strftime('%Y', payment_date) = ?
+      ),
+      expense_total AS (
+          SELECT COALESCE(SUM(price), 0) AS total_expenses 
+          FROM expenses 
+          WHERE strftime('%Y', expense_date) = ?
+      )
+      SELECT 
+          (SELECT total_revenue FROM revenue_total) - 
+          (SELECT total_expenses FROM expense_total) AS availableBalance;
     `, [previousYear, previousYear]);
     console.log(`Starting balance result for year ${year}:`, result);
     return result[0].availableBalance;
@@ -205,6 +228,7 @@ const getStartingBalance = async (year) => {
   }
 };
 
+// Calculate and insert balance for a given year
 const calculateAndInsertBalance = async (year) => {
   try {
     console.log(`Calculating and inserting balance for year ${year}`);
@@ -232,5 +256,5 @@ module.exports = {
   getInventory,
   addInventoryItem,
   getStartingBalance,
-  calculateAndInsertBalance // Add this to exports
+  calculateAndInsertBalance
 };
