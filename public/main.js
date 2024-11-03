@@ -162,55 +162,6 @@ function loadTemplate(containerId, templatePath) {
     });
 }
 
-// Function to initialize application event listeners
-function initializeApp() {
-  console.log("Initializing application...");
-
-  // Set up logout button listener if available
-  const logoutButton = document.getElementById("logout-link");
-  if (logoutButton) {
-    logoutButton.addEventListener("click", (event) => {
-      event.preventDefault();
-      console.log("Logout button clicked.");
-      logoutUser();
-    });
-  } else {
-    console.warn("Logout button not found!");
-  }
-
-  // Set up login form listener if available
-  const loginForm = document.getElementById("login-form");
-  if (loginForm) {
-    loginForm.addEventListener("submit", (event) => {
-      event.preventDefault();
-      const username = document.getElementById("username").value;
-      const password = document.getElementById("password").value;
-      console.log(`Login form submitted with username: ${username}`);
-      loginUser(username, password);
-    });
-  } else {
-    console.warn("Login form not found!");
-  }
-
-  // Set up registration form listener if available
-  const registerForm = document.getElementById("register-form");
-  if (registerForm) {
-    registerForm.addEventListener("submit", (event) => {
-      event.preventDefault();
-      const username = document.getElementById("register-username").value;
-      const password = document.getElementById("register-password").value;
-      console.log(`Registration form submitted with username: ${username}`);
-      registerUser(username, password);
-    });
-  } else {
-    console.warn("Registration form not found!");
-  }
-
-  // Check authentication status on load
-  checkAuth();
-  console.log("Application initialized.");
-}
-// Function to initialize application event listeners
 function initializeApp() {
   console.log("Initializing application...");
 
@@ -257,5 +208,4 @@ function initializeApp() {
   console.log("Application initialized.");
 }
 
-// Call initializeApp to start the application
 document.addEventListener("DOMContentLoaded", initializeApp);

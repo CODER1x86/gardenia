@@ -107,7 +107,6 @@ const getDb = () => {
   console.log("Fetching database instance");
   return db;
 };
-
 // Helper function to run database queries with parameterized statements
 const dbQuery = async (query, params = []) => {
   console.log(`Running query: ${query} with params: ${params}`);
@@ -227,7 +226,6 @@ const getStartingBalance = async (year) => {
     throw error;
   }
 };
-
 // Calculate and insert balance for a given year
 const calculateAndInsertBalance = async (year) => {
   try {
