@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Inventory Management</title>
+  <link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;600&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/css/materialize.min.css" />
+  <link rel="stylesheet" href="./style.css" />
+</head>
+<body>
+  <div id="header-placeholder"></div>
+  <!-- Placeholder for the header -->
+  <div class="container">
+    <h4>Manage Inventory</h4>
+    <form id="inventory-management-form">
+      <div class="input-field">
+        <label for="item">Item</label>
+        <input type="text" id="item" required />
+      </div>
+      <div class="input-field">
+        <label for="category">Category</label>
+        <select id="category" class="browser-default" required>
+          <option value="" disabled selected>Choose a category</option>
+          <!-- Categories will be populated dynamically -->
+        </select>
+      </div>
+      <div class="input-field">
+        <label for="location">Location</label>
+        <input type="text" id="location" required />
+      </div>
+      <div class="input-field">
+        <label for="usage-date">Usage Date</label>
+        <input type="date" id="usage-date" />
+      </div>
+      <div class="input-field">
+        <label for="status">Status</label>
+        <select id="status" class="browser-default" required>
+          <option value="" disabled selected>Choose a status</option>
+          <option value="unconsumed">Unconsumed</option>
+          <option value="consumed">Consumed</option>
+        </select>
+      </div>
+      <div class="action-buttons">
+        <button type="submit" class="btn waves-effect waves-light">
+          Submit
+        </button>
+        <button type="reset" class="btn">Clear</button>
+      </div>
+    </form>
+    <h4>Current Inventory</h4>
+    <table id="inventory-table" class="highlight">
+      <thead>
+        <tr>
+          <th>Item</th>
+          <th>Category</th>
+          <th>Location</th>
+          <th>Usage Date</th>
+          <th>Last Updated</th>
+          <th>Status</th>
+        </tr>
+      </thead>
+      <tbody>
+        <!-- Inventory items will be populated here -->
+      </tbody>
+    </table>
+  </div>
+  <div id="footer-placeholder"></div>
+  <!-- Placeholder for the footer -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/js/materialize.min.js"></script>
+  <script src="./main.js"></script>
+</body>
+</html>

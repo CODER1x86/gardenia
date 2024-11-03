@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Register</title>
+  <link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;600&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/css/materialize.min.css" />
+  <link rel="stylesheet" href="./style.css" />
+</head>
+<body>
+  <div id="header-placeholder"></div>
+  <div class="container">
+    <h4>Register</h4>
+    <form id="register-form">
+      <div class="input-field">
+        <label for="first_name">First Name</label>
+        <input type="text" id="first_name" required />
+      </div>
+      <div class="input-field">
+        <label for="last_name">Last Name</label>
+        <input type="text" id="last_name" required />
+      </div>
+      <div class="input-field">
+        <label for="birthdate">Birthdate</label>
+        <input type="date" id="birthdate" required />
+      </div>
+      <div class="input-field">
+        <label for="email">Email</label>
+        <input type="email" id="email" required />
+      </div>
+      <div class="input-field">
+        <label for="username">Username</label>
+        <input type="text" id="username" required />
+      </div>
+      <div class="input-field">
+        <label for="password">Password</label>
+        <input type="password" id="password" required />
+        <meter max="4" id="password-strength-meter"></meter>
+        <p id="password-strength-text"></p>
+      </div>
+      <div class="input-field">
+        <label for="confirm-password">Confirm Password</label>
+        <input type="password" id="confirm-password" required />
+      </div>
+      <div class="action-buttons">
+        <button type="submit" class="btn waves-effect waves-light">Register</button>
+      </div>
+    </form>
+  </div>
+  <div id="footer-placeholder"></div>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/js/materialize.min.js"></script>
+  <script src="./main.js"></script>
+  <script>
+    document.getElementById("password").addEventListener("input", updatePasswordStrength);
+    document.getElementById("register-form").addEventListener("submit", (event) => {
+      event.preventDefault();
+      const first_name = document.getElementById("first_name").value;
+      const last_name = document.getElementById("last_name").value;
+      const birthdate = document.getElementById("birthdate").value;
+      const email = document.getElementById("email").value;
+      const username = document.getElementById("username").value;
+      const password = document.getElementById("password").value;
+      const confirmPassword = document.getElementById("confirm-password").value;
+
+      if (password !== confirmPassword) {
+        alert("Passwords do not match");
+        return;
+      }
+
+      fetch("/register", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({ first_name, last_name, birthdate, email, username, password })
+      })
+      .then(response => {
+        if (!response.ok) {
+          if (response.status === 409) {
+            throw new Error("Username or email already taken. Please log in or reset your password.");
+          }
+          throw new Error("Error registering user");
+        }
+        return response.json();
+      })
+      .then(data => {
+        alert("Registration successful");
+        window.location.href = "index.html"; // Redirect to login page
+      })
+      .catch(error => {
+        console.error("Error:", error);
+        if (error.message.includes("Username or email already taken")) {
+          if (confirm("Username or email already taken. Do you want to log in or reset your password?")) {
+            window.location.href = "login.html"; // Redirect to login page
+          }
+        } else {
+          alert(error.message);
+        }
+      });
+    });
+
+    function updatePasswordStrength() {
+      const password = document.getElementById("password").value;
+      const meter = document.getElementById("password-strength-meter");
+      const text = document.getElementById("password-strength-text");
+      const strength = calculatePasswordStrength(password);
+
+      meter.value = strength.score;
+      text.textContent = `Strength: ${strength.text}`;
+    }
+
+    function calculatePasswordStrength(password) {
+      let score = 0;
+      let text = "Very Weak";
+
+      if (password.length >= 8) score++;
+      if (/[A-Z]/.test(password)) score++;
+      if (/[0-9]/.test(password)) score++;
+      if (/[^A-Za-z0-9]/.test(password)) score++;
+
+      switch (score) {
+        case 1: text = "Weak"; break;
+        case 2: text = "Fair"; break;
+        case 3: text = "Good"; break;
+        case 4: text = "Strong"; break;
+      }
+
+      return { score, text };
+    }
+  </script>
+</body>
+</html>

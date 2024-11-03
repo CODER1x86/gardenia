@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Modify Footer</title>
+  <link rel="stylesheet" href="/public/style.css" />
+</head>
+<body>
+  <div id="header-placeholder"></div>
+  <div class="container">
+    <h1>Modify Footer</h1>
+    <form id="footer-form">
+      <div>
+        <label for="footer-text">Footer Text:</label>
+        <input type="text" id="footer-text" name="footer-text" />
+      </div>
+      <button type="submit">Update Footer</button>
+    </form>
+  </div>
+  <div id="footer-placeholder"></div>
+  <script src="/public/main.js"></script>
+  <script>
+    document
+      .getElementById("footer-form")
+      .addEventListener("submit", (event) => {
+        event.preventDefault();
+        const footerText = document.getElementById("footer-text").value;
+        localStorage.setItem("footerText", footerText);
+        updateFooter();
+      });
+
+    function updateFooter() {
+      const footerText =
+        localStorage.getItem("footerText") ||
+        "© My App. All rights reserved.";
+      document.querySelector(".footer-bottom").textContent = footerText;
+    }
+
+    document.addEventListener("DOMContentLoaded", updateFooter);
+  </script>
+</body>
+</html>

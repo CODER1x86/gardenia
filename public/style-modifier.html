@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Modify Site Style</title>
+  <link rel="stylesheet" href="/public/style.css" />
+</head>
+<body>
+  <div id="header-placeholder"></div>
+  <div class="container">
+    <h1>Modify Site Style</h1>
+    <div>
+      <label for="color">Choose a color:</label>
+      <input type="color" id="color" name="color" value="#1a73e8" />
+      <button onclick="updateColor()">Update Color</button>
+    </div>
+  </div>
+  <div id="footer-placeholder"></div>
+  <script src="/public/main.js"></script>
+  <script>
+    function updateColor() {
+      const color = document.getElementById("color").value;
+      document.documentElement.style.setProperty("--primary-color", color);
+      localStorage.setItem("primaryColor", color);
+    }
+
+    document.addEventListener("DOMContentLoaded", () => {
+      const storedColor = localStorage.getItem("primaryColor") || "#1a73e8";
+      document.getElementById("color").value = storedColor;
+      updateColor();
+    });
+  </script>
+</body>
+</html>

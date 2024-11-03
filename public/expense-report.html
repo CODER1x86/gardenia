@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Expense Report</title>
+  <link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;600&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/css/materialize.min.css" />
+  <link rel="stylesheet" href="/style.css" />
+</head>
+<body>
+  <div id="header-placeholder"></div>
+  <!-- Placeholder for the header -->
+  <div class="container">
+    <h4>
+      <a href="expense-report.html" style="text-decoration: none; color: inherit">Expense Report</a>
+      <span id="report-info" style="display:none"> (as of <span id="selected-filters"></span>)</span>
+    </h4>
+    <div class="filter-container">
+      <label for="filter-option">Filter By:</label>
+      <form id="filter-form">
+        <p>
+          <label>
+            <input name="filter-option" type="radio" value="year" />
+            <span>Year</span>
+          </label>
+        </p>
+        <p>
+          <label>
+            <input name="filter-option" type="radio" value="month" />
+            <span>Month</span>
+          </label>
+        </p>
+        <p>
+          <label>
+            <input name="filter-option" type="radio" value="category" />
+            <span>Category</span>
+          </label>
+        </p>
+      </form>
+      <div id="year-select-container" style="display: none">
+        <label for="year-select">Select Year:</label>
+        <select id="year-select" class="browser-default"></select>
+      </div>
+      <div id="month-select-container" style="display: none">
+        <label for="month-select">Select Month:</label>
+        <select id="month-select" class="browser-default"></select>
+      </div>
+      <div id="category-select-container" style="display: none">
+        <label for="category-select">Select Category:</label>
+        <select id="category-select" class="browser-default"></select>
+      </div>
+      <button class="btn waves-effect waves-light" id="run-report-btn">Run Report</button>
+    </div>
+    <table class="highlight responsive-table">
+      <thead>
+        <tr>
+          <th>Category</th>
+          <th>Item</th>
+          <th>Amount</th>
+          <th>Payment Date</th>
+          <th>Last Updated</th>
+        </tr>
+      </thead>
+      <tbody id="expense-table-body">
+        <!-- Expense data will be populated here -->
+      </tbody>
+    </table>
+    <div class="action-buttons">
+      <a class="btn waves-effect waves-light" href="revenue-report.html">View Revenue Reports</a>
+      <a class="btn waves-effect waves-light" href="budget-details.html">View Budget Details</a>
+      <a class="btn waves-effect waves-light" href="budget-summary.html">View Budget Summary</a>
+    </div>
+    <br />
+    <center>
+      <div class="share-menu">
+        <button class="btn waves-effect waves-light" id="share-btn">
+          <i class="material-icons">share</i> Share
+        </button>
+        <div class="share-menu-content">
+          <a id="share-whatsapp"><i class="material-icons">message</i> WhatsApp</a>
+          <a id="share-messenger"><i class="material-icons">messenger</i> Messenger</a>
+          <a id="copy-link"><i class="material-icons">link</i> Copy Link</a>
+          <a id="share-twitter"><i class="material-icons">twitter</i> Twitter</a>
+          <a id="share-facebook"><i class="material-icons">facebook</i> Facebook</a>
+        </div>
+      </div>
+      <button class="btn waves-effect waves-light" id="print-btn">
+        <i class="material-icons">print</i> Print
+      </button>
+    </center>
+  </div>
+  <div id="footer-placeholder"></div>
+  <!-- Placeholder for the footer -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/js/materialize.min.js"></script>
+  <script src="/main.js"></script>
+</body>
+</html>
