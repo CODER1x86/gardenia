@@ -215,8 +215,8 @@ function initializeApp() {
   console.log("Initializing application...");
 
   // Load header and footer
-  loadTemplate("header-container", "/path/to/header.html");
-  loadTemplate("footer-container", "/path/to/footer.html");
+  loadTemplate("header-container", "./header.html");
+  loadTemplate("footer-container", "./footer.html");
 
   // Set up logout button listener
   const logoutButton = document.getElementById("logout-link");
