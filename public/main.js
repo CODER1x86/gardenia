@@ -1,3 +1,32 @@
+document.addEventListener("DOMContentLoaded", function () {
+  loadTemplate("header-placeholder", "header.html");
+  loadTemplate("footer-placeholder", "footer.html");
+
+  // Ensure elements exist before adding event listeners
+  const form = document.getElementById("input-form");
+  if (form) {
+    form.addEventListener("submit", addExpense);
+  } else {
+    console.warn("Form element not found.");
+  }
+
+  const clearButton = document.getElementById("clear-form");
+  if (clearButton) {
+    clearButton.addEventListener("click", clearForm);
+  } else {
+    console.warn("Clear button element not found.");
+  }
+
+  const profileForm = document.getElementById("profile-form");
+  if (profileForm) {
+    profileForm.addEventListener("submit", updateProfile);
+  } else {
+    console.warn("Profile form element not found.");
+  }
+
+  loadExpenses();
+});
+
 // Load header and footer templates
 function loadHeaderFooter() {
   loadTemplate("header-placeholder", "header.html");
