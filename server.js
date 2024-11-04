@@ -19,7 +19,7 @@ app.use(session({
 app.use(express.static(path.join(__dirname, 'public')));
 
 // Database setup
-const db = new sqlite3.Database('./database.db', (err) => {
+const db = new sqlite3.Database('./.data/database.db', (err) => {
   if (err) {
     console.error('Could not connect to database', err);
   } else {
