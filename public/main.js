@@ -1,6 +1,6 @@
 // Function to show error messages to the user and log errors to console
 function showError(message) {
-  const errorElement = document.getElementById("error-message");
+  const errorElement = document.getElementById("feedback-error");
   if (errorElement) {
     errorElement.textContent = message;
     errorElement.style.display = "block";
@@ -10,6 +10,20 @@ function showError(message) {
     }, 5000);
   } else {
     console.warn("Error element not found.");
+  }
+}
+
+// Function to show success messages
+function showSuccess(message) {
+  const successElement = document.getElementById("feedback-success");
+  if (successElement) {
+    successElement.textContent = message;
+    successElement.style.display = "block";
+    setTimeout(() => {
+      successElement.style.display = "none";
+    }, 5000);
+  } else {
+    console.warn("Success element not found.");
   }
 }
 
@@ -47,6 +61,16 @@ function hideLoadingSpinner() {
   }
 }
 
+// Initialize date picker
+document.addEventListener('DOMContentLoaded', function() {
+  const datepickerElems = document.querySelectorAll('.datepicker');
+  M.Datepicker.init(datepickerElems, {
+    format: 'yyyy-mm-dd',
+    defaultDate: new Date(),
+    setDefaultDate: true
+  });
+});
+
 // Function to initialize dropdowns
 function initializeDropdowns() {
   const dropdownElems = document.querySelectorAll(".dropdown-trigger");
@@ -66,7 +90,7 @@ function registerUser(username, password) {
     .then((data) => {
       console.log("Registration successful:", data);
       hideLoadingSpinner();
-      alert("Registration successful! Please log in.");
+      showSuccess("Registration successful! Please log in.");
     })
     .catch((error) => {
       console.error("Error during registration:", error);
@@ -140,6 +164,7 @@ function loadTemplate(containerId, templatePath) {
       hideLoadingSpinner();
     });
 }
+
 // Edit Expense Function
 async function editExpense(expense_id) {
   const newCategory = prompt("Enter new category:");
@@ -147,7 +172,7 @@ async function editExpense(expense_id) {
   const newPrice = prompt("Enter new price:");
   const newDate = prompt("Enter new date (YYYY-MM-DD):");
 
-  const response = await fetch(`/expenses/edit/${expense_id}`, {
+  const response = await fetch(`/api/edit-expense/${expense_id}`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
@@ -159,124 +184,25 @@ async function editExpense(expense_id) {
   });
 
   if (response.ok) {
-    alert("Expense updated successfully.");
+    showSuccess("Expense updated successfully.");
     window.location.reload();
   } else {
-    alert("Failed to update expense.");
+    showError("Failed to update expense.");
   }
 }
 
 // Delete Expense Function
 async function deleteExpense(expense_id) {
   if (confirm("Are you sure you want to delete this expense?")) {
-    const response = await fetch(`/expenses/delete/${expense_id}`, {
+    const response = await fetch(`/api/delete-expense/${expense_id}`, {
       method: "POST",
     });
 
     if (response.ok) {
-      alert("Expense deleted successfully.");
+      showSuccess("Expense deleted successfully.");
       window.location.reload();
     } else {
-      alert("Failed to delete expense.");
+      showError("Failed to delete expense.");
     }
   }
 }
-
-// Function to update the current year in the footer
-function updateCurrentYear() {
-  const footerYear = document.getElementById("footer-year");
-  if (footerYear) {
-    footerYear.textContent = new Date().getFullYear();
-  } else {
-    console.warn("Footer year element not found.");
-  }
-}
-
-// Function to initialize application event listeners
-function initializeApp() {
-  console.log("Initializing application...");
-
-  // Initialize Dropdowns
-  initializeDropdowns();
-
-  // Update current year in footer
-  updateCurrentYear();
-
-  // Set up logout button listener if available
-  const logoutButton = document.getElementById("logout-link");
-  if (logoutButton) {
-    logoutButton.addEventListener("click", (event) => {
-      event.preventDefault();
-      console.log("Logout button clicked.");
-      logoutUser();
-    });
-  } else {
-    console.warn("Logout button not found!");
-  }
-
-  // Set up login form listener if available
-  const loginForm = document.getElementById("login-form");
-  if (loginForm) {
-    loginForm.addEventListener("submit", (event) => {
-      event.preventDefault();
-      const username = document.getElementById("username").value;
-      const password = document.getElementById("password").value;
-      console.log(`Login form submitted with username: ${username}`);
-      loginUser(username, password);
-    });
-  } else {
-    console.warn("Login form not found!");
-  }
-
-  // Set up registration form listener if available
-  const registerForm = document.getElementById("register-form");
-  if (registerForm) {
-    registerForm.addEventListener("submit", (event) => {
-      event.preventDefault();
-      const username = document.getElementById("register-username").value;
-      const password = document.getElementById("register-password").value;
-      console.log(`Registration form submitted with username: ${username}`);
-      registerUser(username, password);
-    });
-  } else {
-    console.warn("Registration form not found!");
-  }
-
-  // Check authentication status on load
-  checkAuth();
-  console.log("Application initialized.");
-}
-
-// Function to check if a user is authenticated
-function checkAuth() {
-  console.log("Checking authentication status...");
-  fetch("/api/check-auth")
-    .then(validateResponse)
-    .then((data) => {
-      console.log("Authentication data received:", data);
-      const loginLink = document.getElementById("login-link");
-      const userGreeting = document.getElementById("user-greeting");
-      const logoutLink = document.getElementById("logout-link");
-      const userNameSpan = document.getElementById("user-name");
-
-      if (data.authenticated) {
-        if (loginLink) loginLink.style.display = "none";
-        if (userGreeting) userGreeting.style.display = "inline";
-        if (logoutLink) logoutLink.style.display = "inline";
-        if (userNameSpan) userNameSpan.textContent = data.username;
-        console.log("User is authenticated. Showing logout link.");
-      } else {
-        if (loginLink) loginLink.style.display = "inline";
-        if (userGreeting) userGreeting.style.display = "none";
-        if (logoutLink) logoutLink.style.display = "none";
-        console.log("User is not authenticated. Showing login link.");
-      }
-    })
-    .catch((error) => {
-      console.error("Error checking authentication:", error);
-      showError("Failed to check authentication status.");
-    });
-}
-
-// Call initializeApp to start the application
-document.addEventListener("DOMContentLoaded", initializeApp);
