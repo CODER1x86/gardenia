@@ -1,3 +1,19 @@
+// Load header and footer templates
+function loadHeaderFooter() {
+  loadTemplate("header-placeholder", "header.html");
+  loadTemplate("footer-placeholder", "footer.html");
+}
+
+// Function to update the current year in the footer
+function updateCurrentYear() {
+  const footerYear = document.getElementById("currentyear");
+  if (footerYear) {
+    footerYear.textContent = new Date().getFullYear();
+  } else {
+    console.warn("Footer year element not found.");
+  }
+}
+
 // Function to show error messages to the user and log errors to console
 function showError(message) {
   const errorElement = document.getElementById("feedback-error");
@@ -70,12 +86,98 @@ document.addEventListener("DOMContentLoaded", function () {
     setDefaultDate: true,
   });
 });
+// Function to handle user registration
+function registerUser(username, password) {
+  console.log(`Attempting to register user with username: ${username}`);
+  showLoadingSpinner();
+  fetch("/api/register", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ username, password }),
+  })
+    .then(validateResponse)
+    .then((data) => {
+      console.log("Registration successful:", data);
+      hideLoadingSpinner();
+      showSuccess("Registration successful! Please log in.");
+    })
+    .catch((error) => {
+      console.error("Error during registration:", error);
+      showError("Registration failed.");
+      hideLoadingSpinner();
+    });
+}
 
-// Function to initialize dropdowns
-function initializeDropdowns() {
-  const dropdownElems = document.querySelectorAll(".dropdown-trigger");
-  M.Dropdown.init(dropdownElems, { hover: true, coverTrigger: false });
-  console.log("Dropdowns initialized.");
+// Function to handle user login
+function loginUser(username, password) {
+  console.log(`Attempting to log in user with username: ${username}`);
+  showLoadingSpinner();
+  fetch("/api/login", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ username, password }),
+  })
+    .then(validateResponse)
+    .then((data) => {
+      console.log("Login successful:", data);
+      hideLoadingSpinner();
+      checkAuth(); // Refresh auth status
+      if (data.success) window.location.href = "/dashboard"; // Redirect example
+    })
+    .catch((error) => {
+      console.error("Error during login:", error);
+      showError("Login failed.");
+      hideLoadingSpinner();
+    });
+}
+
+// Function to handle user logout
+function logoutUser() {
+  console.log("Attempting to log out user.");
+  showLoadingSpinner();
+  fetch("/api/logout", { method: "POST" })
+    .then(validateResponse)
+    .then((data) => {
+      console.log("Logout successful:", data);
+      hideLoadingSpinner();
+      checkAuth(); // Refresh auth status
+    })
+    .catch((error) => {
+      console.error("Error during logout:", error);
+      showError("Logout failed.");
+      hideLoadingSpinner();
+    });
+}
+
+// Function to check if a user is authenticated
+function checkAuth() {
+  console.log("Checking authentication status...");
+  fetch("/api/check-auth")
+    .then(validateResponse)
+    .then((data) => {
+      console.log("Authentication data received:", data);
+      const loginLink = document.getElementById("login-link");
+      const userGreeting = document.getElementById("user-greeting");
+      const logoutLink = document.getElementById("logout-link");
+      const userNameSpan = document.getElementById("user-name");
+
+      if (data.authenticated) {
+        if (loginLink) loginLink.style.display = "none";
+        if (userGreeting) userGreeting.style.display = "inline";
+        if (logoutLink) logoutLink.style.display = "inline";
+        if (userNameSpan) userNameSpan.textContent = data.username;
+        console.log("User is authenticated. Showing logout link.");
+      } else {
+        if (loginLink) loginLink.style.display = "inline";
+        if (userGreeting) userGreeting.style.display = "none";
+        if (logoutLink) logoutLink.style.display = "none";
+        console.log("User is not authenticated. Showing login link.");
+      }
+    })
+    .catch((error) => {
+      console.error("Error checking authentication:", error);
+      showError("Failed to check authentication status.");
+    });
 }
 // Function to handle user registration
 function registerUser(username, password) {
@@ -206,101 +308,6 @@ async function deleteExpense(expense_id) {
     }
   }
 }
-// Function to update the current year in the footer
-function updateCurrentYear() {
-  const footerYear = document.getElementById("footer-year");
-  if (footerYear) {
-    footerYear.textContent = new Date().getFullYear();
-  } else {
-    console.warn("Footer year element not found.");
-  }
-}
-
-// Function to initialize application event listeners
-function initializeApp() {
-  console.log("Initializing application...");
-
-  // Initialize Dropdowns
-  initializeDropdowns();
-
-  // Update current year in footer
-  updateCurrentYear();
-
-  // Set up logout button listener if available
-  const logoutButton = document.getElementById("logout-link");
-  if (logoutButton) {
-    logoutButton.addEventListener("click", (event) => {
-      event.preventDefault();
-      console.log("Logout button clicked.");
-      logoutUser();
-    });
-  } else {
-    console.warn("Logout button not found!");
-  }
-
-  // Set up login form listener if available
-  const loginForm = document.getElementById("login-form");
-  if (loginForm) {
-    loginForm.addEventListener("submit", (event) => {
-      event.preventDefault();
-      const username = document.getElementById("username").value;
-      const password = document.getElementById("password").value;
-      console.log(`Login form submitted with username: ${username}`);
-      loginUser(username, password);
-    });
-  } else {
-    console.warn("Login form not found!");
-  }
-
-  // Set up registration form listener if available
-  const registerForm = document.getElementById("register-form");
-  if (registerForm) {
-    registerForm.addEventListener("submit", (event) => {
-      event.preventDefault();
-      const username = document.getElementById("register-username").value;
-      const password = document.getElementById("register-password").value;
-      console.log(`Registration form submitted with username: ${username}`);
-      registerUser(username, password);
-    });
-  } else {
-    console.warn("Registration form not found!");
-  }
-
-  // Check authentication status on load
-  checkAuth();
-  console.log("Application initialized.");
-}
-
-// Function to check if a user is authenticated
-function checkAuth() {
-  console.log("Checking authentication status...");
-  fetch("/api/check-auth")
-    .then(validateResponse)
-    .then((data) => {
-      console.log("Authentication data received:", data);
-      const loginLink = document.getElementById("login-link");
-      const userGreeting = document.getElementById("user-greeting");
-      const logoutLink = document.getElementById("logout-link");
-      const userNameSpan = document.getElementById("user-name");
-
-      if (data.authenticated) {
-        if (loginLink) loginLink.style.display = "none";
-        if (userGreeting) userGreeting.style.display = "inline";
-        if (logoutLink) logoutLink.style.display = "inline";
-        if (userNameSpan) userNameSpan.textContent = data.username;
-        console.log("User is authenticated. Showing logout link.");
-      } else {
-        if (loginLink) loginLink.style.display = "inline";
-        if (userGreeting) userGreeting.style.display = "none";
-        if (logoutLink) logoutLink.style.display = "none";
-        console.log("User is not authenticated. Showing login link.");
-      }
-    })
-    .catch((error) => {
-      console.error("Error checking authentication:", error);
-      showError("Failed to check authentication status.");
-    });
-}
 
 // Function to clear form inputs
 function clearForm() {
@@ -373,6 +380,137 @@ function loadExpenses() {
       showError("Failed to load expenses.");
       hideLoadingSpinner();
     });
+}
+// Function to fetch user profile details
+function fetchProfile() {
+  console.log("Fetching profile details...");
+  showLoadingSpinner();
+  fetch("/api/profile")
+    .then(validateResponse)
+    .then((data) => {
+      document.getElementById("first_name").value = data.first_name;
+      document.getElementById("last_name").value = data.last_name;
+      document.getElementById("birthdate").value = data.birthdate;
+      document.getElementById("email").value = data.email;
+      console.log("Profile details fetched successfully:", data);
+      hideLoadingSpinner();
+    })
+    .catch((error) => {
+      console.error("Error loading profile data:", error);
+      showError("Failed to load profile details.");
+      hideLoadingSpinner();
+    });
+}
+
+// Function to update user profile details
+function updateProfile(event) {
+  event.preventDefault();
+  const first_name = document.getElementById("first_name").value;
+  const last_name = document.getElementById("last_name").value;
+  const birthdate = document.getElementById("birthdate").value;
+  const email = document.getElementById("email").value;
+
+  console.log("Updating profile details...", {
+    first_name,
+    last_name,
+    birthdate,
+    email,
+  });
+  showLoadingSpinner();
+  fetch("/api/profile", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ first_name, last_name, birthdate, email }),
+  })
+    .then(validateResponse)
+    .then((data) => {
+      showSuccess("Profile updated successfully.");
+      hideLoadingSpinner();
+    })
+    .catch((error) => {
+      console.error("Error updating profile:", error);
+      showError("Failed to update profile.");
+      hideLoadingSpinner();
+    });
+}
+
+document
+  .getElementById("profile-form")
+  .addEventListener("submit", updateProfile);
+document.addEventListener("DOMContentLoaded", fetchProfile);
+// Function to update site style color
+function updateColor() {
+  const color = document.getElementById("color").value;
+  document.documentElement.style.setProperty("--primary-color", color);
+  localStorage.setItem("primaryColor", color);
+}
+
+// Initialize site style color
+function initializeSiteStyle() {
+  const storedColor = localStorage.getItem("primaryColor") || "#1a73e8";
+  document.getElementById("color").value = storedColor;
+  updateColor();
+}
+
+// Function to initialize application event listeners
+function initializeApp() {
+  console.log("Initializing application...");
+
+  // Load header and footer
+  loadHeaderFooter();
+
+  // Initialize Dropdowns
+  initializeDropdowns();
+
+  // Initialize site style
+  initializeSiteStyle();
+
+  // Update current year in footer
+  updateCurrentYear();
+
+  // Set up logout button listener if available
+  const logoutButton = document.getElementById("logout-button");
+  if (logoutButton) {
+    logoutButton.addEventListener("click", (event) => {
+      event.preventDefault();
+      console.log("Logout button clicked.");
+      logoutUser();
+    });
+  } else {
+    console.warn("Logout button not found!");
+  }
+
+  // Set up login form listener if available
+  const loginForm = document.getElementById("login-form");
+  if (loginForm) {
+    loginForm.addEventListener("submit", (event) => {
+      event.preventDefault();
+      const username = document.getElementById("username").value;
+      const password = document.getElementById("password").value;
+      console.log(`Login form submitted with username: ${username}`);
+      loginUser(username, password);
+    });
+  } else {
+    console.warn("Login form not found!");
+  }
+
+  // Set up registration form listener if available
+  const registerForm = document.getElementById("register-form");
+  if (registerForm) {
+    registerForm.addEventListener("submit", (event) => {
+      event.preventDefault();
+      const username = document.getElementById("register-username").value;
+      const password = document.getElementById("register-password").value;
+      console.log(`Registration form submitted with username: ${username}`);
+      registerUser(username, password);
+    });
+  } else {
+    console.warn("Registration form not found!");
+  }
+
+  // Check authentication status on load
+  checkAuth();
+  console.log("Application initialized.");
 }
 
 // Add event listeners for form submission
