@@ -42,7 +42,6 @@ function updateCurrentYear() {
     console.warn("Footer year element not found.");
   }
 }
-
 // Function to show error messages to the user and log errors to console
 function showError(message) {
   const errorElement = document.getElementById("feedback-error");
@@ -105,7 +104,6 @@ function hideLoadingSpinner() {
     console.warn("Loading spinner element not found.");
   }
 }
-
 // Initialize date picker
 document.addEventListener("DOMContentLoaded", function () {
   const datepickerElems = document.querySelectorAll(".datepicker");
@@ -115,6 +113,7 @@ document.addEventListener("DOMContentLoaded", function () {
     setDefaultDate: true,
   });
 });
+
 // Function to handle user registration
 function registerUser(username, password) {
   console.log(`Attempting to register user with username: ${username}`);
@@ -208,69 +207,6 @@ function checkAuth() {
       showError("Failed to check authentication status.");
     });
 }
-// Function to handle user registration
-function registerUser(username, password) {
-  console.log(`Attempting to register user with username: ${username}`);
-  showLoadingSpinner();
-  fetch("/api/register", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ username, password }),
-  })
-    .then(validateResponse)
-    .then((data) => {
-      console.log("Registration successful:", data);
-      hideLoadingSpinner();
-      showSuccess("Registration successful! Please log in.");
-    })
-    .catch((error) => {
-      console.error("Error during registration:", error);
-      showError("Registration failed.");
-      hideLoadingSpinner();
-    });
-}
-
-// Function to handle user login
-function loginUser(username, password) {
-  console.log(`Attempting to log in user with username: ${username}`);
-  showLoadingSpinner();
-  fetch("/api/login", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ username, password }),
-  })
-    .then(validateResponse)
-    .then((data) => {
-      console.log("Login successful:", data);
-      hideLoadingSpinner();
-      checkAuth(); // Refresh auth status
-      if (data.success) window.location.href = "/dashboard"; // Redirect example
-    })
-    .catch((error) => {
-      console.error("Error during login:", error);
-      showError("Login failed.");
-      hideLoadingSpinner();
-    });
-}
-
-// Function to handle user logout
-function logoutUser() {
-  console.log("Attempting to log out user.");
-  showLoadingSpinner();
-  fetch("/api/logout", { method: "POST" })
-    .then(validateResponse)
-    .then((data) => {
-      console.log("Logout successful:", data);
-      hideLoadingSpinner();
-      checkAuth(); // Refresh auth status
-    })
-    .catch((error) => {
-      console.error("Error during logout:", error);
-      showError("Logout failed.");
-      hideLoadingSpinner();
-    });
-}
-
 // Function to dynamically load HTML templates into a specified container
 function loadTemplate(containerId, templatePath) {
   console.log(
@@ -337,11 +273,15 @@ async function deleteExpense(expense_id) {
     }
   }
 }
-
 // Function to clear form inputs
 function clearForm() {
-  document.getElementById("input-form").reset();
-  console.log("Form cleared.");
+  const form = document.getElementById("input-form");
+  if (form) {
+    form.reset();
+    console.log("Form cleared.");
+  } else {
+    console.warn("Form element not found.");
+  }
 }
 
 // Function to add a new expense
@@ -463,22 +403,26 @@ function updateProfile(event) {
     });
 }
 
-document
-  .getElementById("profile-form")
-  .addEventListener("submit", updateProfile);
 document.addEventListener("DOMContentLoaded", fetchProfile);
+
 // Function to update site style color
 function updateColor() {
   const color = document.getElementById("color").value;
   document.documentElement.style.setProperty("--primary-color", color);
   localStorage.setItem("primaryColor", color);
 }
-
 // Initialize site style color
 function initializeSiteStyle() {
   const storedColor = localStorage.getItem("primaryColor") || "#1a73e8";
   document.getElementById("color").value = storedColor;
   updateColor();
+}
+
+function initializeDropdowns() {
+  const dropdowns = document.querySelectorAll(".dropdown-trigger");
+  M.Dropdown.init(dropdowns, {
+    coverTrigger: false,
+  });
 }
 
 // Function to initialize application event listeners
@@ -545,7 +489,19 @@ function initializeApp() {
 // Add event listeners for form submission
 document.addEventListener("DOMContentLoaded", () => {
   initializeApp();
-  document.getElementById("input-form").addEventListener("submit", addExpense);
-  document.getElementById("clear-form").addEventListener("click", clearForm);
+  const inputForm = document.getElementById("input-form");
+  if (inputForm) {
+    inputForm.addEventListener("submit", addExpense);
+  } else {
+    console.warn("Input form element not found.");
+  }
+
+  const clearFormButton = document.getElementById("clear-form");
+  if (clearFormButton) {
+    clearFormButton.addEventListener("click", clearForm);
+  } else {
+    console.warn("Clear form button not found.");
+  }
+
   loadExpenses();
 });
