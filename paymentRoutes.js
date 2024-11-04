@@ -1,3 +1,5 @@
+//paymentRoutes.js
+
 const express = require('express');
 const { body, validationResult } = require('express-validator');
 const db = require('./sqlite');
@@ -28,7 +30,6 @@ router.post('/expense-input', [
     res.status(500).json({ success: false, error: error.message });
   }
 });
-
 // Add a new revenue
 router.post('/revenue-input', [
   body('unit_id').isInt(),
@@ -52,7 +53,6 @@ router.post('/revenue-input', [
     res.status(500).json({ success: false, error: error.message });
   }
 });
-
 // Edit an existing expense
 router.post("/edit-expense/:expense_id", async (req, res) => {
   const { expense_id } = req.params;
@@ -65,16 +65,31 @@ router.post("/edit-expense/:expense_id", async (req, res) => {
     res.status(500).json({ error: "Failed to update expense." });
   }
 });
-
-// Delete an existing expense
-router.post("/delete-expense/:expense_id", async (req, res) => {
-  const { expense_id } = req.params;
+// Edit an existing revenue
+router.post("/edit-revenue/:revenue_id", async (req, res) => {
+  const { revenue_id } = req.params;
+  const { unit_id, amount, payment_date, method_id } = req.body;
   try {
-    await db.deleteExpense(expense_id);
-    res.json({ message: "Expense deleted successfully." });
+    await db.run(
+      "UPDATE revenue SET unit_id = ?, amount = ?, payment_date = ?, method_id = ? WHERE revenue_id = ?",
+      [unit_id, amount, payment_date, method_id, revenue_id]
+    );
+    res.json({ message: "Revenue updated successfully." });
   } catch (error) {
-    console.error("Error deleting expense:", error);
-    res.status(500).json({ error: "Failed to delete expense." });
+    console.error("Error updating revenue:", error);
+    res.status(500).json({ error: "Failed to update revenue." });
+  }
+});
+
+// Delete an existing revenue
+router.post("/delete-revenue/:revenue_id", async (req, res) => {
+  const { revenue_id } = req.params;
+  try {
+    await db.run("DELETE FROM revenue WHERE revenue_id = ?", [revenue_id]);
+    res.json({ message: "Revenue deleted successfully." });
+  } catch (error) {
+    console.error("Error deleting revenue:", error);
+    res.status(500).json({ error: "Failed to delete revenue." });
   }
 });
 

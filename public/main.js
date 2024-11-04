@@ -359,84 +359,31 @@ function loadExpenses() {
     });
 }
 
-// Function to fetch user profile details
-function fetchProfile() {
-  console.log("Fetching profile details...");
-  showLoadingSpinner();
-  fetch("/api/profile")
-    .then(validateResponse)
-    .then((data) => {
-      document.getElementById("first_name").value = data.first_name;
-      document.getElementById("last_name").value = data.last_name;
-      document.getElementById("birthdate").value = data.birthdate;
-      document.getElementById("email").value = data.email;
-      console.log("Profile details fetched successfully:", data);
-      hideLoadingSpinner();
-    })
-    .catch((error) => {
-      console.error("Error loading profile data:", error);
-      showError("Failed to load profile details.");
-      hideLoadingSpinner();
-    });
-}
+// Import functions from the js folder
+import { loadHeaderFooter } from '../js/headerFooter.js';
+import { registerUser, loginUser, logoutUser, checkAuth } from '../js/auth.js';
+import { fetchProfile, updateProfile } from '../js/profile.js';
+import { clearForm, addExpense, loadExpenses, editExpense, deleteExpense } from '../js/expense.js';
+import { initializeSiteStyle, updateColor } from '../js/siteStyle.js';
+import { showLoadingSpinner, hideLoadingSpinner } from '../js/spinner.js';
+import { showError, showSuccess } from '../js/validation.js';
 
-// Function to update user profile details
-function updateProfile(event) {
-  event.preventDefault();
-  const first_name = document.getElementById("first_name").value;
-  const last_name = document.getElementById("last_name").value;
-  const birthdate = document.getElementById("birthdate").value;
-  const email = document.getElementById("email").value;
+// Initialize application
+document.addEventListener("DOMContentLoaded", () => {
+  initializeApp();
 
-  console.log("Updating profile details...", {
-    first_name,
-    last_name,
-    birthdate,
-    email,
-  });
-  showLoadingSpinner();
-  fetch("/api/profile", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ first_name, last_name, birthdate, email }),
-  })
-    .then(validateResponse)
-    .then((data) => {
-      showSuccess("Profile updated successfully.");
-      hideLoadingSpinner();
-    })
-    .catch((error) => {
-      console.error("Error updating profile:", error);
-      showError("Failed to update profile.");
-      hideLoadingSpinner();
-    });
-}
-// Initialize site style color
-function initializeSiteStyle() {
-  const storedColor = localStorage.getItem("primaryColor") || "#1a73e8";
-  const colorElement = document.getElementById("color");
-  if (colorElement) {
-    colorElement.value = storedColor;
-    updateColor();
-  } else {
-    console.warn("Color element not found.");
+  const inputForm = document.getElementById("input-form");
+  if (inputForm) {
+    inputForm.addEventListener("submit", addExpense);
   }
-}
 
-// Function to update site style color
-function updateColor() {
-  const color = document.getElementById("color").value;
-  document.documentElement.style.setProperty("--primary-color", color);
-  localStorage.setItem("primaryColor", color);
-}
+  const clearFormButton = document.getElementById("clear-form");
+  if (clearFormButton) {
+    clearFormButton.addEventListener("click", clearForm);
+  }
 
-// Function to initialize Dropdown 
-function initializeDropdowns() {
-  const dropdowns = document.querySelectorAll(".dropdown-trigger");
-  M.Dropdown.init(dropdowns, {
-    coverTrigger: false,
-  });
-}
+  loadExpenses();
+});
 
 // Function to initialize application event listeners
 function initializeApp() {
@@ -462,8 +409,6 @@ function initializeApp() {
       console.log("Logout button clicked.");
       logoutUser();
     });
-  } else {
-    console.warn("Logout button not found!");
   }
 
   // Set up login form listener if available
@@ -476,8 +421,6 @@ function initializeApp() {
       console.log(`Login form submitted with username: ${username}`);
       loginUser(username, password);
     });
-  } else {
-    console.warn("Login form not found!");
   }
 
   // Set up registration form listener if available
@@ -490,8 +433,6 @@ function initializeApp() {
       console.log(`Registration form submitted with username: ${username}`);
       registerUser(username, password);
     });
-  } else {
-    console.warn("Registration form not found!");
   }
 
   // Check authentication status on load
@@ -499,22 +440,19 @@ function initializeApp() {
   console.log("Application initialized.");
 }
 
-// Add event listeners for form submission
-document.addEventListener("DOMContentLoaded", () => {
-  initializeApp();
-  const inputForm = document.getElementById("input-form");
-  if (inputForm) {
-    inputForm.addEventListener("submit", addExpense);
-  } else {
-    console.warn("Input form element not found.");
-  }
+// Function to initialize dropdown elements
+function initializeDropdowns() {
+  const dropdowns = document.querySelectorAll('.dropdown-trigger');
+  dropdowns.forEach(dropdown => {
+    M.Dropdown.init(dropdown);
+  });
+}
 
-  const clearFormButton = document.getElementById("clear-form");
-  if (clearFormButton) {
-    clearFormButton.addEventListener("click", clearForm);
-  } else {
-    console.warn("Clear form button not found.");
+// Function to update current year in footer
+function updateCurrentYear() {
+  const currentYear = new Date().getFullYear();
+  const footerYearElement = document.getElementById("current-year");
+  if (footerYearElement) {
+    footerYearElement.textContent = currentYear;
   }
-
-  loadExpenses();
-});
+}

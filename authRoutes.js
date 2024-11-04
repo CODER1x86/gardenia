@@ -1,3 +1,5 @@
+//authRoutes.js
+
 const express = require('express');
 const { body, validationResult } = require('express-validator');
 const db = require('./sqlite');
@@ -20,7 +22,6 @@ router.post('/register', [
     res.status(500).json({ error: "Registration failed." });
   }
 });
-
 router.post('/login', [
   body('username').notEmpty().isString(),
   body('password').notEmpty().isString()
@@ -44,7 +45,6 @@ router.post('/login', [
     res.status(500).json({ error: "Login failed." });
   }
 });
-
 router.post('/logout', (req, res) => {
   req.session.destroy();
   res.json({ success: true });

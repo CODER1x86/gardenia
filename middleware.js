@@ -1,3 +1,4 @@
+//middleware.js
 const authMiddleware = (req, res, next) => {
   if (req.session.user) {
     return next();
