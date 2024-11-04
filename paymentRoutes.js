@@ -51,4 +51,30 @@ router.post('/revenue-input', [
   }
 });
 
+// Edit Expense Route
+router.post("/edit-expense/:expense_id", async (req, res) => {
+  const { expense_id } = req.params;
+  const { category, item, price, expense_date } = req.body;
+  try {
+    await db.updateExpense(expense_id, category, item, price, expense_date);
+    res.json({ message: "Expense updated successfully." });
+  } catch (error) {
+    console.error("Error updating expense:", error);
+    res.status(500).json({ error: "Failed to update expense." });
+  }
+});
+
+// Delete Expense Route
+router.post("/delete-expense/:expense_id", async (req, res) => {
+  const { expense_id } = req.params;
+  try {
+    await db.deleteExpense(expense_id);
+    res.json({ message: "Expense deleted successfully." });
+  } catch (error) {
+    console.error("Error deleting expense:", error);
+    res.status(500).json({ error: "Failed to delete expense." });
+  }
+});
+
+
 module.exports = router;

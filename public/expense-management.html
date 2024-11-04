@@ -16,6 +16,10 @@
       text-align: center;
       margin-top: 20px;
     }
+    .expense-buttons {
+      text-align: center;
+      margin-top: 10px;
+    }
   </style>
 </head>
 <body>
@@ -69,6 +73,23 @@
         </button>
       </div>
     </form>
+    
+    <!-- Expense List -->
+    <h4>Manage Expenses</h4>
+    <table class="highlight">
+      <thead>
+        <tr>
+          <th>Category</th>
+          <th>Item</th>
+          <th>Amount</th>
+          <th>Date</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody id="expense-list">
+        <!-- Expense items will be populated dynamically here -->
+      </tbody>
+    </table>
   </div>
   <div id="footer-placeholder"></div>
   <!-- Placeholder for the footer -->

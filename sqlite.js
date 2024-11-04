@@ -264,6 +264,20 @@ const calculateAndInsertBalance = async (year) => {
   }
 };
 
+// Update an existing expense
+const updateExpense = async (expense_id, category, item, price, expense_date) => {
+  const query = `UPDATE expenses SET category = ?, item = ?, price = ?, expense_date = ?, last_updated = ? WHERE expense_id = ?`;
+  const params = [category, item, price, expense_date, new Date().toISOString(), expense_id];
+  await db.run(query, params);
+};
+
+// Delete an existing expense
+const deleteExpense = async (expense_id) => {
+  const query = `DELETE FROM expenses WHERE expense_id = ?`;
+  await db.run(query, [expense_id]);
+};
+
+
 // Module Exports
 module.exports = {
   initializeDatabase,
@@ -275,5 +289,7 @@ module.exports = {
   addInventoryItem,
   getStartingBalance,
   calculateAndInsertBalance,
-  dbQuery // Exporting dbQuery for modular usage
+  dbQuery, // Exporting dbQuery for modular usage
+  updateExpense,
+  deleteExpense
 };
