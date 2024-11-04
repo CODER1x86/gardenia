@@ -109,7 +109,6 @@ const getDb = () => {
   console.log("Fetching database instance");
   return db;
 };
-
 // Helper function to run database queries with parameterized statements
 const dbQuery = async (query, params = []) => {
   console.log(`Running query: ${query} with params: ${params}`);
@@ -210,6 +209,7 @@ const addInventoryItem = async (expense_id, location, usage_date, status) => {
     throw error;
   }
 };
+
 // Get the starting balance for a given year
 const getStartingBalance = async (year) => {
   try {
@@ -243,7 +243,6 @@ const getStartingBalance = async (year) => {
     throw error;
   }
 };
-
 // Calculate and insert balance for a given year
 const calculateAndInsertBalance = async (year) => {
   try {
@@ -265,9 +264,22 @@ const calculateAndInsertBalance = async (year) => {
 };
 
 // Update an existing expense
-const updateExpense = async (expense_id, category, item, price, expense_date) => {
+const updateExpense = async (
+  expense_id,
+  category,
+  item,
+  price,
+  expense_date
+) => {
   const query = `UPDATE expenses SET category = ?, item = ?, price = ?, expense_date = ?, last_updated = ? WHERE expense_id = ?`;
-  const params = [category, item, price, expense_date, new Date().toISOString(), expense_id];
+  const params = [
+    category,
+    item,
+    price,
+    expense_date,
+    new Date().toISOString(),
+    expense_id,
+  ];
   await db.run(query, params);
 };
 
@@ -276,7 +288,6 @@ const deleteExpense = async (expense_id) => {
   const query = `DELETE FROM expenses WHERE expense_id = ?`;
   await db.run(query, [expense_id]);
 };
-
 
 // Module Exports
 module.exports = {
@@ -291,5 +302,5 @@ module.exports = {
   calculateAndInsertBalance,
   dbQuery, // Exporting dbQuery for modular usage
   updateExpense,
-  deleteExpense
+  deleteExpense,
 };
