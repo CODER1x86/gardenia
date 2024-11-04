@@ -62,12 +62,12 @@ function hideLoadingSpinner() {
 }
 
 // Initialize date picker
-document.addEventListener('DOMContentLoaded', function() {
-  const datepickerElems = document.querySelectorAll('.datepicker');
+document.addEventListener("DOMContentLoaded", function () {
+  const datepickerElems = document.querySelectorAll(".datepicker");
   M.Datepicker.init(datepickerElems, {
-    format: 'yyyy-mm-dd',
+    format: "yyyy-mm-dd",
     defaultDate: new Date(),
-    setDefaultDate: true
+    setDefaultDate: true,
   });
 });
 
@@ -206,3 +206,179 @@ async function deleteExpense(expense_id) {
     }
   }
 }
+// Function to update the current year in the footer
+function updateCurrentYear() {
+  const footerYear = document.getElementById("footer-year");
+  if (footerYear) {
+    footerYear.textContent = new Date().getFullYear();
+  } else {
+    console.warn("Footer year element not found.");
+  }
+}
+
+// Function to initialize application event listeners
+function initializeApp() {
+  console.log("Initializing application...");
+
+  // Initialize Dropdowns
+  initializeDropdowns();
+
+  // Update current year in footer
+  updateCurrentYear();
+
+  // Set up logout button listener if available
+  const logoutButton = document.getElementById("logout-link");
+  if (logoutButton) {
+    logoutButton.addEventListener("click", (event) => {
+      event.preventDefault();
+      console.log("Logout button clicked.");
+      logoutUser();
+    });
+  } else {
+    console.warn("Logout button not found!");
+  }
+
+  // Set up login form listener if available
+  const loginForm = document.getElementById("login-form");
+  if (loginForm) {
+    loginForm.addEventListener("submit", (event) => {
+      event.preventDefault();
+      const username = document.getElementById("username").value;
+      const password = document.getElementById("password").value;
+      console.log(`Login form submitted with username: ${username}`);
+      loginUser(username, password);
+    });
+  } else {
+    console.warn("Login form not found!");
+  }
+
+  // Set up registration form listener if available
+  const registerForm = document.getElementById("register-form");
+  if (registerForm) {
+    registerForm.addEventListener("submit", (event) => {
+      event.preventDefault();
+      const username = document.getElementById("register-username").value;
+      const password = document.getElementById("register-password").value;
+      console.log(`Registration form submitted with username: ${username}`);
+      registerUser(username, password);
+    });
+  } else {
+    console.warn("Registration form not found!");
+  }
+
+  // Check authentication status on load
+  checkAuth();
+  console.log("Application initialized.");
+}
+
+// Function to check if a user is authenticated
+function checkAuth() {
+  console.log("Checking authentication status...");
+  fetch("/api/check-auth")
+    .then(validateResponse)
+    .then((data) => {
+      console.log("Authentication data received:", data);
+      const loginLink = document.getElementById("login-link");
+      const userGreeting = document.getElementById("user-greeting");
+      const logoutLink = document.getElementById("logout-link");
+      const userNameSpan = document.getElementById("user-name");
+
+      if (data.authenticated) {
+        if (loginLink) loginLink.style.display = "none";
+        if (userGreeting) userGreeting.style.display = "inline";
+        if (logoutLink) logoutLink.style.display = "inline";
+        if (userNameSpan) userNameSpan.textContent = data.username;
+        console.log("User is authenticated. Showing logout link.");
+      } else {
+        if (loginLink) loginLink.style.display = "inline";
+        if (userGreeting) userGreeting.style.display = "none";
+        if (logoutLink) logoutLink.style.display = "none";
+        console.log("User is not authenticated. Showing login link.");
+      }
+    })
+    .catch((error) => {
+      console.error("Error checking authentication:", error);
+      showError("Failed to check authentication status.");
+    });
+}
+
+// Function to clear form inputs
+function clearForm() {
+  document.getElementById("input-form").reset();
+  console.log("Form cleared.");
+}
+
+// Function to add a new expense
+function addExpense(event) {
+  event.preventDefault();
+  const category = document.getElementById("category").value;
+  const item = document.getElementById("item").value;
+  const amount = document.getElementById("amount").value;
+  const paymentDay = document.getElementById("payment-day").value;
+
+  showLoadingSpinner();
+  fetch("/api/expense-input", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ category, item, amount, payment_date: paymentDay }),
+  })
+    .then(validateResponse)
+    .then((data) => {
+      console.log("Expense added:", data);
+      hideLoadingSpinner();
+      showSuccess("Expense added successfully.");
+      clearForm();
+      loadExpenses();
+    })
+    .catch((error) => {
+      console.error("Error adding expense:", error);
+      showError("Failed to add expense.");
+      hideLoadingSpinner();
+    });
+}
+
+// Function to load expenses and display them in the table
+function loadExpenses() {
+  console.log("Loading expenses...");
+  showLoadingSpinner();
+  fetch("/api/expenses")
+    .then(validateResponse)
+    .then((expenses) => {
+      const expenseList = document.getElementById("expense-list");
+      if (expenseList) {
+        expenseList.innerHTML = expenses
+          .map((expense) => {
+            return `
+              <tr>
+                <td>${expense.category}</td>
+                <td>${expense.item}</td>
+                <td>${expense.price}</td>
+                <td>${expense.expense_date}</td>
+                <td>
+                  <button class="btn-small" onclick="editExpense(${expense.expense_id})">Edit</button>
+                  <button class="btn-small red" onclick="deleteExpense(${expense.expense_id})">Delete</button>
+                </td>
+              </tr>
+            `;
+          })
+          .join("");
+        console.log("Expenses loaded and displayed.");
+      } else {
+        console.error("Expense list container not found.");
+      }
+      hideLoadingSpinner();
+    })
+    .catch((error) => {
+      console.error("Error loading expenses:", error);
+      showError("Failed to load expenses.");
+      hideLoadingSpinner();
+    });
+}
+
+// Add event listeners for form submission
+document.addEventListener("DOMContentLoaded", () => {
+  initializeApp();
+  document.getElementById("input-form").addEventListener("submit", addExpense);
+  document.getElementById("clear-form").addEventListener("click", clearForm);
+  loadExpenses();
+});
