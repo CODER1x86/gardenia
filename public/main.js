@@ -430,7 +430,7 @@ function updateColor() {
   localStorage.setItem("primaryColor", color);
 }
 
-// Function to initialize Dropdown Menus
+// Function to initialize Dropdown 
 function initializeDropdowns() {
   const dropdowns = document.querySelectorAll(".dropdown-trigger");
   M.Dropdown.init(dropdowns, {
