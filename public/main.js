@@ -51,65 +51,6 @@ function initializeDropdowns() {
   M.Dropdown.init(dropdownElems, { hover: true, coverTrigger: false });
   console.log("Dropdowns initialized.");
 }
-
-// Call this function within initializeApp
-function initializeApp() {
-  console.log("Initializing application...");
-
-  // Initialize Dropdowns
-  initializeDropdowns();
-
-  // Set up logout button listener if available
-  const logoutButton = document.getElementById("logout-link");
-  if (logoutButton) {
-    logoutButton.addEventListener("click", (event) => {
-      event.preventDefault();
-      console.log("Logout button clicked.");
-      logoutUser();
-    });
-  } else {
-    console.warn("Logout button not found!");
-  }
-
-  // (Rest of your existing code...)
-
-  // Check authentication status on load
-  checkAuth();
-  console.log("Application initialized.");
-}
-
-// Function to check if a user is authenticated
-// Function to check if a user is authenticated
-function checkAuth() {
-  console.log("Checking authentication status...");
-  fetch("/api/check-auth")
-    .then(validateResponse)
-    .then((data) => {
-      console.log("Authentication data received:", data);
-      const loginLink = document.getElementById("login-link");
-      const userGreeting = document.getElementById("user-greeting");
-      const logoutLink = document.getElementById("logout-link");
-      const userNameSpan = document.getElementById("user-name");
-
-      if (data.authenticated) {
-        if (loginLink) loginLink.style.display = "none";
-        if (userGreeting) userGreeting.style.display = "inline";
-        if (logoutLink) logoutLink.style.display = "inline";
-        if (userNameSpan) userNameSpan.textContent = data.username;
-        console.log("User is authenticated. Showing logout link.");
-      } else {
-        if (loginLink) loginLink.style.display = "inline";
-        if (userGreeting) userGreeting.style.display = "none";
-        if (logoutLink) logoutLink.style.display = "none";
-        console.log("User is not authenticated. Showing login link.");
-      }
-    })
-    .catch((error) => {
-      console.error("Error checking authentication:", error);
-      showError("Failed to check authentication status.");
-    });
-}
-
 // Function to handle user registration
 function registerUser(username, password) {
   console.log(`Attempting to register user with username: ${username}`);
@@ -196,10 +137,15 @@ function loadTemplate(containerId, templatePath) {
       hideLoadingSpinner();
     });
 }
-
 // Function to initialize application event listeners
 function initializeApp() {
   console.log("Initializing application...");
+
+  // Initialize Dropdowns
+  initializeDropdowns();
+
+  // Update current year in footer
+  updateCurrentYear();
 
   // Set up logout button listener if available
   const logoutButton = document.getElementById("logout-link");
@@ -245,5 +191,37 @@ function initializeApp() {
   checkAuth();
   console.log("Application initialized.");
 }
+
+// Function to check if a user is authenticated
+function checkAuth() {
+  console.log("Checking authentication status...");
+  fetch("/api/check-auth")
+    .then(validateResponse)
+    .then((data) => {
+      console.log("Authentication data received:", data);
+      const loginLink = document.getElementById("login-link");
+      const userGreeting = document.getElementById("user-greeting");
+      const logoutLink = document.getElementById("logout-link");
+      const userNameSpan = document.getElementById("user-name");
+
+      if (data.authenticated) {
+        if (loginLink) loginLink.style.display = "none";
+        if (userGreeting) userGreeting.style.display = "inline";
+        if (logoutLink) logoutLink.style.display = "inline";
+        if (userNameSpan) userNameSpan.textContent = data.username;
+        console.log("User is authenticated. Showing logout link.");
+      } else {
+        if (loginLink) loginLink.style.display = "inline";
+        if (userGreeting) userGreeting.style.display = "none";
+        if (logoutLink) logoutLink.style.display = "none";
+        console.log("User is not authenticated. Showing login link.");
+      }
+    })
+    .catch((error) => {
+      console.error("Error checking authentication:", error);
+      showError("Failed to check authentication status.");
+    });
+}
+
 // Call initializeApp to start the application
 document.addEventListener("DOMContentLoaded", initializeApp);
