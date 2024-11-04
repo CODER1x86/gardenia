@@ -24,6 +24,7 @@ function validateResponse(response) {
   }
   return response.json();
 }
+
 // Show a loading spinner during operations and log the event
 function showLoadingSpinner() {
   const spinner = document.getElementById("loading-spinner");
@@ -45,6 +46,7 @@ function hideLoadingSpinner() {
     console.warn("Loading spinner element not found.");
   }
 }
+
 // Function to initialize dropdowns
 function initializeDropdowns() {
   const dropdownElems = document.querySelectorAll(".dropdown-trigger");
@@ -113,6 +115,7 @@ function logoutUser() {
       hideLoadingSpinner();
     });
 }
+
 // Function to dynamically load HTML templates into a specified container
 function loadTemplate(containerId, templatePath) {
   console.log(
@@ -137,6 +140,58 @@ function loadTemplate(containerId, templatePath) {
       hideLoadingSpinner();
     });
 }
+// Edit Expense Function
+async function editExpense(expense_id) {
+  const newCategory = prompt("Enter new category:");
+  const newItem = prompt("Enter new item:");
+  const newPrice = prompt("Enter new price:");
+  const newDate = prompt("Enter new date (YYYY-MM-DD):");
+
+  const response = await fetch(`/expenses/edit/${expense_id}`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      category: newCategory,
+      item: newItem,
+      price: newPrice,
+      expense_date: newDate,
+    }),
+  });
+
+  if (response.ok) {
+    alert("Expense updated successfully.");
+    window.location.reload();
+  } else {
+    alert("Failed to update expense.");
+  }
+}
+
+// Delete Expense Function
+async function deleteExpense(expense_id) {
+  if (confirm("Are you sure you want to delete this expense?")) {
+    const response = await fetch(`/expenses/delete/${expense_id}`, {
+      method: "POST",
+    });
+
+    if (response.ok) {
+      alert("Expense deleted successfully.");
+      window.location.reload();
+    } else {
+      alert("Failed to delete expense.");
+    }
+  }
+}
+
+// Function to update the current year in the footer
+function updateCurrentYear() {
+  const footerYear = document.getElementById("footer-year");
+  if (footerYear) {
+    footerYear.textContent = new Date().getFullYear();
+  } else {
+    console.warn("Footer year element not found.");
+  }
+}
+
 // Function to initialize application event listeners
 function initializeApp() {
   console.log("Initializing application...");
