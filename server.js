@@ -82,7 +82,8 @@ app.get('/api/check-auth', (req, res) => {
 app.get('/api/expenses', (req, res) => {
   db.all('SELECT * FROM expenses', (err, rows) => {
     if (err) {
-      return res.status(500).json({ error: 'Database error' });
+      console.error('Database error:', err);  // Enhanced logging
+      return res.status(500).json({ error: 'Database error', details: err.message });
     }
     res.json(rows);
   });
