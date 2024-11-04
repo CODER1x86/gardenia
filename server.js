@@ -4,6 +4,7 @@ const path = require("path");
 const {
   initializeDatabase,
   getDb,
+  db,
   getRevenue,
   getExpensesSum,
   getInventory,
@@ -86,6 +87,56 @@ initializeDatabase().then(() => {
     });
   });
 });
+
+// Authentication Check Endpoint
+app.get("/api/check-auth", (req, res) => {
+  if (req.session.userId) {
+    res.json({ authenticated: true, username: req.session.username });
+  } else {
+    res.json({ authenticated: false });
+  }
+});
+
+// User Registration Endpoint
+app.post("/api/register", async (req, res) => {
+  const { username, password } = req.body;
+  try {
+    await db.run("INSERT INTO users (username, password) VALUES (?, ?)", [
+      username,
+      password,
+    ]);
+    res.json({ success: true });
+  } catch (error) {
+    res.status(500).json({ error: "Registration failed." });
+  }
+});
+
+// User Login Endpoint
+app.post("/api/login", async (req, res) => {
+  const { username, password } = req.body;
+  try {
+    const user = await db.get(
+      "SELECT * FROM users WHERE username = ? AND password = ?",
+      [username, password]
+    );
+    if (user) {
+      req.session.userId = user.id;
+      req.session.username = user.username;
+      res.json({ success: true });
+    } else {
+      res.status(401).json({ error: "Invalid credentials." });
+    }
+  } catch (error) {
+    res.status(500).json({ error: "Login failed." });
+  }
+});
+
+// User Logout Endpoint
+app.post("/api/logout", (req, res) => {
+  req.session.destroy();
+  res.json({ success: true });
+});
+
 // 6. API Endpoints for Data Retrieval and Calculations
 
 // Retrieve Budget Data

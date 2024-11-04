@@ -45,6 +45,40 @@ function hideLoadingSpinner() {
     console.warn("Loading spinner element not found.");
   }
 }
+// Function to initialize dropdowns
+function initializeDropdowns() {
+  const dropdownElems = document.querySelectorAll(".dropdown-trigger");
+  M.Dropdown.init(dropdownElems, { hover: true, coverTrigger: false });
+  console.log("Dropdowns initialized.");
+}
+
+// Call this function within initializeApp
+function initializeApp() {
+  console.log("Initializing application...");
+
+  // Initialize Dropdowns
+  initializeDropdowns();
+
+  // Set up logout button listener if available
+  const logoutButton = document.getElementById("logout-link");
+  if (logoutButton) {
+    logoutButton.addEventListener("click", (event) => {
+      event.preventDefault();
+      console.log("Logout button clicked.");
+      logoutUser();
+    });
+  } else {
+    console.warn("Logout button not found!");
+  }
+
+  // (Rest of your existing code...)
+
+  // Check authentication status on load
+  checkAuth();
+  console.log("Application initialized.");
+}
+
+// Function to check if a user is authenticated
 // Function to check if a user is authenticated
 function checkAuth() {
   console.log("Checking authentication status...");
@@ -53,13 +87,19 @@ function checkAuth() {
     .then((data) => {
       console.log("Authentication data received:", data);
       const loginLink = document.getElementById("login-link");
+      const userGreeting = document.getElementById("user-greeting");
       const logoutLink = document.getElementById("logout-link");
+      const userNameSpan = document.getElementById("user-name");
+
       if (data.authenticated) {
         if (loginLink) loginLink.style.display = "none";
+        if (userGreeting) userGreeting.style.display = "inline";
         if (logoutLink) logoutLink.style.display = "inline";
+        if (userNameSpan) userNameSpan.textContent = data.username;
         console.log("User is authenticated. Showing logout link.");
       } else {
         if (loginLink) loginLink.style.display = "inline";
+        if (userGreeting) userGreeting.style.display = "none";
         if (logoutLink) logoutLink.style.display = "none";
         console.log("User is not authenticated. Showing login link.");
       }
