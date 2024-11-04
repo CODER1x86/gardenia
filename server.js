@@ -1,92 +1,175 @@
-const winston = require("winston");
-const express = require("express");
-const session = require("express-session");
-const cookieParser = require("cookie-parser");
-const helmet = require("helmet");
-const rateLimit = require("express-rate-limit");
-const authRoutes = require("./authRoutes");
-const paymentRoutes = require("./paymentRoutes");
-const unitRoutes = require("./unitRoutes");
-const { ensureAuthenticated } = require("./middleware");
-const db = require("./sqlite"); // Ensure this import is correct based on your structure
-
-// Logger setup
-const logger = winston.createLogger({
-  level: "info",
-  format: winston.format.json(),
-  transports: [
-    new winston.transports.File({ filename: "error.log", level: "error" }),
-    new winston.transports.File({ filename: "combined.log" }),
-  ],
-});
-
-if (process.env.NODE_ENV !== "production") {
-  logger.add(
-    new winston.transports.Console({
-      format: winston.format.simple(),
-    })
-  );
-}
-
+const express = require('express');
+const bodyParser = require('body-parser');
+const session = require('express-session');
+const path = require('path');
+const sqlite3 = require('sqlite3').verbose();
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-app.use(express.json());
-app.use(cookieParser());
-app.use(helmet()); // Adding Helmet to enhance security
+// Middleware setup
+app.use(bodyParser.json());
+app.use(bodyParser.urlencoded({ extended: true }));
+app.use(session({
+  secret: 'your_secret_key',
+  resave: false,
+  saveUninitialized: true,
+}));
 
-// Rate limiting middleware
-const limiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 100, // Limit each IP to 100 requests per windowMs
-  message: "Too many requests from this IP, please try again later.",
-});
-app.use(limiter);
+// Serve static files
+app.use(express.static(path.join(__dirname, 'public')));
 
-app.use(
-  session({
-    secret: "your-secret-key",
-    resave: false,
-    saveUninitialized: true,
-    cookie: { secure: false }, // Change to true if using HTTPS
-  })
-);
-
-// Use route modules
-app.use("/api", authRoutes);
-app.use("/api", paymentRoutes);
-app.use("/api", unitRoutes);
-
-// Use winston for logging
-app.use((req, res, next) => {
-  logger.info(`${req.method} ${req.url}`);
-  next();
-});
-
-// Error handling middleware
-app.use((err, req, res, next) => {
-  logger.error(err.stack);
-  res.status(500).send("Something broke!");
-});
-
-// Content Security Policy (CSP) setup
-app.use(
-  helmet.contentSecurityPolicy({
-    directives: {
-      defaultSrc: ["'self'"],
-      scriptSrc: ["'self'", "https://apis.google.com"],
-      styleSrc: ["'self'", "https://fonts.googleapis.com"],
-      fontSrc: ["'self'", "https://fonts.gstatic.com"],
-    },
-  })
-);
-
-app.listen(PORT, () => {
-  logger.info(`Server running on http://localhost:${PORT}`);
-  console.log(
-    `Server is running in ${process.env.NODE_ENV} mode on port ${PORT}`
-  );
-  if (process.env.NODE_ENV === "production") {
-    console.log("Ensure HTTPS is enforced for production use.");
+// Database setup
+const db = new sqlite3.Database('./database.db', (err) => {
+  if (err) {
+    console.error('Could not connect to database', err);
+  } else {
+    console.log('Connected to database');
   }
+});
+// User registration route
+app.post('/api/register', (req, res) => {
+  const { username, password } = req.body;
+  db.get('SELECT * FROM users WHERE username = ?', [username], (err, row) => {
+    if (err) {
+      return res.status(500).json({ error: 'Database error' });
+    }
+    if (row) {
+      return res.status(409).json({ error: 'Username already exists' });
+    }
+    db.run('INSERT INTO users (username, password) VALUES (?, ?)', [username, password], (err) => {
+      if (err) {
+        return res.status(500).json({ error: 'Database error' });
+      }
+      res.status(201).json({ message: 'User registered successfully' });
+    });
+  });
+});
+
+// User login route
+app.post('/api/login', (req, res) => {
+  const { username, password } = req.body;
+  db.get('SELECT * FROM users WHERE username = ? AND password = ?', [username, password], (err, row) => {
+    if (err) {
+      return res.status(500).json({ error: 'Database error' });
+    }
+    if (!row) {
+      return res.status(401).json({ error: 'Invalid credentials' });
+    }
+    req.session.user = row;
+    res.json({ message: 'Login successful', username: row.username });
+  });
+});
+
+// User logout route
+app.post('/api/logout', (req, res) => {
+  req.session.destroy((err) => {
+    if (err) {
+      return res.status(500).json({ error: 'Failed to logout' });
+    }
+    res.json({ message: 'Logout successful' });
+  });
+});
+
+// Check authentication status
+app.get('/api/check-auth', (req, res) => {
+  if (req.session.user) {
+    res.json({ authenticated: true, username: req.session.user.username });
+  } else {
+    res.json({ authenticated: false });
+  }
+});
+// Get all expenses
+app.get('/api/expenses', (req, res) => {
+  db.all('SELECT * FROM expenses', (err, rows) => {
+    if (err) {
+      return res.status(500).json({ error: 'Database error' });
+    }
+    res.json(rows);
+  });
+});
+
+// Add a new expense
+app.post('/api/expense-input', (req, res) => {
+  const { category, item, amount, payment_date } = req.body;
+  db.run('INSERT INTO expenses (category, item, price, expense_date) VALUES (?, ?, ?, ?)', [category, item, amount, payment_date], (err) => {
+    if (err) {
+      return res.status(500).json({ error: 'Database error' });
+    }
+    res.status(201).json({ message: 'Expense added successfully' });
+  });
+});
+
+// Edit an existing expense
+app.post('/api/edit-expense/:id', (req, res) => {
+  const { category, item, price, expense_date } = req.body;
+  db.run('UPDATE expenses SET category = ?, item = ?, price = ?, expense_date = ? WHERE expense_id = ?', [category, item, price, expense_date, req.params.id], (err) => {
+    if (err) {
+      return res.status(500).json({ error: 'Database error' });
+    }
+    res.json({ message: 'Expense updated successfully' });
+  });
+});
+
+// Delete an expense
+app.post('/api/delete-expense/:id', (req, res) => {
+  db.run('DELETE FROM expenses WHERE expense_id = ?', [req.params.id], (err) => {
+    if (err) {
+      return res.status(500).json({ error: 'Database error' });
+    }
+    res.json({ message: 'Expense deleted successfully' });
+  });
+});
+
+// Get all revenues
+app.get('/api/revenues', (req, res) => {
+  db.all('SELECT * FROM revenues', (err, rows) => {
+    if (err) {
+      return res.status(500).json({ error: 'Database error' });
+    }
+    res.json(rows);
+  });
+});
+
+// Add a new revenue
+app.post('/api/revenue-input', (req, res) => {
+  const { unit_number, amount, payment_date, payment_method } = req.body;
+  db.run('INSERT INTO revenues (unit_number, amount, payment_date, payment_method) VALUES (?, ?, ?, ?)', [unit_number, amount, payment_date, payment_method], (err) => {
+    if (err) {
+      return res.status(500).json({ error: 'Database error' });
+    }
+    res.status(201).json({ message: 'Revenue added successfully' });
+  });
+});
+// Get user profile
+app.get('/api/profile', (req, res) => {
+  const userId = req.session.user?.id;
+  if (!userId) {
+    return res.status(401).json({ error: 'Not authenticated' });
+  }
+  db.get('SELECT first_name, last_name, birthdate, email FROM users WHERE id = ?', [userId], (err, row) => {
+    if (err) {
+      return res.status(500).json({ error: 'Database error' });
+    }
+    res.json(row);
+  });
+});
+
+// Update user profile
+app.post('/api/profile', (req, res) => {
+  const userId = req.session.user?.id;
+  const { first_name, last_name, birthdate, email } = req.body;
+  if (!userId) {
+    return res.status(401).json({ error: 'Not authenticated' });
+  }
+  db.run('UPDATE users SET first_name = ?, last_name = ?, birthdate = ?, email = ? WHERE id = ?', [first_name, last_name, birthdate, email, userId], (err) => {
+    if (err) {
+      return res.status(500).json({ error: 'Database error' });
+    }
+    res.json({ message: 'Profile updated successfully' });
+  });
+});
+
+// Start the server
+app.listen(PORT, () => {
+  console.log(`Server running on port ${PORT}`);
 });

@@ -3,6 +3,7 @@ const { body, validationResult } = require('express-validator');
 const db = require('./sqlite');
 const router = express.Router();
 
+// Add a new expense
 router.post('/expense-input', [
   body('unit_id').isInt(),
   body('category').notEmpty().isString(),
@@ -28,6 +29,7 @@ router.post('/expense-input', [
   }
 });
 
+// Add a new revenue
 router.post('/revenue-input', [
   body('unit_id').isInt(),
   body('amount').isFloat(),
@@ -51,7 +53,7 @@ router.post('/revenue-input', [
   }
 });
 
-// Edit Expense Route
+// Edit an existing expense
 router.post("/edit-expense/:expense_id", async (req, res) => {
   const { expense_id } = req.params;
   const { category, item, price, expense_date } = req.body;
@@ -64,7 +66,7 @@ router.post("/edit-expense/:expense_id", async (req, res) => {
   }
 });
 
-// Delete Expense Route
+// Delete an existing expense
 router.post("/delete-expense/:expense_id", async (req, res) => {
   const { expense_id } = req.params;
   try {

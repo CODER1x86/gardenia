@@ -1,7 +1,8 @@
-module.exports.ensureAuthenticated = (req, res, next) => {
-  if (req.session.userId) {
+const authMiddleware = (req, res, next) => {
+  if (req.session.user) {
     return next();
-  } else {
-    res.status(401).json({ error: 'Unauthorized' });
   }
+  res.status(401).json({ error: 'Not authenticated' });
 };
+
+module.exports = { authMiddleware };
