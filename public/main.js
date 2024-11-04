@@ -249,7 +249,7 @@ function loadTemplate(containerId, templatePath) {
   );
   showLoadingSpinner();
   fetch(templatePath)
-    .then(validateResponse)
+    .then((response) => response.text()) // Use .text() instead of .json()
     .then((htmlContent) => {
       const container = document.getElementById(containerId);
       if (container) {
