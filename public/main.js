@@ -1,5 +1,3 @@
-// main.js
-
 // Function to show error messages to the user and log errors to console
 function showError(message) {
   const errorElement = document.getElementById("error-message");
@@ -26,7 +24,6 @@ function validateResponse(response) {
   }
   return response.json();
 }
-
 // Show a loading spinner during operations and log the event
 function showLoadingSpinner() {
   const spinner = document.getElementById("loading-spinner");
@@ -48,7 +45,6 @@ function hideLoadingSpinner() {
     console.warn("Loading spinner element not found.");
   }
 }
-
 // Function to check if a user is authenticated
 function checkAuth() {
   console.log("Checking authentication status...");
@@ -136,7 +132,6 @@ function logoutUser() {
       hideLoadingSpinner();
     });
 }
-
 // Function to dynamically load HTML templates into a specified container
 function loadTemplate(containerId, templatePath) {
   console.log(
@@ -162,14 +157,11 @@ function loadTemplate(containerId, templatePath) {
     });
 }
 
+// Function to initialize application event listeners
 function initializeApp() {
   console.log("Initializing application...");
 
-  // Load header and footer
-  loadTemplate("header-container", "./header.html");
-  loadTemplate("footer-container", "./footer.html");
-
-  // Set up logout button listener
+  // Set up logout button listener if available
   const logoutButton = document.getElementById("logout-link");
   if (logoutButton) {
     logoutButton.addEventListener("click", (event) => {
@@ -177,9 +169,11 @@ function initializeApp() {
       console.log("Logout button clicked.");
       logoutUser();
     });
+  } else {
+    console.warn("Logout button not found!");
   }
 
-  // Set up login form listener
+  // Set up login form listener if available
   const loginForm = document.getElementById("login-form");
   if (loginForm) {
     loginForm.addEventListener("submit", (event) => {
@@ -189,9 +183,11 @@ function initializeApp() {
       console.log(`Login form submitted with username: ${username}`);
       loginUser(username, password);
     });
+  } else {
+    console.warn("Login form not found!");
   }
 
-  // Set up registration form listener
+  // Set up registration form listener if available
   const registerForm = document.getElementById("register-form");
   if (registerForm) {
     registerForm.addEventListener("submit", (event) => {
@@ -201,11 +197,13 @@ function initializeApp() {
       console.log(`Registration form submitted with username: ${username}`);
       registerUser(username, password);
     });
+  } else {
+    console.warn("Registration form not found!");
   }
 
   // Check authentication status on load
   checkAuth();
   console.log("Application initialized.");
 }
-
+// Call initializeApp to start the application
 document.addEventListener("DOMContentLoaded", initializeApp);

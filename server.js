@@ -1,5 +1,3 @@
-// server.js
-
 // 1. Import and Initialize Dependencies
 const express = require("express");
 const path = require("path");
@@ -12,7 +10,7 @@ const {
   addInventoryItem,
   getStartingBalance,
   calculateAndInsertBalance,
-  getExpenses // Added to fetch all expenses
+  getExpenses, // Added to fetch all expenses
 } = require("./sqlite.js");
 const session = require("express-session");
 const cookieParser = require("cookie-parser");
@@ -20,7 +18,6 @@ const nodemailer = require("nodemailer");
 require("dotenv").config();
 const bodyParser = require("body-parser");
 const app = express();
-
 // 2. Middleware Setup
 app.use(cookieParser());
 app.use(
@@ -36,7 +33,6 @@ app.use(
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json());
 app.use(express.static(path.join(__dirname, "public")));
-
 // 3. Protect Specific Routes (requires authentication)
 function ensureAuthenticated(req, res, next) {
   if (req.session.userId) {
@@ -59,17 +55,16 @@ const transporter = nodemailer.createTransport({
     pass: process.env.EMAIL_PASS,
   },
 });
-
 // 5. Database Initialization and Root Route
 initializeDatabase().then(() => {
   global.db = getDb();
   console.log("Database initialized.");
-  
+
   // Serve Root Route
   app.get("/", (req, res) => {
     res.sendFile(path.join(__dirname, "public", "index.html"));
   });
-  
+
   // Serve Static Pages
   const pages = [
     "index.html",
@@ -91,7 +86,6 @@ initializeDatabase().then(() => {
     });
   });
 });
-
 // 6. API Endpoints for Data Retrieval and Calculations
 
 // Retrieve Budget Data
@@ -144,14 +138,17 @@ app.get("/api/starting-balance", ensureAuthenticated, async (req, res) => {
 app.get("/api/months", ensureAuthenticated, async (req, res) => {
   const year = req.query.year;
   try {
-    const result = await global.db.all(`
+    const result = await global.db.all(
+      `
       SELECT DISTINCT strftime('%m', expense_date) AS month
       FROM expenses WHERE strftime('%Y', expense_date) = ?
       UNION
       SELECT DISTINCT strftime('%m', payment_date) AS month
       FROM revenue WHERE strftime('%Y', payment_date) = ?
-    `, [year, year]);
-    res.json(result.map(row => row.month));
+    `,
+      [year, year]
+    );
+    res.json(result.map((row) => row.month));
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
@@ -165,19 +162,27 @@ app.get("/api/years", ensureAuthenticated, async (req, res) => {
       UNION
       SELECT DISTINCT strftime('%Y', payment_date) AS year FROM revenue
     `);
-    res.json(result.map(row => row.year));
+    res.json(result.map((row) => row.year));
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
 });
-
 // Expense Input Endpoint
 app.post("/api/expense-input", ensureAuthenticated, async (req, res) => {
-  const { unit_id, category, item, price, expense_date, receipt_photo } = req.body;
+  const { unit_id, category, item, price, expense_date, receipt_photo } =
+    req.body;
   try {
     await global.db.run(
       "INSERT INTO expenses (unit_id, category, item, price, expense_date, last_updated, receipt_photo) VALUES (?, ?, ?, ?, ?, ?, ?)",
-      [unit_id, category, item, price, expense_date, new Date().toISOString(), receipt_photo]
+      [
+        unit_id,
+        category,
+        item,
+        price,
+        expense_date,
+        new Date().toISOString(),
+        receipt_photo,
+      ]
     );
     res.json({ success: true });
   } catch (error) {
@@ -198,7 +203,8 @@ app.post("/api/revenue-input", ensureAuthenticated, async (req, res) => {
     res.status(500).json({ success: false, error: error.message });
   }
 });
-
 // Start the Server
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => console.log(`Server running on http://localhost:${PORT}`));
+app.listen(PORT, () =>
+  console.log(`Server running on http://localhost:${PORT}`)
+);
