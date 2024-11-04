@@ -24,9 +24,21 @@ document.addEventListener("DOMContentLoaded", function () {
     console.warn("Profile form element not found.");
   }
 
-  loadExpenses();
-});
+  // Check if expenses load is necessary
+  const expenseList = document.getElementById("expense-list");
+  if (expenseList) {
+    loadExpenses();
+  } else {
+    console.warn("Expense list container not found.");
+  }
 
+  // Check if profile fetch is necessary
+  if (profileForm) {
+    fetchProfile();
+  } else {
+    console.warn("Profile form not present for fetching profile.");
+  }
+});
 // Load header and footer templates
 function loadHeaderFooter() {
   loadTemplate("header-placeholder", "header.html");
@@ -42,6 +54,7 @@ function updateCurrentYear() {
     console.warn("Footer year element not found.");
   }
 }
+
 // Function to show error messages to the user and log errors to console
 function showError(message) {
   const errorElement = document.getElementById("feedback-error");
@@ -70,7 +83,6 @@ function showSuccess(message) {
     console.warn("Success element not found.");
   }
 }
-
 // Function to validate API responses and log issues
 function validateResponse(response) {
   console.log(`Validating response: Status ${response.status}`);
@@ -104,6 +116,7 @@ function hideLoadingSpinner() {
     console.warn("Loading spinner element not found.");
   }
 }
+
 // Initialize date picker
 document.addEventListener("DOMContentLoaded", function () {
   const datepickerElems = document.querySelectorAll(".datepicker");
@@ -113,7 +126,6 @@ document.addEventListener("DOMContentLoaded", function () {
     setDefaultDate: true,
   });
 });
-
 // Function to handle user registration
 function registerUser(username, password) {
   console.log(`Attempting to register user with username: ${username}`);
@@ -176,7 +188,6 @@ function logoutUser() {
       hideLoadingSpinner();
     });
 }
-
 // Function to check if a user is authenticated
 function checkAuth() {
   console.log("Checking authentication status...");
@@ -207,14 +218,13 @@ function checkAuth() {
       showError("Failed to check authentication status.");
     });
 }
+
 // Function to dynamically load HTML templates into a specified container
 function loadTemplate(containerId, templatePath) {
-  console.log(
-    `Loading template from ${templatePath} into container ${containerId}`
-  );
+  console.log(`Loading template from ${templatePath} into container ${containerId}`);
   showLoadingSpinner();
   fetch(templatePath)
-    .then((response) => response.text()) // Use .text() instead of .json()
+    .then(response => response.text()) // Use .text() instead of .json()
     .then((htmlContent) => {
       const container = document.getElementById(containerId);
       if (container) {
@@ -231,7 +241,6 @@ function loadTemplate(containerId, templatePath) {
       hideLoadingSpinner();
     });
 }
-
 // Edit Expense Function
 async function editExpense(expense_id) {
   const newCategory = prompt("Enter new category:");
@@ -312,7 +321,6 @@ function addExpense(event) {
       hideLoadingSpinner();
     });
 }
-
 // Function to load expenses and display them in the table
 function loadExpenses() {
   console.log("Loading expenses...");
@@ -350,6 +358,7 @@ function loadExpenses() {
       hideLoadingSpinner();
     });
 }
+
 // Function to fetch user profile details
 function fetchProfile() {
   console.log("Fetching profile details...");
@@ -402,8 +411,17 @@ function updateProfile(event) {
       hideLoadingSpinner();
     });
 }
-
-document.addEventListener("DOMContentLoaded", fetchProfile);
+// Initialize site style color
+function initializeSiteStyle() {
+  const storedColor = localStorage.getItem("primaryColor") || "#1a73e8";
+  const colorElement = document.getElementById("color");
+  if (colorElement) {
+    colorElement.value = storedColor;
+    updateColor();
+  } else {
+    console.warn("Color element not found.");
+  }
+}
 
 // Function to update site style color
 function updateColor() {
@@ -411,13 +429,8 @@ function updateColor() {
   document.documentElement.style.setProperty("--primary-color", color);
   localStorage.setItem("primaryColor", color);
 }
-// Initialize site style color
-function initializeSiteStyle() {
-  const storedColor = localStorage.getItem("primaryColor") || "#1a73e8";
-  document.getElementById("color").value = storedColor;
-  updateColor();
-}
 
+// Function to initialize Dropdown Menus
 function initializeDropdowns() {
   const dropdowns = document.querySelectorAll(".dropdown-trigger");
   M.Dropdown.init(dropdowns, {
