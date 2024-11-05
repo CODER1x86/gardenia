@@ -12,6 +12,15 @@ import {
 import { initializeSiteStyle, updateColor } from "./js/siteStyle.js";
 import { showLoadingSpinner, hideLoadingSpinner } from "./js/spinner.js";
 import { validateResponse, showError, showSuccess } from "./js/validation.js";
+import { fetchAvailableBalance, fetchTotalRevenue, fetchTotalExpenses } from './js/financialData.js';
+
+// Call the functions on page load
+document.addEventListener('DOMContentLoaded', function() {
+  fetchAvailableBalance();
+  fetchTotalRevenue();
+  fetchTotalExpenses();
+});
+
 
 document.addEventListener("DOMContentLoaded", function () {
   loadTemplate("header-placeholder", "header.html");
