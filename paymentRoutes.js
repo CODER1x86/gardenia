@@ -2,11 +2,33 @@
 
 const express = require('express');
 const { body, validationResult } = require('express-validator');
-const db = require('./sqlite');
+const sqlite3 = require('sqlite3').verbose();
+const db = new sqlite3.Database('./.data/database.db');
+const { authMiddleware } = require('./middleware');
 const router = express.Router();
 
-// Add a new expense
-router.post('/expense-input', [
+// Public endpoint for fetching expenses
+router.get('/expenses', (req, res) => {
+  db.all('SELECT * FROM expenses', (err, rows) => {
+    if (err) {
+      return res.status(500).json({ error: err.message });
+    }
+    res.json(rows);
+  });
+});
+
+// Public endpoint for fetching revenues
+router.get('/revenues', (req, res) => {
+  db.all('SELECT * FROM revenues', (err, rows) => {
+    if (err) {
+      return res.status(500).json({ error: err.message });
+    }
+    res.json(rows);
+  });
+});
+
+// Add a new expense (protected route)
+router.post('/expense-input', authMiddleware, [
   body('unit_id').isInt(),
   body('category').notEmpty().isString(),
   body('item').notEmpty().isString(),
@@ -30,8 +52,9 @@ router.post('/expense-input', [
     res.status(500).json({ success: false, error: error.message });
   }
 });
-// Add a new revenue
-router.post('/revenue-input', [
+
+// Add a new revenue (protected route)
+router.post('/revenue-input', authMiddleware, [
   body('unit_id').isInt(),
   body('amount').isFloat(),
   body('payment_date').isISO8601(),
@@ -53,8 +76,9 @@ router.post('/revenue-input', [
     res.status(500).json({ success: false, error: error.message });
   }
 });
-// Edit an existing expense
-router.post("/edit-expense/:expense_id", async (req, res) => {
+
+// Edit an existing expense (protected route)
+router.post("/edit-expense/:expense_id", authMiddleware, async (req, res) => {
   const { expense_id } = req.params;
   const { category, item, price, expense_date } = req.body;
   try {
@@ -65,8 +89,9 @@ router.post("/edit-expense/:expense_id", async (req, res) => {
     res.status(500).json({ error: "Failed to update expense." });
   }
 });
-// Edit an existing revenue
-router.post("/edit-revenue/:revenue_id", async (req, res) => {
+
+// Edit an existing revenue (protected route)
+router.post("/edit-revenue/:revenue_id", authMiddleware, async (req, res) => {
   const { revenue_id } = req.params;
   const { unit_id, amount, payment_date, method_id } = req.body;
   try {
@@ -81,8 +106,8 @@ router.post("/edit-revenue/:revenue_id", async (req, res) => {
   }
 });
 
-// Delete an existing revenue
-router.post("/delete-revenue/:revenue_id", async (req, res) => {
+// Delete an existing revenue (protected route)
+router.post("/delete-revenue/:revenue_id", authMiddleware, async (req, res) => {
   const { revenue_id } = req.params;
   try {
     await db.run("DELETE FROM revenue WHERE revenue_id = ?", [revenue_id]);
