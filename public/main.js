@@ -1,3 +1,5 @@
+
+
 // Import functions from the js folder
 import { loadHeaderFooter } from "./js/headerFooter.js";
 import { registerUser, loginUser, logoutUser, checkAuth } from "./js/auth.js";
@@ -12,15 +14,64 @@ import {
 import { initializeSiteStyle, updateColor } from "./js/siteStyle.js";
 import { showLoadingSpinner, hideLoadingSpinner } from "./js/spinner.js";
 import { validateResponse, showError, showSuccess } from "./js/validation.js";
-import { fetchAvailableBalance, fetchTotalRevenue, fetchTotalExpenses } from './js/financialData.js';
+import {
+  fetchAvailableBalance,
+  fetchTotalRevenue,
+  fetchTotalExpenses,
+} from "./js/financialData.js";
 
+// Function to build query parameters from filters
+function buildQueryParams(filters) {
+  const params = new URLSearchParams();
+  Object.keys(filters).forEach((key) => {
+    if (filters[key]) {
+      params.append(key, filters[key]);
+    }
+  });
+  return params.toString();
+}
+// Fetch and display data with dynamic filters
+function fetchData(filters) {
+  const queryParams = buildQueryParams(filters);
+
+  // Fetch available balance
+  fetchAvailableBalance(filters.year);
+
+  // Fetch total revenue
+  fetchTotalRevenue(filters.year);
+
+  // Fetch total expenses
+  fetchTotalExpenses(filters.year);
+
+  // Optionally, you can add more specific functions here if needed
+}
+
+// Call the fetch functions with default filters on page load
+document.addEventListener("DOMContentLoaded", function () {
+  const currentYear = new Date().getFullYear();
+  const filters = { year: currentYear };
+  fetchData(filters);
+});
+
+// Event listener for filter changes
+document.querySelectorAll(".filter-input").forEach((input) => {
+  input.addEventListener("change", () => {
+    const filters = {
+      year: document.getElementById("filter-year").value,
+      month: document.getElementById("filter-month").value,
+      category: document.getElementById("filter-category").value,
+      unitNumber: document.getElementById("filter-unit-number").value,
+      floor: document.getElementById("filter-floor").value,
+    };
+    fetchData(filters);
+  });
+});
 // Call the functions on page load
-document.addEventListener('DOMContentLoaded', function() {
+document.addEventListener("DOMContentLoaded", function () {
   fetchAvailableBalance();
   fetchTotalRevenue();
   fetchTotalExpenses();
 });
-
 
 document.addEventListener("DOMContentLoaded", function () {
   loadTemplate("header-placeholder", "header.html");
@@ -63,7 +114,6 @@ document.addEventListener("DOMContentLoaded", function () {
     console.warn("Profile form not present for fetching profile.");
   }
 });
-
 // Function to update the current year in the footer
 function updateCurrentYear() {
   const footerYear = document.getElementById("currentyear");
@@ -117,10 +167,12 @@ document.addEventListener("DOMContentLoaded", () => {
 
 // Function to dynamically load HTML templates into a specified container
 function loadTemplate(containerId, templatePath) {
-  console.log(`Loading template from ${templatePath} into container ${containerId}`);
+  console.log(
+    `Loading template from ${templatePath} into container ${containerId}`
+  );
   showLoadingSpinner();
   fetch(templatePath)
-    .then(response => response.text()) // Use .text() instead of .json()
+    .then((response) => response.text()) // Use .text() instead of .json()
     .then((htmlContent) => {
       const container = document.getElementById(containerId);
       if (container) {
