@@ -1,4 +1,5 @@
 document.addEventListener("DOMContentLoaded", function () {
+  // Fixed typo here
   loadTemplate("header-placeholder", "header.html");
   loadTemplate("footer-placeholder", "footer.html");
 
@@ -39,11 +40,6 @@ document.addEventListener("DOMContentLoaded", function () {
     console.warn("Profile form not present for fetching profile.");
   }
 });
-// Load header and footer templates
-function loadHeaderFooter() {
-  loadTemplate("header-placeholder", "header.html");
-  loadTemplate("footer-placeholder", "footer.html");
-}
 
 // Function to update the current year in the footer
 function updateCurrentYear() {
@@ -83,6 +79,7 @@ function showSuccess(message) {
     console.warn("Success element not found.");
   }
 }
+
 // Function to validate API responses and log issues
 function validateResponse(response) {
   console.log(`Validating response: Status ${response.status}`);
@@ -126,127 +123,47 @@ document.addEventListener("DOMContentLoaded", function () {
     setDefaultDate: true,
   });
 });
-// Function to handle user registration
-function registerUser(username, password) {
-  console.log(`Attempting to register user with username: ${username}`);
-  showLoadingSpinner();
-  fetch("/api/register", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ username, password }),
-  })
-    .then(validateResponse)
-    .then((data) => {
-      console.log("Registration successful:", data);
-      hideLoadingSpinner();
-      showSuccess("Registration successful! Please log in.");
-    })
-    .catch((error) => {
-      console.error("Error during registration:", error);
-      showError("Registration failed.");
-      hideLoadingSpinner();
-    });
-}
 
-// Function to handle user login
-function loginUser(username, password) {
-  console.log(`Attempting to log in user with username: ${username}`);
-  showLoadingSpinner();
-  fetch("/api/login", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ username, password }),
-  })
-    .then(validateResponse)
-    .then((data) => {
-      console.log("Login successful:", data);
-      hideLoadingSpinner();
-      checkAuth(); // Refresh auth status
-      if (data.success) window.location.href = "/dashboard"; // Redirect example
-    })
-    .catch((error) => {
-      console.error("Error during login:", error);
-      showError("Login failed.");
-      hideLoadingSpinner();
-    });
-}
 
-// Function to handle user logout
-function logoutUser() {
-  console.log("Attempting to log out user.");
-  showLoadingSpinner();
-  fetch("/api/logout", { method: "POST" })
-    .then(validateResponse)
-    .then((data) => {
-      console.log("Logout successful:", data);
-      hideLoadingSpinner();
-      checkAuth(); // Refresh auth status
-    })
-    .catch((error) => {
-      console.error("Error during logout:", error);
-      showError("Logout failed.");
-      hideLoadingSpinner();
-    });
-}
-// Function to check if a user is authenticated
-function checkAuth() {
-  console.log("Checking authentication status...");
+// Function to redirect to login if not authenticated
+function requireAuth() {
   fetch("/api/check-auth")
-    .then(validateResponse)
+    .then((response) => response.json())
     .then((data) => {
-      console.log("Authentication data received:", data);
-      const loginLink = document.getElementById("login-link");
-      const userGreeting = document.getElementById("user-greeting");
-      const logoutLink = document.getElementById("logout-link");
-      const userNameSpan = document.getElementById("user-name");
-
-      if (data.authenticated) {
-        if (loginLink) loginLink.style.display = "none";
-        if (userGreeting) userGreeting.style.display = "inline";
-        if (logoutLink) logoutLink.style.display = "inline";
-        if (userNameSpan) userNameSpan.textContent = data.username;
-        console.log("User is authenticated. Showing logout link.");
-      } else {
-        if (loginLink) loginLink.style.display = "inline";
-        if (userGreeting) userGreeting.style.display = "none";
-        if (logoutLink) logoutLink.style.display = "none";
-        console.log("User is not authenticated. Showing login link.");
+      if (!data.authenticated) {
+        window.location.href = "/login.html";
       }
     })
     .catch((error) => {
       console.error("Error checking authentication:", error);
-      showError("Failed to check authentication status.");
-    });
-}
-
-// Function to redirect to login if not authenticated
-function requireAuth() {
-  fetch('/api/check-auth')
-    .then(response => response.json())
-    .then(data => {
-      if (!data.authenticated) {
-        window.location.href = '/login.html';
-      }
-    })
-    .catch(error => {
-      console.error('Error checking authentication:', error);
-      window.location.href = '/login.html';
+      window.location.href = "/login.html";
     });
 }
 
 // Call requireAuth on pages that need authentication
 document.addEventListener("DOMContentLoaded", () => {
-  if (["expense-management.html", "footer-settings.html", "inventory-management.html", "profile.html", "revenue-management.html", "style-modifier.html"].includes(location.pathname.split('/').pop())) {
+  if (
+    [
+      "expense-management.html",
+      "footer-settings.html",
+      "inventory-management.html",
+      "profile.html",
+      "revenue-management.html",
+      "style-modifier.html",
+    ].includes(location.pathname.split("/").pop())
+  ) {
     requireAuth();
   }
-
+});
 
 // Function to dynamically load HTML templates into a specified container
 function loadTemplate(containerId, templatePath) {
-  console.log(`Loading template from ${templatePath} into container ${containerId}`);
+  console.log(
+    `Loading template from ${templatePath} into container ${containerId}`
+  );
   showLoadingSpinner();
   fetch(templatePath)
-    .then(response => response.text()) // Use .text() instead of .json()
+    .then((response) => response.text()) // Use .text() instead of .json()
     .then((htmlContent) => {
       const container = document.getElementById(containerId);
       if (container) {
@@ -263,6 +180,7 @@ function loadTemplate(containerId, templatePath) {
       hideLoadingSpinner();
     });
 }
+
 // Edit Expense Function
 async function editExpense(expense_id) {
   const newCategory = prompt("Enter new category:");
@@ -304,6 +222,7 @@ async function deleteExpense(expense_id) {
     }
   }
 }
+
 // Function to clear form inputs
 function clearForm() {
   const form = document.getElementById("input-form");
@@ -314,7 +233,6 @@ function clearForm() {
     console.warn("Form element not found.");
   }
 }
-
 // Function to add a new expense
 function addExpense(event) {
   event.preventDefault();
@@ -343,6 +261,7 @@ function addExpense(event) {
       hideLoadingSpinner();
     });
 }
+
 // Function to load expenses and display them in the table
 function loadExpenses() {
   console.log("Loading expenses...");
@@ -382,13 +301,19 @@ function loadExpenses() {
 }
 
 // Import functions from the js folder
-import { loadHeaderFooter } from '../js/headerFooter.js';
-import { registerUser, loginUser, logoutUser, checkAuth } from '../js/auth.js';
-import { fetchProfile, updateProfile } from '../js/profile.js';
-import { clearForm, addExpense, loadExpenses, editExpense, deleteExpense } from '../js/expense.js';
-import { initializeSiteStyle, updateColor } from '../js/siteStyle.js';
-import { showLoadingSpinner, hideLoadingSpinner } from '../js/spinner.js';
-import { showError, showSuccess } from '../js/validation.js';
+import { loadHeaderFooter } from "../js/headerFooter.js";
+import { registerUser, loginUser, logoutUser, checkAuth } from "../js/auth.js";
+import { fetchProfile, updateProfile } from "../js/profile.js";
+import {
+  clearForm,
+  addExpense,
+  loadExpenses,
+  editExpense,
+  deleteExpense,
+} from "../js/expense.js";
+import { initializeSiteStyle, updateColor } from "../js/siteStyle.js";
+import { showLoadingSpinner, hideLoadingSpinner } from "../js/spinner.js";
+import { showError, showSuccess } from "../js/validation.js";
 
 // Initialize application
 document.addEventListener("DOMContentLoaded", () => {
@@ -464,8 +389,8 @@ function initializeApp() {
 
 // Function to initialize dropdown elements
 function initializeDropdowns() {
-  const dropdowns = document.querySelectorAll('.dropdown-trigger');
-  dropdowns.forEach(dropdown => {
+  const dropdowns = document.querySelectorAll(".dropdown-trigger");
+  dropdowns.forEach((dropdown) => {
     M.Dropdown.init(dropdown);
   });
 }
