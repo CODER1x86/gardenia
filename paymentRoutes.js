@@ -1,11 +1,11 @@
 // paymentRoutes.js
 
-const express = require("express");
-const { body, validationResult } = require("express-validator");
-const sqlite3 = require("sqlite3").verbose();
-const db = new sqlite3.Database("./.data/database.db");
-const { authMiddleware } = require("./middleware");
-const buildDynamicQuery = require("./queryBuilder");
+const express = require('express');
+const { body, validationResult } = require('express-validator');
+const sqlite3 = require('sqlite3').verbose();
+const db = new sqlite3.Database('./.data/database.db');
+const { authMiddleware } = require('./middleware');
+const buildDynamicQuery = require('./js/queryBuilder');
 const router = express.Router();
 
 // Public endpoint for fetching expenses
