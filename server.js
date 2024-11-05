@@ -42,15 +42,6 @@ app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
-// Public endpoints for fetching data
-app.get('/api/expenses', (req, res) => {
-  // Fetch expenses from database and send response
-});
-
-app.get('/api/revenues', (req, res) => {
-  // Fetch revenues from database and send response
-});
-
 // Routes for user authentication and profile management
 app.post('/api/register', authRoutes);
 app.post('/api/login', authRoutes);
@@ -58,13 +49,6 @@ app.post('/api/logout', authRoutes);
 app.get('/api/check-auth', authRoutes);
 app.get('/api/profile', authRoutes);
 app.post('/api/profile', authRoutes);
-
-// Use middleware to protect routes
-app.use('/api/expense-input', authMiddleware);
-app.use('/api/edit-expense', authMiddleware);
-app.use('/api/delete-expense', authMiddleware);
-app.use('/api/revenue-input', authMiddleware);
-app.use('/api/style-settings', authMiddleware);
 
 // Error handling middleware
 app.use((err, req, res, next) => {
