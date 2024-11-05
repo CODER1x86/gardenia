@@ -20,7 +20,9 @@ body {
   padding: 20px;
 }
 
-h1, h2, h4 {
+h1,
+h2,
+h4 {
   font-weight: 600;
   margin-bottom: 20px;
 }
@@ -56,7 +58,8 @@ footer.page-footer {
   width: 100%;
 }
 
-footer .container h5, footer .container p {
+footer .container h5,
+footer .container p {
   margin: 0;
 }
 
@@ -103,7 +106,8 @@ footer .container h5, footer .container p {
 }
 
 /* Dropdown and Submenu Consistency */
-.dropdown-content, .dropdown {
+.dropdown-content,
+.dropdown {
   color: var(--primary-color, #1a73e8);
   font-family: inherit;
 }
@@ -149,7 +153,8 @@ footer .container h5, footer .container p {
     margin: 10px 0;
   }
 
-  input, button {
+  input,
+  button {
     width: 100%;
     font-size: 1.2rem;
   }
@@ -204,4 +209,27 @@ footer .container h5, footer .container p {
   text-align: center;
   margin-top: 20px;
   font-size: 16px;
+}
+
+/* Form and Button Styling */
+.input-field {
+  margin-bottom: 20px;
+}
+
+.checkbox-container {
+  margin-bottom: 30px; /* Ensure space below checkbox container */
+  display: flex;
+  align-items: center;
+}
+
+.action-buttons {
+  margin-top: 20px; /* Ensure space above action buttons */
+  text-align: center;
+}
+
+@media screen and (min-width: 600px) {
+  .btn {
+    margin-top: 10px;
+    margin-bottom: 10px; /* Ensure space above and below buttons */
+  }
 }

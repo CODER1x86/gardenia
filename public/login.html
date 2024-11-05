@@ -20,6 +20,7 @@
     }
     .action-buttons {
       text-align: center;
+      margin-top: 20px;
     }
     .register-text {
       text-align: center;
@@ -29,6 +30,12 @@
       justify-content: center;
       align-items: center;
       height: 100vh;
+    }
+    .checkbox-container {
+      margin-top: -10px; /* Adjusted top margin for proper spacing */
+      margin-bottom: 30px; /* Ensure space below checkbox container */
+      display: flex;
+      align-items: center;
     }
   </style>
 </head>
@@ -62,7 +69,7 @@
                 <label for="password">Password</label>
                 <input type="password" id="password" required />
               </div>
-              <div class="input-field">
+              <div class="input-field checkbox-container">
                 <label>
                   <input type="checkbox" id="remember-me" />
                   <span>Remember Me</span>
