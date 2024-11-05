@@ -219,6 +219,28 @@ function checkAuth() {
     });
 }
 
+// Function to redirect to login if not authenticated
+function requireAuth() {
+  fetch('/api/check-auth')
+    .then(response => response.json())
+    .then(data => {
+      if (!data.authenticated) {
+        window.location.href = '/login.html';
+      }
+    })
+    .catch(error => {
+      console.error('Error checking authentication:', error);
+      window.location.href = '/login.html';
+    });
+}
+
+// Call requireAuth on pages that need authentication
+document.addEventListener("DOMContentLoaded", () => {
+  if (["expense-management.html", "footer-settings.html", "inventory-management.html", "profile.html", "revenue-management.html", "style-modifier.html"].includes(location.pathname.split('/').pop())) {
+    requireAuth();
+  }
+
+
 // Function to dynamically load HTML templates into a specified container
 function loadTemplate(containerId, templatePath) {
   console.log(`Loading template from ${templatePath} into container ${containerId}`);

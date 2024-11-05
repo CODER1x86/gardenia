@@ -10,6 +10,17 @@ const { authMiddleware } = require('./middleware'); // Import the middleware
 const app = express();
 const PORT = process.env.PORT || 3000;
 
+// Use middleware to protect routes
+app.use('/api/expenses', authMiddleware);
+app.use('/api/expense-input', authMiddleware);
+app.use('/api/edit-expense', authMiddleware);
+app.use('/api/delete-expense', authMiddleware);
+app.use('/api/revenues', authMiddleware);
+app.use('/api/revenue-input', authMiddleware);
+app.use('/api/profile', authMiddleware);
+app.use('/api/style-settings', authMiddleware);
+// Add other routes that require authentication as needed
+
 // Middleware setup
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
