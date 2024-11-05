@@ -1,8 +1,8 @@
 //auth.js
 
 // auth.js
-import { showLoadingSpinner, hideLoadingSpinner, showError, showSuccess } from './spinner.js';
-import { validateResponse } from './validation.js';
+import { showLoadingSpinner, hideLoadingSpinner } from "./spinner.js";
+import { validateResponse, showError, showSuccess } from "./validation.js";
 
 // Function to handle user registration
 function registerUser(username, password) {

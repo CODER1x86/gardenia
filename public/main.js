@@ -1,5 +1,13 @@
+// Import functions from the js folder
+import { loadHeaderFooter } from './js/headerFooter.js';
+import { registerUser, loginUser, logoutUser, checkAuth } from './js/auth.js';
+import { fetchProfile, updateProfile } from './js/profile.js';
+import { clearForm, addExpense, loadExpenses, editExpense, deleteExpense } from './js/expense.js';
+import { initializeSiteStyle, updateColor } from './js/siteStyle.js';
+import { showLoadingSpinner, hideLoadingSpinner } from './js/spinner.js';
+import { showError, showSuccess } from './js/validation.js';
+
 document.addEventListener("DOMContentLoaded", function () {
-  // Fixed typo here
   loadTemplate("header-placeholder", "header.html");
   loadTemplate("footer-placeholder", "footer.html");
 
@@ -128,22 +136,6 @@ function loadTemplate(containerId, templatePath) {
       hideLoadingSpinner();
     });
 }
-
-// Import functions from the js folder
-import { loadHeaderFooter } from "./js/headerFooter.js";
-import { registerUser, loginUser, logoutUser, checkAuth } from "./js/auth.js";
-import { fetchProfile, updateProfile } from "./js/profile.js";
-import {
-  clearForm,
-  addExpense,
-  loadExpenses,
-  editExpense,
-  deleteExpense,
-} from "./js/expense.js";
-import { initializeSiteStyle, updateColor } from "./js/siteStyle.js";
-import { showLoadingSpinner, hideLoadingSpinner } from "./js/spinner.js";
-import { showError, showSuccess } from "./js/validation.js";
-
 // Initialize application
 document.addEventListener("DOMContentLoaded", () => {
   initializeApp();

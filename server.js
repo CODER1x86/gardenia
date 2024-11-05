@@ -6,20 +6,9 @@ const sqlite3 = require('sqlite3').verbose();
 const authRoutes = require('./authRoutes');
 const paymentRoutes = require('./paymentRoutes');
 const unitRoutes = require('./unitRoutes');
-const { authMiddleware } = require('./middleware'); // Import the middleware
+const { authMiddleware } = require('./middleware');
 const app = express();
 const PORT = process.env.PORT || 3000;
-
-// Use middleware to protect routes
-app.use('/api/expenses', authMiddleware);
-app.use('/api/expense-input', authMiddleware);
-app.use('/api/edit-expense', authMiddleware);
-app.use('/api/delete-expense', authMiddleware);
-app.use('/api/revenues', authMiddleware);
-app.use('/api/revenue-input', authMiddleware);
-app.use('/api/profile', authMiddleware);
-app.use('/api/style-settings', authMiddleware);
-// Add other routes that require authentication as needed
 
 // Middleware setup
 app.use(bodyParser.json());
@@ -30,8 +19,10 @@ app.use(session({
   saveUninitialized: true,
 }));
 
-// Serve static files
+// Serve static files from the 'public' and 'js' directories
 app.use(express.static(path.join(__dirname, 'public')));
+app.use('/js', express.static(path.join(__dirname, 'js'))); // Serve the 'js' directory
+
 // Database setup
 const db = new sqlite3.Database('./.data/database.db', (err) => {
   if (err) {
@@ -50,6 +41,7 @@ app.use('/api', unitRoutes);
 app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
+
 // Routes for user authentication and profile management
 app.post('/api/register', authRoutes);
 app.post('/api/login', authRoutes);
@@ -58,9 +50,15 @@ app.get('/api/check-auth', authRoutes);
 app.get('/api/profile', authRoutes);
 app.post('/api/profile', authRoutes);
 
-// Routes for payment and expense management
-app.use('/api', paymentRoutes);
-app.use('/api', unitRoutes);
+// Use middleware to protect routes
+app.use('/api/expenses', authMiddleware);
+app.use('/api/expense-input', authMiddleware);
+app.use('/api/edit-expense', authMiddleware);
+app.use('/api/delete-expense', authMiddleware);
+app.use('/api/revenues', authMiddleware);
+app.use('/api/revenue-input', authMiddleware);
+app.use('/api/style-settings', authMiddleware);
+
 // Error handling middleware
 app.use((err, req, res, next) => {
   console.error(err.stack);
