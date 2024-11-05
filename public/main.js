@@ -51,35 +51,6 @@ function updateCurrentYear() {
   }
 }
 
-// Function to show error messages to the user and log errors to console
-function showError(message) {
-  const errorElement = document.getElementById("feedback-error");
-  if (errorElement) {
-    errorElement.textContent = message;
-    errorElement.style.display = "block";
-    console.error(`Error Displayed: ${message}`);
-    setTimeout(() => {
-      errorElement.style.display = "none";
-    }, 5000);
-  } else {
-    console.warn("Error element not found.");
-  }
-}
-
-// Function to show success messages
-function showSuccess(message) {
-  const successElement = document.getElementById("feedback-success");
-  if (successElement) {
-    successElement.textContent = message;
-    successElement.style.display = "block";
-    setTimeout(() => {
-      successElement.style.display = "none";
-    }, 5000);
-  } else {
-    console.warn("Success element not found.");
-  }
-}
-
 // Function to validate API responses and log issues
 function validateResponse(response) {
   console.log(`Validating response: Status ${response.status}`);
@@ -92,28 +63,6 @@ function validateResponse(response) {
   return response.json();
 }
 
-// Show a loading spinner during operations and log the event
-function showLoadingSpinner() {
-  const spinner = document.getElementById("loading-spinner");
-  if (spinner) {
-    spinner.style.display = "block";
-    console.log("Loading spinner displayed.");
-  } else {
-    console.warn("Loading spinner element not found.");
-  }
-}
-
-// Hide the loading spinner and log the event
-function hideLoadingSpinner() {
-  const spinner = document.getElementById("loading-spinner");
-  if (spinner) {
-    spinner.style.display = "none";
-    console.log("Loading spinner hidden.");
-  } else {
-    console.warn("Loading spinner element not found.");
-  }
-}
-
 // Initialize date picker
 document.addEventListener("DOMContentLoaded", function () {
   const datepickerElems = document.querySelectorAll(".datepicker");
@@ -123,7 +72,6 @@ document.addEventListener("DOMContentLoaded", function () {
     setDefaultDate: true,
   });
 });
-
 
 // Function to redirect to login if not authenticated
 function requireAuth() {
@@ -181,139 +129,20 @@ function loadTemplate(containerId, templatePath) {
     });
 }
 
-// Edit Expense Function
-async function editExpense(expense_id) {
-  const newCategory = prompt("Enter new category:");
-  const newItem = prompt("Enter new item:");
-  const newPrice = prompt("Enter new price:");
-  const newDate = prompt("Enter new date (YYYY-MM-DD):");
-
-  const response = await fetch(`/api/edit-expense/${expense_id}`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      category: newCategory,
-      item: newItem,
-      price: newPrice,
-      expense_date: newDate,
-    }),
-  });
-
-  if (response.ok) {
-    showSuccess("Expense updated successfully.");
-    window.location.reload();
-  } else {
-    showError("Failed to update expense.");
-  }
-}
-
-// Delete Expense Function
-async function deleteExpense(expense_id) {
-  if (confirm("Are you sure you want to delete this expense?")) {
-    const response = await fetch(`/api/delete-expense/${expense_id}`, {
-      method: "POST",
-    });
-
-    if (response.ok) {
-      showSuccess("Expense deleted successfully.");
-      window.location.reload();
-    } else {
-      showError("Failed to delete expense.");
-    }
-  }
-}
-
-// Function to clear form inputs
-function clearForm() {
-  const form = document.getElementById("input-form");
-  if (form) {
-    form.reset();
-    console.log("Form cleared.");
-  } else {
-    console.warn("Form element not found.");
-  }
-}
-// Function to add a new expense
-function addExpense(event) {
-  event.preventDefault();
-  const category = document.getElementById("category").value;
-  const item = document.getElementById("item").value;
-  const amount = document.getElementById("amount").value;
-  const paymentDay = document.getElementById("payment-day").value;
-
-  showLoadingSpinner();
-  fetch("/api/expense-input", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ category, item, amount, payment_date: paymentDay }),
-  })
-    .then(validateResponse)
-    .then((data) => {
-      console.log("Expense added:", data);
-      hideLoadingSpinner();
-      showSuccess("Expense added successfully.");
-      clearForm();
-      loadExpenses();
-    })
-    .catch((error) => {
-      console.error("Error adding expense:", error);
-      showError("Failed to add expense.");
-      hideLoadingSpinner();
-    });
-}
-
-// Function to load expenses and display them in the table
-function loadExpenses() {
-  console.log("Loading expenses...");
-  showLoadingSpinner();
-  fetch("/api/expenses")
-    .then(validateResponse)
-    .then((expenses) => {
-      const expenseList = document.getElementById("expense-list");
-      if (expenseList) {
-        expenseList.innerHTML = expenses
-          .map((expense) => {
-            return `
-              <tr>
-                <td>${expense.category}</td>
-                <td>${expense.item}</td>
-                <td>${expense.price}</td>
-                <td>${expense.expense_date}</td>
-                <td>
-                  <button class="btn-small" onclick="editExpense(${expense.expense_id})">Edit</button>
-                  <button class="btn-small red" onclick="deleteExpense(${expense.expense_id})">Delete</button>
-                </td>
-              </tr>
-            `;
-          })
-          .join("");
-        console.log("Expenses loaded and displayed.");
-      } else {
-        console.error("Expense list container not found.");
-      }
-      hideLoadingSpinner();
-    })
-    .catch((error) => {
-      console.error("Error loading expenses:", error);
-      showError("Failed to load expenses.");
-      hideLoadingSpinner();
-    });
-}
-
 // Import functions from the js folder
-import { loadHeaderFooter } from "../js/headerFooter.js";
-import { registerUser, loginUser, logoutUser, checkAuth } from "../js/auth.js";
-import { fetchProfile, updateProfile } from "../js/profile.js";
+import { loadHeaderFooter } from "./js/headerFooter.js";
+import { registerUser, loginUser, logoutUser, checkAuth } from "./js/auth.js";
+import { fetchProfile, updateProfile } from "./js/profile.js";
 import {
   clearForm,
   addExpense,
   loadExpenses,
   editExpense,
   deleteExpense,
-} from "../js/expense.js";
-import { initializeSiteStyle, updateColor } from "../js/siteStyle.js";
-import { showLoadingSpinner, hideLoadingSpinner } from "../js/spinner.js";
-import { showError, showSuccess } from "../js/validation.js";
+} from "./js/expense.js";
+import { initializeSiteStyle, updateColor } from "./js/siteStyle.js";
+import { showLoadingSpinner, hideLoadingSpinner } from "./js/spinner.js";
+import { showError, showSuccess } from "./js/validation.js";
 
 // Initialize application
 document.addEventListener("DOMContentLoaded", () => {
@@ -393,13 +222,4 @@ function initializeDropdowns() {
   dropdowns.forEach((dropdown) => {
     M.Dropdown.init(dropdown);
   });
-}
-
-// Function to update current year in footer
-function updateCurrentYear() {
-  const currentYear = new Date().getFullYear();
-  const footerYearElement = document.getElementById("current-year");
-  if (footerYearElement) {
-    footerYearElement.textContent = currentYear;
-  }
 }
