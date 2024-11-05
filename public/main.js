@@ -1,11 +1,17 @@
 // Import functions from the js folder
-import { loadHeaderFooter } from './js/headerFooter.js';
-import { registerUser, loginUser, logoutUser, checkAuth } from './js/auth.js';
-import { fetchProfile, updateProfile } from './js/profile.js';
-import { clearForm, addExpense, loadExpenses, editExpense, deleteExpense } from './js/expense.js';
-import { initializeSiteStyle, updateColor } from './js/siteStyle.js';
-import { showLoadingSpinner, hideLoadingSpinner } from './js/spinner.js';
-import { showError, showSuccess } from './js/validation.js';
+import { loadHeaderFooter } from "./js/headerFooter.js";
+import { registerUser, loginUser, logoutUser, checkAuth } from "./js/auth.js";
+import { fetchProfile, updateProfile } from "./js/profile.js";
+import {
+  clearForm,
+  addExpense,
+  loadExpenses,
+  editExpense,
+  deleteExpense,
+} from "./js/expense.js";
+import { initializeSiteStyle, updateColor } from "./js/siteStyle.js";
+import { showLoadingSpinner, hideLoadingSpinner } from "./js/spinner.js";
+import { validateResponse, showError, showSuccess } from "./js/validation.js";
 
 document.addEventListener("DOMContentLoaded", function () {
   loadTemplate("header-placeholder", "header.html");
@@ -59,18 +65,6 @@ function updateCurrentYear() {
   }
 }
 
-// Function to validate API responses and log issues
-function validateResponse(response) {
-  console.log(`Validating response: Status ${response.status}`);
-  if (!response.ok) {
-    console.error(
-      `API error! Status: ${response.status}, Status Text: ${response.statusText}`
-    );
-    throw new Error(`HTTP error! status: ${response.status}`);
-  }
-  return response.json();
-}
-
 // Initialize date picker
 document.addEventListener("DOMContentLoaded", function () {
   const datepickerElems = document.querySelectorAll(".datepicker");
@@ -114,12 +108,10 @@ document.addEventListener("DOMContentLoaded", () => {
 
 // Function to dynamically load HTML templates into a specified container
 function loadTemplate(containerId, templatePath) {
-  console.log(
-    `Loading template from ${templatePath} into container ${containerId}`
-  );
+  console.log(`Loading template from ${templatePath} into container ${containerId}`);
   showLoadingSpinner();
   fetch(templatePath)
-    .then((response) => response.text()) // Use .text() instead of .json()
+    .then(response => response.text()) // Use .text() instead of .json()
     .then((htmlContent) => {
       const container = document.getElementById(containerId);
       if (container) {
