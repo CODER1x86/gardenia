@@ -99,5 +99,51 @@
   <!-- Placeholder for the footer -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/js/materialize.min.js"></script>
   <script src="/main.js"></script>
+  <script>
+    document.addEventListener("DOMContentLoaded", function () {
+      loadTemplate("header-placeholder", "header.html");
+      loadTemplate("footer-placeholder", "footer.html");
+
+      // Initialize filter options
+      initializeFilters();
+
+      document.getElementById("run-report-btn").addEventListener("click", function(event) {
+        event.preventDefault();
+        // Logic to fetch and display filtered revenue data
+        fetchRevenueData();
+      });
+    });
+
+    function initializeFilters() {
+      const filterForm = document.getElementById("filter-form");
+      filterForm.addEventListener("change", function() {
+        const selectedOption = document.querySelector('input[name="filter-option"]:checked').value;
+        document.getElementById("year-select-container").style.display = selectedOption === "year" ? "block" : "none";
+        document.getElementById("month-select-container").style.display = selectedOption === "month" ? "block" : "none";
+        document.getElementById("unit-select-container").style.display = selectedOption === "unit" ? "block" : "none";
+      });
+
+      // Populate year, month, and unit options dynamically
+      populateYearOptions();
+      populateMonthOptions();
+      populateUnitOptions();
+    }
+
+    function populateYearOptions() {
+      // Logic to populate year options
+    }
+
+    function populateMonthOptions() {
+      // Logic to populate month options
+    }
+
+    function populateUnitOptions() {
+      // Logic to populate unit options
+    }
+
+    function fetchRevenueData() {
+      // Logic to fetch and display revenue data based on selected filters
+    }
+  </script>
 </body>
 </html>

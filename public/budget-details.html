@@ -1,86 +1,168 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Budget Details</title>
-  <link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;600&display=swap" rel="stylesheet" />
-  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet" />
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/css/materialize.min.css" />
-  <link rel="stylesheet" href="/style.css" />
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Budget Details - Gardenia City Budget Management">
+    <title>Budget Details - Gardenia City</title>
+    
+    <!-- Fonts and Icons -->
+    <link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;600&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    
+    <!-- Materialize CSS -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/css/materialize.min.css">
+    
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <div id="header-placeholder"></div>
-  <!-- Placeholder for the header -->
-  <div class="container">
-    <h4 id="report-header">
-      Budget Summary (as of <span id="selected-period"></span>)
-    </h4>
-    <div class="filter-container">
-      <label for="filter-option">Filter By:</label>
-      <form id="filter-form">
-        <p>
-          <label>
-            <input name="filter-option" type="radio" value="year" />
-            <span>Year</span>
-          </label>
-        </p>
-        <p>
-          <label>
-            <input name="filter-option" type="radio" value="month" />
-            <span>Month</span>
-          </label>
-        </p>
-      </form>
-      <div id="year-select-container" style="display: none">
-        <label for="year-select">Select Year:</label>
-        <select id="year-select" class="browser-default"></select>
-      </div>
-      <div id="month-select-container" style="display: none">
-        <label for="month-select">Select Month:</label>
-        <select id="month-select" class="browser-default"></select>
-      </div>
-      <button class="btn waves-effect waves-light" id="run-report-btn">Run Report</button>
-    </div>
-    <table class="highlight responsive-table">
-      <thead>
-        <tr>
-          <th>Total Revenue</th>
-          <th>Total Expenses</th>
-          <th>Available Balance</th>
-        </tr>
-      </thead>
-      <tbody id="budget-table-body">
-        <!-- Budget details data will be populated here -->
-      </tbody>
-    </table>
-    <div class="action-buttons">
-      <a class="btn waves-effect waves-light" href="expense-report.html">View Expense Reports</a>
-      <a class="btn waves-effect waves-light" href="revenue-report.html">View Revenue Reports</a>
-      <a class="btn waves-effect waves-light" href="budget-summary.html">View Budget Summary</a>
-    </div>
-    <br />
-    <center>
-      <div class="share-menu">
-        <button class="btn waves-effect waves-light" id="share-btn">
-          <i class="material-icons">share</i> Share
-        </button>
-        <div class="share-menu-content">
-          <a id="share-whatsapp"><i class="material-icons">message</i> WhatsApp</a>
-          <a id="share-messenger"><i class="material-icons">messenger</i> Messenger</a>
-          <a id="copy-link"><i class="material-icons">link</i> Copy Link</a>
-          <a id="share-twitter"><i class="material-icons">twitter</i> Twitter</a>
-          <a id="share-facebook"><i class="material-icons">facebook</i> Facebook</a>
+    <!-- Header Include -->
+    <div id="header-placeholder"></div>
+
+    <main class="container">
+        <!-- Page Title with Dynamic Year -->
+        <div class="card">
+            <h4 class="text-center">Budget Details <span class="grey-text text-darken-1">(as of <span id="currentyear"></span>)</span></h4>
         </div>
-      </div>
-      <button class="btn waves-effect waves-light" id="print-btn">
-        <i class="material-icons">print</i> Print
-      </button>
-    </center>
-  </div>
-  <div id="footer-placeholder"></div>
-  <!-- Placeholder for the footer -->
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/js/materialize.min.js"></script>
-  <script src="/main.js"></script>
+
+        <!-- Filters Section -->
+        <div class="filter-container">
+            <div class="row mb-0">
+                <div class="col s12 m4">
+                    <label for="filter-option">Filter By:</label>
+                    <select id="filter-option" class="browser-default">
+                        <option value="" disabled selected>Choose a filter</option>
+                        <option value="year">Year</option>
+                        <option value="month">Month</option>
+                    </select>
+                </div>
+                <div class="col s12 m4" id="year-select-container" style="display: none;">
+                    <label for="year-select">Select Year:</label>
+                    <select id="year-select" class="browser-default"></select>
+                </div>
+                <div class="col s12 m4" id="month-select-container" style="display: none;">
+                    <label for="month-select">Select Month:</label>
+                    <select id="month-select" class="browser-default"></select>
+                </div>
+            </div>
+            <div class="row mt-20">
+                <div class="col s12 center-align">
+                    <button class="btn waves-effect waves-light" id="run-report-btn">
+                        <i class="material-icons left">assessment</i>
+                        Generate Report
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Summary Cards -->
+        <div class="row">
+            <div class="col s12 m4">
+                <div class="summary-card">
+                    <i class="material-icons medium">trending_up</i>
+                    <h5>Total Revenue</h5>
+                    <h4 id="total-revenue">₱0.00</h4>
+                </div>
+            </div>
+            <div class="col s12 m4">
+                <div class="summary-card">
+                    <i class="material-icons medium">trending_down</i>
+                    <h5>Total Expenses</h5>
+                    <h4 id="total-expenses">₱0.00</h4>
+                </div>
+            </div>
+            <div class="col s12 m4">
+                <div class="summary-card">
+                    <i class="material-icons medium">account_balance</i>
+                    <h5>Net Balance</h5>
+                    <h4 id="net-balance">₱0.00</h4>
+                </div>
+            </div>
+        </div>
+
+        <!-- Details Table -->
+        <div class="card">
+            <div class="table-responsive">
+                <table class="highlight responsive-table">
+                    <thead>
+                        <tr>
+                            <th>Year</th>
+                            <th>Month</th>
+                            <th>Revenue</th>
+                            <th>Expenses</th>
+                            <th>Balance</th>
+                        </tr>
+                    </thead>
+                    <tbody id="details-table-body">
+                        <!-- Data will be populated via JavaScript -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Action Buttons -->
+        <div class="action-buttons center-align">
+            <a class="btn waves-effect waves-light" href="revenue-report.html">
+                <i class="material-icons left">show_chart</i>
+                Revenue Reports
+            </a>
+            <a class="btn waves-effect waves-light" href="expense-report.html">
+                <i class="material-icons left">receipt</i>
+                Expense Reports
+            </a>
+            <a class="btn waves-effect waves-light" href="budget-summary.html">
+                <i class="material-icons left">dashboard</i>
+                Budget Summary
+            </a>
+        </div>
+
+        <!-- Share and Print Options -->
+        <div class="card">
+            <div class="center-align">
+                <div class="share-menu">
+                    <button class="btn waves-effect waves-light" id="share-btn">
+                        <i class="material-icons left">share</i>
+                        Share
+                    </button>
+                    <div class="share-menu-content">
+                        <a id="share-whatsapp"><i class="material-icons">message</i> WhatsApp</a>
+                        <a id="share-messenger"><i class="material-icons">messenger</i> Messenger</a>
+                        <a id="copy-link"><i class="material-icons">link</i> Copy Link</a>
+                        <a id="share-twitter"><i class="material-icons">twitter</i> Twitter</a>
+                        <a id="share-facebook"><i class="material-icons">facebook</i> Facebook</a>
+                    </div>
+                </div>
+                <button class="btn waves-effect waves-light" id="print-btn">
+                    <i class="material-icons left">print</i>
+                    Print
+                </button>
+            </div>
+        </div>
+    </main>
+
+    <!-- Footer Include -->
+    <div id="footer-placeholder"></div>
+
+    <!-- Scripts -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/js/materialize.min.js"></script>
+    <script src="https://apis.google.com/js/api.js"></script>
+    <script src="main.js"></script>
+
+    <!-- Print Stylesheet -->
+    <style media="print">
+        .no-print { display: none !important; }
+        .print-only { display: block !important; }
+        @page { margin: 2cm; }
+    </style>
+
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            loadTemplate("header-placeholder", "header.html");
+            loadTemplate("footer-placeholder", "footer.html");
+            initializeDropdowns(); // Initialize dropdowns for Materialize
+            updateCurrentYear(); // Update the year in the header
+        });
+    </script>
 </body>
 </html>

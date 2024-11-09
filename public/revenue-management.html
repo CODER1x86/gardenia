@@ -49,5 +49,79 @@
   <!-- Placeholder for the footer -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/js/materialize.min.js"></script>
   <script src="./main.js"></script>
+  <script>
+    document.addEventListener("DOMContentLoaded", function () {
+      loadTemplate("header-placeholder", "header.html");
+      loadTemplate("footer-placeholder", "footer.html");
+      requireAuth(); // Ensure the user is authenticated
+
+      // Populate unit numbers and payment methods dynamically
+      populateUnitNumbers();
+      populatePaymentMethods();
+
+      document.getElementById("revenue-input-form").addEventListener("submit", function(event) {
+        event.preventDefault();
+        const unitNumber = document.getElementById("unit-number").value;
+        const amount = document.getElementById("amount").value;
+        const paymentDate = document.getElementById("payment-date").value;
+        const paymentMethod = document.getElementById("payment-method").value;
+
+        // Logic to handle revenue submission
+        fetch('/api/revenue', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ unitNumber, amount, paymentDate, paymentMethod }),
+        })
+        .then(response => {
+          if (!response.ok) throw new Error('Error submitting revenue');
+          return response.json();
+        })
+        .then(data => {
+          M.toast({html: 'Revenue submitted successfully', classes: 'rounded'});
+          document.getElementById("revenue-input-form").reset();
+        })
+        .catch(error => {
+          console.error('Error:', error);
+          M.toast({html: 'Failed to submit revenue. Please try again.', classes: 'rounded'});
+        });
+      });
+    });
+
+    function populateUnitNumbers() {
+      // Fetch and populate unit numbers
+      fetch('/api/units')
+        .then(response => response.json())
+        .then(data => {
+          const unitSelect = document.getElementById("unit-number");
+          data.forEach(unit => {
+            const option = document.createElement("option");
+            option.value = unit.id;
+            option.textContent = unit.name;
+            unitSelect.appendChild(option);
+          });
+          M.FormSelect.init(unitSelect);
+        })
+        .catch(error => console.error("Error loading unit numbers:", error));
+    }
+
+    function populatePaymentMethods() {
+      // Fetch and populate payment methods
+      fetch('/api/payment-methods')
+        .then(response => response.json())
+        .then(data => {
+          const paymentSelect = document.getElementById("payment-method");
+          data.forEach(method => {
+            const option = document.createElement("option");
+            option.value = method.id;
+            option.textContent = method.name;
+            paymentSelect.appendChild(option);
+          });
+          M.FormSelect.init(paymentSelect);
+        })
+        .catch(error => console.error("Error loading payment methods:", error));
+    }
+  </script>
 </body>
 </html>

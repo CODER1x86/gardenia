@@ -95,5 +95,18 @@
   <!-- Placeholder for the footer -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/js/materialize.min.js"></script>
   <script src="/main.js"></script>
+  <script>
+    document.addEventListener("DOMContentLoaded", function () {
+      loadTemplate("header-placeholder", "header.html");
+      loadTemplate("footer-placeholder", "footer.html");
+      initializeDropdowns(); // Initialize dropdowns for Materialize
+      updateCurrentYear(); // Update the year in the header
+      // Add event listeners for filter changes and report generation
+      document.getElementById('run-report-btn').addEventListener('click', function(event) {
+        event.preventDefault();
+        // Logic to fetch and display filtered expense data
+      });
+    });
+  </script>
 </body>
 </html>

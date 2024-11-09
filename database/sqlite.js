@@ -218,7 +218,6 @@ const addInventoryItem = async (expense_id, location, usage_date, status) => {
     );
     console.log("Inventory item added");
   } catch (error) {
-    console.error("Error adding inventory item:", error    );
     console.error("Error adding inventory item:", error);
     throw error;
   }
@@ -286,22 +285,36 @@ const updateExpense = async (
   price,
   expense_date
 ) => {
-  const query = `UPDATE expenses SET category = ?, item = ?, price = ?, expense_date = ?, last_updated = ? WHERE expense_id = ?`;
-  const params = [
-    category,
-    item,
-    price,
-    expense_date,
-    new Date().toISOString(),
-    expense_id,
-  ];
-  await dbRun(query, params);
+  try {
+    console.log(`Updating expense with ID ${expense_id}`);
+    const query = `UPDATE expenses SET category = ?, item = ?, price = ?, expense_date = ?, last_updated = ? WHERE expense_id = ?`;
+    const params = [
+      category,
+      item,
+      price,
+      expense_date,
+      new Date().toISOString(),
+      expense_id,
+    ];
+    await dbRun(query, params);
+    console.log(`Expense with ID ${expense_id} updated`);
+  } catch (error) {
+    console.error("Error updating expense:", error);
+    throw error;
+  }
 };
 
 // Delete an existing expense
 const deleteExpense = async (expense_id) => {
-  const query = `DELETE FROM expenses WHERE expense_id = ?`;
-  await dbRun(query, [expense_id]);
+  try {
+    console.log(`Deleting expense with ID ${expense_id}`);
+    const query = `DELETE FROM expenses WHERE expense_id = ?`;
+    await dbRun(query, [expense_id]);
+    console.log(`Expense with ID ${expense_id} deleted`);
+  } catch (error) {
+    console.error("Error deleting expense:", error);
+    throw error;
+  }
 };
 
 // Module Exports

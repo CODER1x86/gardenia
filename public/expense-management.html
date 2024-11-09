@@ -95,5 +95,15 @@
   <!-- Placeholder for the footer -->
   <script src="https://apis.google.com/js/api.js"></script>
   <script src="main.js"></script>
+  <script>
+    document.addEventListener("DOMContentLoaded", function () {
+      loadTemplate("header-placeholder", "header.html");
+      loadTemplate("footer-placeholder", "footer.html");
+      requireAuth(); // Ensure the user is authenticated
+      initializeDropdowns(); // Initialize dropdowns for Materialize
+      updateCurrentYear(); // Update the year in the header
+      loadExpenses(); // Load existing expenses into the table
+    });
+  </script>
 </body>
 </html>

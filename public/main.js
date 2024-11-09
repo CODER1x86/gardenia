@@ -1,252 +1,210 @@
-// Import functions from the js folder
-import { loadHeaderFooter } from "./js/headerFooter.js";
-import { registerUser, loginUser, logoutUser, checkAuth } from "./js/auth.js";
-import { fetchProfile, updateProfile } from "./js/profile.js";
-import { clearForm, addExpense, loadExpenses, editExpense, deleteExpense } from "./js/expense.js";
-import { initializeSiteStyle, updateColor } from "./js/siteStyle.js";
-import { showLoadingSpinner, hideLoadingSpinner } from "./js/spinner.js";
-import { validateResponse, showError, showSuccess } from "./js/validation.js";
-import { fetchAvailableBalance, fetchTotalRevenue, fetchTotalExpenses } from './js/financialData.js';
+/**
+ * Main Application Entry Point
+ * Integrates all modules and handles application initialization
+ */
+import auth from './services/auth.js';
+import ui from './core/ui.js';
+import settings from './config/settings.js';
+import BudgetModule from './modules/budget.js';
+import ExpenseModule from './modules/expense.js';
+import RevenueModule from './modules/revenue.js';
+import { loadHeader } from './components/header.js';
+import { loadFooter } from './components/footer.js';
+import { fetchAvailableBalance, fetchTotalRevenue, fetchTotalExpenses } from './services/financial.js';
 
-// Function to build query parameters from filters
-function buildQueryParams(filters) {
-  const params = new URLSearchParams();
-  Object.keys(filters).forEach(key => {
-    if (filters[key]) {
-      params.append(key, filters[key]);
+class App {
+    constructor() {
+        this.modules = {
+            budget: BudgetModule,
+            expense: ExpenseModule,
+            revenue: RevenueModule
+        };
+        this.currentModule = null;
+        this.initialized = false;
     }
-  });
-  return params.toString();
+
+    async init() {
+        if (this.initialized) return;
+
+        try {
+            ui.showLoadingSpinner();
+
+            // Core initialization
+            await Promise.all([
+                auth.init(),
+                settings.init(),
+                this.initializeUI(),
+                this.loadCurrentModule()
+            ]);
+
+            // Setup event listeners and load data
+            this.setupEventListeners();
+            await this.loadDashboardData();
+
+            this.initialized = true;
+            console.log('Application initialized successfully');
+            ui.hideLoadingSpinner();
+        } catch (error) {
+            console.error('Application initialization failed:', error);
+            ui.showNotification('Failed to initialize application', 'error');
+            ui.hideLoadingSpinner();
+        }
+    }
+
+    async initializeUI() {
+        // Load structural components
+        await Promise.all([loadHeader(), loadFooter()]);
+
+        // Initialize UI elements
+        ui.initializeSiteStyle();
+        
+        // Initialize dropdowns if Materialize is present
+        if (typeof M !== 'undefined') {
+            document.querySelectorAll('.dropdown-trigger').forEach(dropdown => {
+                M.Dropdown.init(dropdown);
+            });
+        }
+
+        // Update footer year
+        const footerYear = document.getElementById('currentyear');
+        if (footerYear) {
+            footerYear.textContent = new Date().getFullYear();
+        }
+    }
+
+    async loadCurrentModule() {
+        const currentPage = window.location.pathname.split('/').pop().replace('.html', '');
+        
+        if (this.modules[currentPage]) {
+            this.currentModule = this.modules[currentPage];
+            await this.currentModule.init();
+        }
+    }
+
+    async loadDashboardData(filters = {}) {
+        try {
+            const year = filters.year || new Date().getFullYear();
+            const [balance, revenue, expenses] = await Promise.all([
+                fetchAvailableBalance(year),
+                fetchTotalRevenue(year),
+                fetchTotalExpenses(year)
+            ]);
+
+            this.updateDashboardUI({ balance, revenue, expenses });
+        } catch (error) {
+            console.error('Error loading dashboard data:', error);
+            ui.showNotification('Failed to load dashboard data', 'error');
+        }
+    }
+
+    updateDashboardUI(data) {
+        const elements = {
+            balance: document.getElementById('available-balance'),
+            revenue: document.getElementById('total-revenue'),
+            expenses: document.getElementById('total-expenses')
+        };
+
+        Object.entries(elements).forEach(([key, element]) => {
+            if (element && data[key]) {
+                element.textContent = data[key];
+            }
+        });
+    }
+
+    setupEventListeners() {
+        // Filter handling
+        const filterForm = document.getElementById('filter-form');
+        if (filterForm) {
+            filterForm.addEventListener('submit', (e) => {
+                e.preventDefault();
+                const formData = new FormData(filterForm);
+                const filters = Object.fromEntries(formData.entries());
+                this.loadDashboardData(filters);
+            });
+        }
+
+        // Auth form handling
+        this.setupAuthForms();
+
+        // Navigation handling
+        document.addEventListener('click', async (e) => {
+            if (e.target.matches('nav a')) {
+                e.preventDefault();
+                const module = e.target.dataset.module;
+                
+                if (this.modules[module]) {
+                    history.pushState(null, '', e.target.href);
+                    await this.loadCurrentModule();
+                }
+            }
+        });
+
+        // Handle back/forward browser navigation
+        window.addEventListener('popstate', () => this.loadCurrentModule());
+    }
+
+    setupAuthForms() {
+        // Login form
+        const loginForm = document.getElementById('login-form');
+        if (loginForm) {
+            loginForm.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                const formData = new FormData(loginForm);
+                await auth.login(
+                    formData.get('username'),
+                    formData.get('password')
+                );
+            });
+        }
+
+        // Register form
+        const registerForm = document.getElementById('register-form');
+        if (registerForm) {
+            registerForm.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                const formData = new FormData(registerForm);
+                await auth.register(
+                    formData.get('username'),
+                    formData.get('password')
+                );
+            });
+        }
+
+        // Logout button
+        const logoutBtn = document.querySelector('.logout-btn');
+        if (logoutBtn) {
+            logoutBtn.addEventListener('click', () => {
+                auth.logout().then(() => window.location.href = '/login.html');
+            });
+        }
+    }
+
+    checkAuth() {
+        const protectedPages = [
+            'expense-management',
+            'footer-settings',
+            'inventory-management',
+            'profile',
+            'revenue-management',
+            'style-modifier'
+        ];
+
+        const currentPage = window.location.pathname.split('/').pop().replace('.html', '');
+        if (protectedPages.includes(currentPage) && !auth.isAuthenticated()) {
+            window.location.href = '/login.html';
+        }
+    }
 }
 
-// Fetch and display data with dynamic filters
-function fetchData(filters) {
-  const queryParams = buildQueryParams(filters);
+// Create and initialize the application
+const app = new App();
 
-  // Fetch available balance
-  fetchAvailableBalance(filters.year);
-
-  // Fetch total revenue
-  fetchTotalRevenue(filters.year);
-
-  // Fetch total expenses
-  fetchTotalExpenses(filters.year);
-
-  // Optionally, you can add more specific functions here if needed
-}
-
-// Call the fetch functions with default filters on page load
-document.addEventListener('DOMContentLoaded', function() {
-  const currentYear = new Date().getFullYear();
-  const filters = { year: currentYear };
-  fetchData(filters);
-});
-
-// Event listener for filter changes
-document.querySelectorAll('.filter-input').forEach(input => {
-  input.addEventListener('change', () => {
-    const filters = {
-      year: document.getElementById('filter-year').value,
-      month: document.getElementById('filter-month').value,
-      category: document.getElementById('filter-category').value,
-      unitNumber: document.getElementById('filter-unit-number').value,
-      floor: document.getElementById('filter-floor').value
-    };
-    fetchData(filters);
-  });
-});
-// Call the functions on page load
-document.addEventListener("DOMContentLoaded", function () {
-  loadTemplate("header-placeholder", "header.html");
-  loadTemplate("footer-placeholder", "footer.html");
-
-  // Ensure elements exist before adding event listeners
-  const form = document.getElementById("input-form");
-  if (form) {
-    form.addEventListener("submit", addExpense);
-  } else {
-    console.warn("Form element not found.");
-  }
-
-  const clearButton = document.getElementById("clear-form");
-  if (clearButton) {
-    clearButton.addEventListener("click", clearForm);
-  } else {
-    console.warn("Clear button element not found.");
-  }
-
-  const profileForm = document.getElementById("profile-form");
-  if (profileForm) {
-    profileForm.addEventListener("submit", updateProfile);
-  } else {
-    console.warn("Profile form element not found.");
-  }
-
-  // Check if expenses load is necessary
-  const expenseList = document.getElementById("expense-list");
-  if (expenseList) {
-    loadExpenses();
-  } else {
-    console.warn("Expense list container not found.");
-  }
-
-  // Check if profile fetch is necessary
-  if (profileForm) {
-    fetchProfile();
-  } else {
-    console.warn("Profile form not present for fetching profile.");
-  }
-});
-// Function to update the current year in the footer
-function updateCurrentYear() {
-  const footerYear = document.getElementById("currentyear");
-  if (footerYear) {
-    footerYear.textContent = new Date().getFullYear();
-  } else {
-    console.warn("Footer year element not found.");
-  }
-}
-
-// Initialize date picker
-document.addEventListener("DOMContentLoaded", function () {
-  const datepickerElems = document.querySelectorAll(".datepicker");
-  M.Datepicker.init(datepickerElems, {
-    format: "yyyy-mm-dd",
-    defaultDate: new Date(),
-    setDefaultDate: true,
-  });
-});
-
-// Function to redirect to login if not authenticated
-function requireAuth() {
-  fetch("/api/check-auth")
-    .then((response) => response.json())
-    .then((data) => {
-      if (!data.authenticated) {
-        window.location.href = "/login.html";
-      }
-    })
-    .catch((error) => {
-      console.error("Error checking authentication:", error);
-      window.location.href = "/login.html";
+// Initialize when DOM is ready
+document.addEventListener('DOMContentLoaded', () => {
+    app.init().catch(error => {
+        console.error('Failed to initialize application:', error);
     });
-}
-
-// Call requireAuth on pages that need authentication
-document.addEventListener("DOMContentLoaded", () => {
-  if (
-    [
-      "expense-management.html",
-      "footer-settings.html",
-      "inventory-management.html",
-      "profile.html",
-      "revenue-management.html",
-      "style-modifier.html",
-    ].includes(location.pathname.split("/").pop())
-  ) {
-    requireAuth();
-  }
 });
 
-// Function to dynamically load HTML templates into a specified container
-function loadTemplate(containerId, templatePath) {
-  console.log(`Loading template from ${templatePath} into container ${containerId}`);
-  showLoadingSpinner();
-  fetch(templatePath)
-    .then(response => response.text()) // Use .text() instead of .json()
-    .then((htmlContent) => {
-      const container = document.getElementById(containerId);
-      if (container) {
-        container.innerHTML = htmlContent;
-        console.log(`Template loaded successfully into ${containerId}`);
-      } else {
-        console.error(`Container with ID ${containerId} not found.`);
-      }
-      hideLoadingSpinner();
-    })
-    .catch((error) => {
-      console.error("Error loading template:", error);
-      showError("Failed to load content.");
-      hideLoadingSpinner();
-    });
-}
-
-// Initialize application
-document.addEventListener("DOMContentLoaded", () => {
-  initializeApp();
-
-  const inputForm = document.getElementById("input-form");
-  if (inputForm) {
-    inputForm.addEventListener("submit", addExpense);
-  }
-
-  const clearFormButton = document.getElementById("clear-form");
-  if (clearFormButton) {
-    clearFormButton.addEventListener("click", clearForm);
-  }
-
-  loadExpenses();
-});
-
-// Function to initialize application event listeners
-function initializeApp() {
-  console.log("Initializing application...");
-
-  // Load header and footer
-  loadHeaderFooter();
-
-  // Initialize Dropdowns
-  initializeDropdowns();
-
-  // Initialize site style
-  initializeSiteStyle();
-
-  // Update current year in footer
-  updateCurrentYear();
-
-  // Set up logout button listener if available
-  const logoutButton = document.getElementById("logout-button");
-  if (logoutButton) {
-    logoutButton.addEventListener("click", (event) => {
-      event.preventDefault();
-      console.log("Logout button clicked.");
-      logoutUser();
-    });
-  }
-
-  // Set up login form listener if available
-  const loginForm = document.getElementById("login-form");
-  if (loginForm) {
-    loginForm.addEventListener("submit", (event) => {
-      event.preventDefault();
-      const username = document.getElementById("username").value;
-      const password = document.getElementById("password").value;
-      console.log(`Login form submitted with username: ${username}`);
-      loginUser(username, password);
-    });
-  }
-
-  // Set up registration form listener if available
-  const registerForm = document.getElementById("register-form");
-  if (registerForm) {
-    registerForm.addEventListener("submit", (event) => {
-      event.preventDefault();
-      const username = document.getElementById("register-username").value;
-      const password = document.getElementById("register-password").value;
-      console.log(`Registration form submitted with username: ${username}`);
-      registerUser(username, password);
-    });
-  }
-
-  // Check authentication status on load
-  checkAuth();
-  console.log("Application initialized.");
-}
-
-// Function to initialize dropdown elements
-function initializeDropdowns() {
-  const dropdowns = document.querySelectorAll(".dropdown-trigger");
-  dropdowns.forEach((dropdown) => {
-    M.Dropdown.init(dropdown);
-  });
-}
+// Export for global access
+window.app = app;

@@ -4,32 +4,64 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Modify Site Style</title>
-  <link rel="stylesheet" href="/public/style.css" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/css/materialize.min.css" />
+  <link rel="stylesheet" href="/style.css" />
 </head>
 <body>
   <div id="header-placeholder"></div>
   <div class="container">
     <h1>Modify Site Style</h1>
-    <div>
-      <label for="color">Choose a color:</label>
-      <input type="color" id="color" name="color" value="#1a73e8" />
-      <button onclick="updateColor()">Update Color</button>
+    <div class="input-field">
+      <label for="primary-color">Choose Primary Color:</label>
+      <input type="color" id="primary-color" name="primary-color" value="#26a69a" />
     </div>
+    <div class="input-field">
+      <label for="secondary-color">Choose Secondary Color:</label>
+      <input type="color" id="secondary-color" name="secondary-color" value="#ee6e73" />
+    </div>
+    <div class="input-field">
+      <label for="font-family">Choose Font Family:</label>
+      <select id="font-family" class="browser-default">
+        <option value="'Open Sans', sans-serif" selected>Open Sans</option>
+        <option value="'Roboto', sans-serif">Roboto</option>
+        <option value="'Lato', sans-serif">Lato</option>
+        <option value="'Montserrat', sans-serif">Montserrat</option>
+      </select>
+    </div>
+    <button class="btn waves-effect waves-light" onclick="updateStyles()">Update Styles</button>
   </div>
   <div id="footer-placeholder"></div>
-  <script src="/public/main.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/js/materialize.min.js"></script>
   <script>
-    function updateColor() {
-      const color = document.getElementById("color").value;
-      document.documentElement.style.setProperty("--primary-color", color);
-      localStorage.setItem("primaryColor", color);
+    document.addEventListener("DOMContentLoaded", () => {
+      const storedPrimaryColor = localStorage.getItem("primaryColor") || "#26a69a";
+      const storedSecondaryColor = localStorage.getItem("secondaryColor") || "#ee6e73";
+      const storedFontFamily = localStorage.getItem("fontFamily") || "'Open Sans', sans-serif";
+
+      document.getElementById("primary-color").value = storedPrimaryColor;
+      document.getElementById("secondary-color").value = storedSecondaryColor;
+      document.getElementById("font-family").value = storedFontFamily;
+
+      applyStyles(storedPrimaryColor, storedSecondaryColor, storedFontFamily);
+    });
+
+    function updateStyles() {
+      const primaryColor = document.getElementById("primary-color").value;
+      const secondaryColor = document.getElementById("secondary-color").value;
+      const fontFamily = document.getElementById("font-family").value;
+
+      applyStyles(primaryColor, secondaryColor, fontFamily);
+
+      localStorage.setItem("primaryColor", primaryColor);
+      localStorage.setItem("secondaryColor", secondaryColor);
+      localStorage.setItem("fontFamily", fontFamily);
     }
 
-    document.addEventListener("DOMContentLoaded", () => {
-      const storedColor = localStorage.getItem("primaryColor") || "#1a73e8";
-      document.getElementById("color").value = storedColor;
-      updateColor();
-    });
+    function applyStyles(primaryColor, secondaryColor, fontFamily) {
+      document.documentElement.style.setProperty("--primary-color", primaryColor);
+      document.documentElement.style.setProperty("--secondary-color", secondaryColor);
+      document.body.style.fontFamily = fontFamily;
+    }
   </script>
 </body>
 </html>

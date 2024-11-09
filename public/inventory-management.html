@@ -70,5 +70,21 @@
   <!-- Placeholder for the footer -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/js/materialize.min.js"></script>
   <script src="./main.js"></script>
+  <script>
+    document.addEventListener("DOMContentLoaded", function () {
+      loadTemplate("header-placeholder", "header.html");
+      loadTemplate("footer-placeholder", "footer.html");
+      requireAuth(); // Ensure the user is authenticated
+      initializeDropdowns(); // Initialize dropdowns for Materialize
+      loadInventory(); // Load existing inventory items into the table
+
+      document.getElementById("inventory-management-form").addEventListener("submit", function(event) {
+        event.preventDefault();
+        // Logic to handle inventory item submission
+        console.log("Inventory item submitted");
+        // You can add an AJAX call here to send the form data to the server
+      });
+    });
+  </script>
 </body>
 </html>

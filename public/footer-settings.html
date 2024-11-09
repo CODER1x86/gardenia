@@ -4,40 +4,48 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Modify Footer</title>
-  <link rel="stylesheet" href="/public/style.css" />
+  <link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;600&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/css/materialize.min.css" />
+  <link rel="stylesheet" href="/style.css" />
 </head>
 <body>
   <div id="header-placeholder"></div>
   <div class="container">
     <h1>Modify Footer</h1>
     <form id="footer-form">
-      <div>
+      <div class="input-field">
         <label for="footer-text">Footer Text:</label>
         <input type="text" id="footer-text" name="footer-text" />
       </div>
-      <button type="submit">Update Footer</button>
+      <button type="submit" class="btn waves-effect waves-light">Update Footer</button>
     </form>
   </div>
   <div id="footer-placeholder"></div>
-  <script src="/public/main.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/js/materialize.min.js"></script>
+  <script src="/main.js"></script>
   <script>
-    document
-      .getElementById("footer-form")
-      .addEventListener("submit", (event) => {
+    document.addEventListener("DOMContentLoaded", function () {
+      loadTemplate("header-placeholder", "header.html");
+      loadTemplate("footer-placeholder", "footer.html");
+      requireAuth(); // Ensure the user is authenticated
+      updateFooter(); // Update the footer with stored text
+
+      document.getElementById("footer-form").addEventListener("submit", (event) => {
         event.preventDefault();
         const footerText = document.getElementById("footer-text").value;
         localStorage.setItem("footerText", footerText);
         updateFooter();
       });
+    });
 
     function updateFooter() {
-      const footerText =
-        localStorage.getItem("footerText") ||
-        "© My App. All rights reserved.";
-      document.querySelector(".footer-bottom").textContent = footerText;
+      const footerText = localStorage.getItem("footerText") || "© My App. All rights reserved.";
+      const footerElement = document.querySelector(".footer-bottom");
+      if (footerElement) {
+        footerElement.textContent = footerText;
+      }
     }
-
-    document.addEventListener("DOMContentLoaded", updateFooter);
   </script>
 </body>
 </html>

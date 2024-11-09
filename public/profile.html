@@ -40,6 +40,10 @@
   <script src="./main.js"></script>
   <script>
     document.addEventListener("DOMContentLoaded", function () {
+      loadTemplate("header-placeholder", "header.html");
+      loadTemplate("footer-placeholder", "footer.html");
+      requireAuth(); // Ensure the user is authenticated
+
       // Fetch user data and populate form
       fetch('/api/profile')
         .then(response => response.json())
@@ -48,6 +52,7 @@
           document.getElementById('last_name').value = data.last_name;
           document.getElementById('birthdate').value = data.birthdate;
           document.getElementById('email').value = data.email;
+          M.updateTextFields(); // Update Materialize labels
         })
         .catch(error => console.error("Error loading profile data:", error));
 
@@ -71,11 +76,11 @@
           return response.json();
         })
         .then(data => {
-          alert('Profile updated successfully');
+          M.toast({html: 'Profile updated successfully', classes: 'rounded'});
         })
         .catch(error => {
           console.error('Error:', error);
-          alert('Failed to update profile. Please try again.');
+          M.toast({html: 'Failed to update profile. Please try again.', classes: 'rounded'});
         });
       });
     });

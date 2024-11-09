@@ -32,8 +32,8 @@
       height: 100vh;
     }
     .checkbox-container {
-      margin-top: -10px; /* Adjusted top margin for proper spacing */
-      margin-bottom: 30px; /* Ensure space below checkbox container */
+      margin-top: -10px;
+      margin-bottom: 30px;
       display: flex;
       align-items: center;
     }
@@ -92,5 +92,21 @@
   <div id="footer-placeholder"></div>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/js/materialize.min.js"></script>
   <script type="module" src="/main.js"></script>
+  <script>
+    document.addEventListener("DOMContentLoaded", function () {
+      loadTemplate("header-placeholder", "header.html");
+      loadTemplate("footer-placeholder", "footer.html");
+
+      document.getElementById("login-form").addEventListener("submit", function(event) {
+        event.preventDefault();
+        const username = document.getElementById("username").value;
+        const password = document.getElementById("password").value;
+        const rememberMe = document.getElementById("remember-me").checked;
+        // Logic to handle login
+        console.log("Login attempt:", { username, password, rememberMe });
+        // You can add an AJAX call here to send the login data to the server
+      });
+    });
+  </script>
 </body>
 </html>
